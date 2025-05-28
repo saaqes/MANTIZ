@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MANTIZ / Ranger jort⚡</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <script src="https://kit.fontawesome.com/6674bb917f.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <a href="../index.html">Inicio</a>
+    </div>
+    <div class="header-center">
+      MANTIZ
+    </div>
+    <div class="header-right" id="headerRight">
+      <a class="login nav-hover">Login</a>
+      <buttom class="search-icon nav-hover" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i></buttom>
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar...">
+      <span class="close-icon" onclick="toggleSearch()">✖</span>
+
+      <div class="relative">
+        <a href="#" onclick="toggleCart()" aria-label="Carrito">
+          <i class="fas fa-shopping-cart text-xl"></i>
+        </a>
+        <span id="cartIndicator" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full hidden"></span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="product-container">
+    <div class="image-section">
+      <img id="mainImage" class="main-image" src="../imgs/product4.jpg" alt="Spider Web Jeans">
+      <div class="thumbnail-row">
+        <img src="../imgs/product4.jpg" class="thumb active" alt="thumb1">
+        <img src="../imgs/producto44.jpg" class="thumb" alt="thumb2">
+        <img src="../imgs/producto444.jpg" class="thumb" alt="thumb3">
+        <img src="../imgs/producto4.jpg" class="thumb" alt="thumb4">
+        <img src="../imgs/producto4444.jpg" class="thumb" alt="thumb5">
+      </div>
+    </div>
+    <div class="details-section">
+      <h2>Ranger jort⚡</h2>
+      <p class="price">$ 40.000</p>
+            <label>Talla:</label>
+      <div class="size-options">
+        <div class="size-option selected">S</div>
+        <div class="size-option sold-out">M</div>
+        <div class="size-option">L</div>
+        <div class="size-option sold-out">XL</div>
+      </div>
+      <div class="quantity-selector flex items-center gap-4 my-4">
+        <button class="minus bg-gray-300 px-2 py-1 rounded" onclick="updateQty(-1)">−</button>
+        <span id="qty">1</span>
+        <button class="plus bg-gray-300 px-2 py-1 rounded" onclick="updateQty(1)">+</button>
+      </div>
+
+      <div class="add-to-cart-section mt-4">
+        <button class="add-to-cart"
+                onclick="addToCartFromPage()">Añadir al carrito</button>
+      </div>
+
+      <script>
+      function addToCartFromPage() {
+        const qty = parseInt(document.getElementById("qty").innerText);
+        const name = "Miss me Oxford"; // cambia esto por el nombre correcto del producto
+        const price = 30000; // cambia esto por el precio correcto del producto
+
+        addToCart(name, price, qty);
+      }
+
+      function updateQty(change) {
+        const qtyDisplay = document.getElementById("qty");
+        let current = parseInt(qtyDisplay.innerText);
+        current = Math.max(1, current + change);
+        qtyDisplay.innerText = current;
+      }
+      </script>
+
+
+
+      <div class="description">
+        <h3>Descripción</h3>
+        <p>
+          Medidas aproximadas:
+
+30cm de bota
+39cm de cintura
+57cm de largo
+
+
+        </p>
+      </div>
+    </div>
+  </main>
+
+<section class="productos-relacionados">
+  <h2 class="titulo-relacionados">PRODUCTOS RELACIONADOS</h2>
+  <div class="grid-productos">
+    <!-- Producto 1 -->
+    <div class="card-producto">
+      <div class="img-wrapper">
+        <a><img src="../imgs/product1.jpg" alt="Producto 3" class="img-normal"></a>
+        <a href="../pages/producto1.html"><img src="../imgs/producto1.jpg" alt="Producto 1 Hover" class="img-hover"></a>
+      </div>
+      <h3 class="nombre-producto">Puffer 🐑</h3>
+      <p class="precio-producto">Precio: 30k</p>
+    </div>
+
+    <!-- Producto 2 -->
+    <div class="card-producto">
+      <div class="img-wrapper">
+        <a><img src="../imgs/product2.jpg" alt="Producto 2" class="img-normal"></a>
+        <a href="../pages/producto2.html"><img src="../imgs/producto2.jpg" alt="Producto 2 Hover" class="img-hover"></a>
+      </div>
+      <h3 class="nombre-producto">True Religion 🙏</h3>
+      <p class="precio-producto">Precio: 30k</p>
+    </div>
+
+    <!-- Producto 3 -->
+    <div class="card-producto">
+      <div class="img-wrapper">
+        <a><img src="../imgs/product3.jpg" alt="Producto 1" class="img-normal"></a>
+        <a href="../pages/producto3.html"><img src="../imgs/producto3.jpg" alt="Producto 3 Hover" class="img-hover"></a>
+      </div>
+      <h3 class="nombre-producto">Miss me Oxford</h3>
+      <p class="precio-producto">Precio: 30k</p>
+    </div>
+
+    <!-- Producto 4 -->
+    <div class="card-producto">
+      <div class="img-wrapper">
+        <a><img src="../imgs/product5.jpg" alt="Producto 4" class="img-normal"></a>
+        <a href="../pages/producto5.html"><img src="../imgs/producto555.jpg" alt="Producto 4 Hover" class="img-hover"></a>
+      </div>
+      <h3 class="nombre-producto">Short puffer</h3>
+      <p class="precio-producto">Precio: 40k</p>
+    </div>
+  </div>
+
+  <div class="line"  style="background-color: #8AD000; border-color: #8AD000; height: 2px; margin-left: 5%; margin-right: 5%;"></div>
+
+  <!-- From Uiverse.io by alexruix --> 
+  <div class="input-group">
+      <input type="email" class="input" id="Email" name="Email" placeholder="@ejemplo.com" autocomplete="off">
+      <input class="button--submit" value="Subscribe" type="submit">
+      
+</section>
+
+
+ <script>
+    const mainImage = document.getElementById('mainImage');
+    const thumbnails = document.querySelectorAll('.thumb');
+    const headerRight = document.getElementById('headerRight');
+    const searchInput = document.getElementById('searchInput');
+    const sizeOptions = document.querySelectorAll('.size-option');
+    const qtyDisplay = document.getElementById('qty');
+
+    thumbnails.forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        thumbnails.forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+        mainImage.src = thumb.src;
+      });
+    });
+
+    function toggleSearch() {
+      headerRight.classList.toggle('search-visible');
+    }
+
+    sizeOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        if (!option.classList.contains('sold-out')) {
+          sizeOptions.forEach(o => o.classList.remove('selected'));
+          option.classList.add('selected');
+        }
+      });
+    });
+
+    function updateQty(change) {
+      let current = parseInt(qtyDisplay.innerText);
+      if (current + change >= 1) {
+        qtyDisplay.innerText = current + change;
+      }
+    }
+
+    const zoomOverlay = document.getElementById('zoomOverlay');
+const zoomedImage = document.getElementById('zoomedImage');
+
+mainImage.addEventListener('mouseenter', () => {
+  zoomedImage.src = mainImage.src;
+  zoomOverlay.style.display = 'flex';
+});
+
+zoomOverlay.addEventListener('click', () => {
+  zoomOverlay.style.display = 'none';
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    zoomOverlay.style.display = 'none';
+  }
+});
+
+  </script>
+    <div id="zoomOverlay" style="display:none;">
+  <img id="zoomedImage" src="" alt="Zoomed" />
+</div>
+
+<footer>
+    <!-- Sección inferior -->
+      <div class="footer-container">
+    <!-- Izquierda -->
+    <div class="footer-left">
+      <a href="#" class="hover:underline">Política de privacidad</a>
+      <a href="#" class="hover:underline">Términos de servicio</a>
+    </div>
+
+    <!-- Centro -->
+    <div class="footer-center">
+      © 2025 MANTIZ. Todos los derechos reservados.
+    </div>
+
+    <!-- Derecha -->
+    <div class="footer-right">
+      <a href="#" class="hover:text-pink-500"><i class="fab fa-instagram text-xl"></i></a>
+      <a href="#" class="hover:text-blue-500"><i class="fab fa-facebook text-xl"></i></a>
+      <a href="#" class="hover:text-blue-400"><i class="fab fa-x-twitter text-xl"></i></a>
+    </div>
+  </div>
+</footer>
+
+<!-- Capa oscura -->
+<div id="cartOverlay"
+     class="fixed inset-0 bg-black bg-opacity-50 z-[9998] hidden"
+     onclick="closeCart()"></div>
+
+<!-- Sidebar del carrito -->
+<div id="cartModal" class="fixed top-0 right-0 w-[400px] h-full bg-black text-white shadow-lg z-[9999] transform translate-x-full transition-transform duration-300">
+  <div class="flex justify-between items-center p-4 border-b">
+    <h2 class="text-xl font-bold">Carrito</h2>
+    <button onclick="closeCart()" class="text-white hover:text-[#8AD000] text-xl transition-colors duration-300 bg-transparent">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div id="cartItems" class="p-4 space-y-4 overflow-y-auto max-h-[70%]"></div>
+  <div class="p-4 border-t">
+    <div class="flex justify-between text-lg font-semibold mb-4">
+      <span>Total:</span>
+      <span>$<span id="cartTotal">0</span></span>
+    </div>
+    <button disabled class="w-full bg-white text-black py-2 px-4 rounded hover:bg-#8AD000 transition duration-200">
+      Hacer compra
+    </button>
+  </div>
+</div>
+
+<!-- Carga el archivo de funciones -->
+<script src="../cart.js"></script>
+
+</body>
+</html>

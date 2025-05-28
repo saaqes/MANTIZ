@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link class="icon-preview" rel="shortcut icon" href="imgs/MANTIZ.jpeg" type="image/x-icon">
+  <script src="https://kit.fontawesome.com/6674bb917f.js" crossorigin="anonymous"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MANTIZ</title>
+   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style_fixed.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="m-0 p-0 overflow-x-hidden bg-black">
+
+
+  <div id="splash">
+    <img class="splashimg" src="imgs/roMANTIZismo.jpg" alt="">
+  </div> <!-- capa que cubre todo -->
+
+  <div id="carousel" class="relative w-full h-screen flex items-center justify-center transition-all duration-500 overflow-hidden">
+    <img id="carouselImage" class="absolute w-full h-full object-cover z-0 opacity-100" src="imgs/1.png" alt="carousel" />
+
+    <div id="carouselContent" class="z-10 text-center text-white opacity-0 translate-y-10 transition-all duration-500">
+      <h1 class="text-7xl font-bold mb-4">Demo...</h1>
+      <button class="bg-white text-black px-6 py-2 rounded-full font-semibold">Botón</button>
+    </div>
+
+    <div class="absolute bottom-6 right-6 flex gap-2 z-10 scale-75">
+      <svg class="w-5 h-5 cursor-pointer indicator" data-index="0" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="16" stroke="white" stroke-width="4" fill="none" opacity="0.3"/>
+        <circle class="progress" cx="18" cy="18" r="16" stroke="white" stroke-width="4" fill="none" stroke-dasharray="100" stroke-dashoffset="100"/>
+      </svg>
+      <svg class="w-5 h-5 cursor-pointer indicator" data-index="1" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="16" stroke="white" stroke-width="4" fill="none" opacity="0.3"/>
+        <circle class="progress" cx="18" cy="18" r="16" stroke="white" stroke-width="4" fill="none" stroke-dasharray="100" stroke-dashoffset="100"/>
+      </svg>
+      <svg class="w-5 h-5 cursor-pointer indicator" data-index="2" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="16" stroke="white" stroke-width="4" fill="none" opacity="0.3"/>
+        <circle class="progress" cx="18" cy="18" r="16" stroke="white" stroke-width="4" fill="none" stroke-dasharray="100" stroke-dashoffset="100"/>
+      </svg>
+    </div>
+  </div>
+  <script src="index.js"></script>
+  <!-- Botón flotante opcional para ir al catálogo -->
+<div class="w-full flex justify-center -mt-8 z-20 relative pointer-events-none">
+  <button onclick="document.getElementById('catalogo').scrollIntoView({ behavior: 'smooth' });"
+          class="bg-white text-black w-16 h-16 rounded-full shadow-lg border-1 border-gray flex items-center justify-center hover:scale-110 transition-all duration-300 pointer-events-auto">
+    <i class="fa-solid fa-arrow-down text-2xl"></i>
+  </button>
+</div>
+
+<!-- Contenedor del catálogo -->
+<div id="catalogo" class="bg-black py-16 px-4" >
+  <h2 class="text-4xl font-bold text-center mb-10" style="color: #8AD000; border-bottom: 1px solid #8AD000;; margin-left: 10%; margin-right: 10%; padding-bottom:50px;">
+  PRODUCTOS
+</h2>
+  
+  <!-- Contenedor de productos SIN max-w-6xl -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+    
+    <!-- Repite para cada producto -->
+    <!-- Producto 1 -->
+    <div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
+      <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
+        <a href="pages/producto1.html"><img src="imgs/product1.jpg" alt="Producto 1" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
+        <a href="pages/producto1.html"><img src="imgs/producto1.jpg" alt="Producto 1 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
+      </div>
+      <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
+        Puffer 🐑
+      <div class="relative group w-6 h-6">
+        <div
+          onclick="addToCart('Puffer 🐑', 30000)"
+           class="absolute inset-0 rounded-full border-2 border-[#8AD000] text-[#8AD000] flex items-center justify-center scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 cursor-pointer text-sm font-bold"
+        >+</div>
+      </div>
+      </h3>
+      <p class="text-sm  text-center">Precio: 30k</p>
+    </div>
+
+    <!-- Producto 2 -->
+    <div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
+      <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
+        <a href="pages/producto2.html"><img src="imgs/product2.jpg" alt="Producto 2" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
+        <a href="pages/producto2.html"><img src="imgs/producto2.jpg" alt="Producto 2 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
+      </div>
+      <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
+        True Religion 🙏
+      <div class="relative group w-6 h-6">
+        <div
+          onclick="addToCart('True Religion 🙏', 25000)"
+           class="absolute inset-0 rounded-full border-2 border-[#8AD000] text-[#8AD000] flex items-center justify-center scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 cursor-pointer text-sm font-bold"
+        >+</div>
+      </div>
+      </h3>
+      <p class="text-sm  text-center">Precio: 25k</p>
+    </div>
+
+    <!-- Producto 3 -->
+    <div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
+      <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
+        <a href="pages/producto3.html"><img src="imgs/product3.jpg" alt="Producto 3" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
+        <a href="pages/producto3.html"><img src="imgs/producto3.jpg" alt="Producto 3 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
+      </div>
+      <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
+        Miss me Oxford
+      <div class="relative group w-6 h-6">
+        <div
+          onclick="addToCart('Miss me Oxford', 30000)"
+           class="absolute inset-0 rounded-full border-2 border-[#8AD000] text-[#8AD000] flex items-center justify-center scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 cursor-pointer text-sm font-bold"
+        >+</div>
+      </div>
+      </h3>
+      <p class="text-sm text-center">Precio: 30k</p>
+    </div>
+
+    <!-- Producto 4 -->
+    <div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
+      <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
+        <a href="pages/producto4.html"><img src="imgs/product4.jpg" alt="Producto 4" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
+        <a href="pages/producto4.html"><img src="imgs/producto4.jpg" alt="Producto 4 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
+      </div>
+      <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
+        Ranger jort⚡
+      <div class="relative group w-6 h-6">
+        <div
+          onclick="addToCart('Ranger jort⚡', 40000)"
+           class="absolute inset-0 rounded-full border-2 border-[#8AD000] text-[#8AD000] flex items-center justify-center scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 cursor-pointer text-sm font-bold"
+        >+</div>
+      </div>
+      </h3>
+      <p class="text-sm text-center">Precio 40k</p>
+    </div>
+
+  </div>
+</div>
+<section class="feed-section">
+  <div class="feed-header">
+    <h2>Nuestro feed</h2>
+  </div>
+
+  <div class="video-carousel-container">
+    <button id="prevVideoBtn" class="nav-btn">&#10094;</button>
+
+    <div class="video-carousel manual-mode">
+      <div class="video-wrapper active">
+        <video autoplay loop muted playsinline>
+          <source src="videos/video1.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div class="video-wrapper">
+        <video autoplay loop muted playsinline>
+          <source src="videos/video2.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div class="video-wrapper">
+        <video autoplay loop muted playsinline>
+          <source src="videos/video3.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div class="video-wrapper">
+        <video autoplay loop muted playsinline>
+          <source src="videos/video4.mp4" type="video/mp4" />
+        </video>
+      </div>
+    </div>
+
+    <button id="nextVideoBtn" class="nav-btn">&#10095;</button>
+  </div>
+  <div class="feed-header-down"><a href="https://instagram.com/mantiz.xe" target="_blank" class="instagram-link">
+      Visítanos en:
+      <i class="fab fa-instagram instagram-icon"></i>
+      <h3 class="instagram-link-redirect">mantiz.xe</h3>
+    </a></div>
+</section>
+
+
+
+<script>
+  const wrappers = document.querySelectorAll(".video-wrapper");
+  const nextBtn = document.getElementById("nextVideoBtn");
+  const prevBtn = document.getElementById("prevVideoBtn");
+  let currentVideo = 0;
+
+  function showVideo(index) {
+    wrappers.forEach(w => w.classList.remove("active"));
+    wrappers[index].classList.add("active");
+  }
+
+  nextBtn.addEventListener("click", () => {
+    currentVideo = (currentVideo + 1) % wrappers.length;
+    showVideo(currentVideo);
+  });
+
+  prevBtn.addEventListener("click", () => {
+    currentVideo = (currentVideo - 1 + wrappers.length) % wrappers.length;
+    showVideo(currentVideo);
+  });
+
+  // Inicializa el primer video activo
+  showVideo(currentVideo);
+</script>
+
+
+
+
+
+
+
+<!-- Contenedor navbar + barra de búsqueda -->
+<div class="navbar-wrapper relative z-50">
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="menu-toggle" onclick="toggleMenu()" id="menuButton">
+  <ul class="text-full">
+    <li><a class="menu-item-x" href="pages/desarrollando.html">FAMILIA</a></li>
+    <li><a class="menu-item-x" href="pages/desarrollando.html">EXCLUSIVIDAD</a></li>
+    <li><a class="menu-item-x" href="pages/desarrollando.html">CONTACTO</a></li>
+    <li><a class="menu-item-x" href="pages/desarrollando.html">INFO</a></li>
+    <li><a class="menu-item-x" href="pages/desarrollando.html">TODOS LOS PRODUCTOS</a></li>
+  </ul>
+  <span class="text-short"><i class="fa-solid fa-bars"></i></span>
+</div>
+
+    <!-- Logo centrado -->
+    <div class="main-content">
+      <div id="logoMain" class="logo" alt="Logo">MANTIZ</div>
+      <style>
+        #logoMain {
+        transition: opacity 0.3s ease;
+        
+        }
+      </style>
+    </div>
+
+    <!-- Lado derecho -->
+    <div class="nav-right">
+      <a class="login-link" href="#" id="loginButton" >Login</a>
+<button id="searchToggleButton" onclick="toggleSearchBarInline()" style="background: transparent; border: none;">
+  <i id="searchToggleIcon" class="fa-solid fa-magnifying-glass" style="color: white; font-size: 24px; padding: 10px;"></i>
+</button>
+
+
+<!-- Barra de búsqueda oculta inicialmente -->
+<input
+  type="text"
+  id="inlineSearchContainer"
+  placeholder="Search..."
+  style="
+    color: white;
+    display: none;
+    opacity: 1;
+    width: 100%;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    transform: scaleX(0.95);
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #cccccc00;
+    background-color: rgba(0, 0, 0, 0.158);
+  "
+/>
+
+    <div class="relative">
+      <a href="#" class="carrito-link" onclick="toggleCart()" aria-label="Carrito">
+      <i class="fas fa-shopping-cart text-xl"></i>
+      </a>
+      <span id="cartIndicator" class="absolute -top-1 -right-1 bg-red-500 w-3 h-3 rounded-full hidden"></span>
+    </div>
+
+    </div>
+  </div>
+  <script src="index_inline_search.js"></script>
+<script src="index_inline_search_animated.js"></script>
+<script src="index_inline_search_icon_toggle.js"></script>
+
+
+
+  <!-- Menú lateral oculto -->
+<div id="sideMenu" class="side-menu">
+  <button class="close-btn" onclick="toggleMenu()"><i class="fa-solid fa-xmark"></i></button>
+  <a href="pages/desarrollando.html" onclick="closeMenu()" class="close-opt">FAMILIA</a>
+  <a href="pages/desarrollando.html" onclick="closeMenu()" class="close-opt">EXCLISIVIDAD</a>
+  <a href="pages/desarrollando.html" onclick="closeMenu()" class="close-opt">CONTACTO</a>
+  <a href="pages/desarrollando.html" onclick="closeMenu()" class="close-opt">INFO</a>
+  <a href="pages/desarrollando.html" onclick="closeMenu()" class="close-opt">TODOS LOS PRODUCTOS</a>
+  <div class="side-menu-down">
+    <a class="sideLogin">Login</a>
+  </div>
+</div>
+
+<!-- From Uiverse.io by alexruix --> 
+<div class="input-group">
+    <input type="email" class="input" id="Email" name="Email" placeholder="@ejemplo.com" autocomplete="off">
+    <input class="button--submit" value="Subscribe" type="submit">
+</div>
+
+
+<!-- Capa oscura detrás del carrito -->
+<div id="cartOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-[9998] hidden" onclick="closeCart()"></div>
+<!-- Sidebar del carrito -->
+<div id="cartModal" class="fixed top-0 right-0 w-[400px] h-full bg-black text-white shadow-lg z-[9999] transform translate-x-full transition-transform duration-300">
+  <div class="flex justify-between items-center p-4 border-b">
+    <h2 class="text-xl font-bold">Carrito</h2>
+    <button onclick="closeCart()" class="text-white hover:text-[#8AD000] text-xl transition-colors duration-300 bg-transparent">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div id="cartItems" class="p-4 space-y-4 overflow-y-auto max-h-[70%]"></div>
+  <div class="p-4 border-t">
+    <div class="flex justify-between text-lg font-semibold mb-4">
+      <span>Total:</span>
+      <span>$<span id="cartTotal">0</span></span>
+    </div>
+    <button disabled class="w-full bg-white text-black py-2 px-4 rounded hover:bg-#8AD000 transition duration-200">
+      Hacer compra
+    </button>
+  </div>
+</div>
+
+
+<script src="cart.js"></script>
+
+
+
+<footer>
+
+    <!-- Sección inferior -->
+    <div class="flex flex-col md:flex-row justify-between items-center text-sm mt-6 space-y-4 md:space-y-0">
+      <!-- Izquierda -->
+      <div class="flex flex-col md:flex-row gap-4 text-white">
+        <a href="#" class="hover:underline">Política de privacidad</a>
+        <a href="#" class="hover:underline">Términos de servicio</a>
+      </div>
+
+      <!-- Centro -->
+      <div class="text-center text-gray-400">
+        © 2025 MANTIZ. Todos los derechos reservados.
+      </div>
+
+      <!-- Derecha -->
+      <div class="flex gap-5 text-white">
+        <a href="https://instagram.com/mantiz.xe" class="hover:text-pink-500"><i class="fab fa-instagram text-xl"></i></a>
+      </div>
+    </div>
+  </div>
+</footer>
+</body>
+
+</html>
