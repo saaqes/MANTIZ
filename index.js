@@ -1,3 +1,5 @@
+// index.js actualizado para ocultar y mostrar el navbar con scroll
+
 const images = [
   "./imgs/1.png",
   "./imgs/2.png",
@@ -22,14 +24,12 @@ function showImage(index) {
     void imageEl.offsetWidth;
     imageEl.classList.add("fade-in");
 
-    // Indicador
     progressEls.forEach((el, i) => {
       el.style.animation = "none";
-      el.offsetHeight; // reflow
+      el.offsetHeight;
       el.style.animation = i === current ? "progress 4.5s linear forwards" : "none";
     });
 
-    // Texto
     contentEl.classList.remove("text-enter");
     contentEl.classList.add("text-exit");
     setTimeout(() => {
@@ -60,51 +60,43 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function toggleMenu() {
+  document.getElementById("sideMenu").classList.toggle("open");
+}
 
-  
-  function toggleMenu() {
-    document.getElementById("sideMenu").classList.toggle("open");
-  }
+function closeMenu() {
+  document.getElementById("sideMenu").classList.remove("open");
+}
 
-  function closeMenu() {
-    document.getElementById("sideMenu").classList.remove("open");
-  }
+// Toggle búsqueda superior
+const searchToggle = document.getElementById("searchToggle");
+if (searchToggle) {
+  searchToggle.addEventListener("click", () => {
+    const searchBar = document.getElementById("searchBar");
+    if (searchBar) searchBar.classList.toggle("active");
+  });
+}
 
-   // Muestra / oculta la barra de búsqueda al hacer clic en la lupa
-    document.getElementById("searchToggle").addEventListener("click", () => {
-      document.getElementById("searchBar").classList.toggle("active");
-    });
-
-    
+// Splash screen
 window.addEventListener("DOMContentLoaded", () => {
-  // Splash screen
   const splash = document.getElementById("splash");
   if (splash) {
     splash.addEventListener("animationend", () => splash.remove());
-    setTimeout(() => splash.remove(), 1600); // respaldo
-  }
-
-  // Carousel
-  progressEls[0].style.animation = "progress 4.5s linear forwards";
-  startCarousel();
-
-  indicators.forEach((el) => {
-    el.addEventListener("click", () => {
-      const index = parseInt(el.getAttribute("data-index"));
-      updateImage(index);
-      resetCarouselTimer();
-    });
-  });
-
-  contentEl.classList.add("text-enter");
-
-  // Barra de búsqueda
-  const searchToggle = document.getElementById("searchToggle");
-  const searchBar = document.getElementById("searchBar");
-  if (searchToggle && searchBar) {
-    searchToggle.addEventListener("click", () => {
-      searchBar.classList.toggle("active");
-    });
+    setTimeout(() => splash.remove(), 1600);
   }
 });
 
+// Navbar desaparece al hacer scroll hacia abajo y reaparece al subir
+let lastScrollY = window.scrollY;
+window.addEventListener("scroll", () => {
+  const navbar = document.getElementById("navbar");
+  if (!navbar) return;
+
+  const currentScroll = window.scrollY;
+  if (currentScroll > lastScrollY && currentScroll > 50) {
+    navbar.classList.add("-translate-y-full");
+  } else {
+    navbar.classList.remove("-translate-y-full");
+  }
+  lastScrollY = currentScroll;
+});
