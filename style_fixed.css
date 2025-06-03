@@ -452,8 +452,7 @@
 
   .side-menu-down{
   border-bottom:rgb(38 38 38) solid 0.5px ;
-  margin-left: 5%;
-  margin-right: 5%;
+  margin-left: -10%;
   font-family: sans-serif;
   font-weight: bold;
   font-size: 95%;
@@ -467,6 +466,14 @@
   margin-bottom: 20px;
   cursor: pointer;
 }
+@media (max-width: 679px) {
+
+  .sideLogin {
+    margin-left: 15%;
+  }
+}
+
+
 
 .side-menu {
   position: fixed;
