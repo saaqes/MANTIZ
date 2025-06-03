@@ -91,3 +91,21 @@ function renderCart() {
 
   totalEl.textContent = total.toLocaleString();
 }
+
+// Ajuste de tamaño dinámico del carrito para pantallas pequeñas
+window.addEventListener("resize", () => {
+  const cartModal = document.getElementById("cartModal");
+  if (!cartModal) return;
+
+  const width = window.innerWidth;
+  if (width < 400) {
+    cartModal.style.width = `${Math.max(240, width * 0.9)}px`;
+  } else {
+    cartModal.style.width = "400px";
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  window.dispatchEvent(new Event("resize"));
+});
+
