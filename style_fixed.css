@@ -196,12 +196,10 @@
 @media (max-width: 310px) {
   
 .logo {
-   font-size: 10px;
+  font-size: 10px;
   margin-right: 100px;
 }
 }
-
-
 
 .menu-toggle {
   z-index: 1100;
@@ -442,7 +440,7 @@
       font-weight: 600;
     }
         /* Responsive: ocultar login en pantallas < 1000px */
-    @media (max-width: 680px) {
+    @media (max-width: 845px) {
       .nav-right .login-link {
         display: none;
       }
@@ -451,8 +449,8 @@
     
 
   .side-menu-down{
-  border-bottom:rgb(38 38 38) solid 0.5px ;
-  margin-left: -10%;
+
+  margin-left: -25%;
   font-family: sans-serif;
   font-weight: bold;
   font-size: 95%;
@@ -469,7 +467,7 @@
 @media (max-width: 679px) {
 
   .sideLogin {
-    margin-left: 15%;
+    margin-left: 30%;
   }
 }
 
@@ -601,8 +599,23 @@ footer{
   outline: none;
 }
 
+.producto-title{
+  font-size: 2rem;
+  font-weight: bold;
+  color: #8AD000;
+  margin-left: 5%;
+  margin-right: 5%;
+  text-align: center;
+  padding-bottom: 5%;
+  margin-bottom: 5%;
+  border-bottom: 1px solid;
+  border-image-slice: 1;
+  border-bottom-width: 5px;
+  border-image-source: linear-gradient(to left, transparent, #8AD000, transparent);
+}
+
 .feed-section {
-  background: black;
+  background: linear-gradient( #000000,#8AD000, #8AD000,#8AD000, #000000);
   color: white;
   padding: 2rem 1rem;
   overflow: hidden;
@@ -614,7 +627,9 @@ footer{
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
   padding: 0 1rem;
-  border-top: #8AD000 2px solid;
+    border-image-slice: 1;
+    border-top-width: 5px;
+  border-image-source: linear-gradient(to left, transparent, #8AD000, transparent);
   margin-left: 10%;
   margin-right: 10%;
   padding: 40px;
@@ -635,7 +650,9 @@ footer{
   margin-bottom: 1.5rem;
   display: flex;
   justify-content: center;
-  border-bottom: #8AD000 2px solid;
+      border-image-slice: 1;
+    border-bottom-width: 5px;
+  border-image-source: linear-gradient(to left, transparent, #8AD000, transparent);
   margin-left: 10%;
   margin-right: 10%;  
   padding-bottom: 50px;
@@ -824,6 +841,76 @@ footer{
 .wrapper .instagram:hover .tooltip::before {
   background: #8AD000;
   color: #fff;
+}
+/* Note that you only needs to edit the config to customize the button! */
+
+.plusButton {
+  /* Config start */
+  --plus_sideLength: 1.7rem;
+  --plus_topRightTriangleSideLength: 0.9rem;
+  /* Config end */
+  margin-left: 70px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid white;
+  width: var(--plus_sideLength);
+  height: var(--plus_sideLength);
+  background-color: #000000;
+  overflow: hidden;
+}
+
+.plusButton::before {
+  position: absolute;
+  content: "";
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-width: 0 var(--plus_topRightTriangleSideLength) var(--plus_topRightTriangleSideLength) 0;
+  border-style: solid;
+  border-color: transparent white transparent transparent;
+  transition-timing-function: ease-in-out;
+  transition-duration: 0.2s;
+}
+
+.plusButton:hover {
+  cursor: pointer;
+}
+
+.plusButton:hover::before {
+  --plus_topRightTriangleSideLength: calc(var(--plus_sideLength) * 2);
+}
+
+.plusButton:focus-visible::before {
+  --plus_topRightTriangleSideLength: calc(var(--plus_sideLength) * 2);
+}
+
+.plusButton>.plusIcon {
+  fill: white;
+  width: calc(var(--plus_sideLength) * 0.7);
+  height: calc(var(--plus_sideLength) * 0.7);
+  z-index: 1;
+  transition-timing-function: ease-in-out;
+  transition-duration: 0.2s;
+}
+
+.plusButton:hover>.plusIcon {
+  fill: black;
+  transform: rotate(180deg);
+}
+
+.plusButton:focus-visible>.plusIcon {
+  fill: black;
+  transform: rotate(180deg);
+}
+
+.text-cente {
+  text-align: center;
+  font-size: 20px;
+  color: gray;
+  font-weight: bold;
 }
 
 
