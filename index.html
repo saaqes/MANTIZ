@@ -6,7 +6,9 @@
   <script src="https://kit.fontawesome.com/6674bb917f.js" crossorigin="anonymous"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MANTIZ</title>
-   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="style_fixed.css" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -15,7 +17,7 @@
 
 
   <div id="splash">
-    <img class="splashimg" src="imgs/roMANTIZismo.jpg" alt="">
+    <img class="splashimg" src="../imgs/roMANTIZismo.jpg" alt="">
   </div> <!-- capa que cubre todo -->
 
   <div id="carousel" class="relative w-full h-screen flex items-center justify-center transition-all duration-500 overflow-hidden">
@@ -52,7 +54,7 @@
 
 <!-- Contenedor del catálogo -->
 <div id="catalogo" class="bg-black py-16 px-4" >
-  <h2 class="text-4xl font-bold text-center mb-10" style="color: #8AD000; border-bottom: 1px solid #8AD000;; margin-left: 10%; margin-right: 10%; padding-bottom:50px;">
+  <h2 class="producto-title">
   PRODUCTOS
 </h2>
   
@@ -67,15 +69,17 @@
         <a href="pages/producto1.html"><img src="imgs/producto1.jpg" alt="Producto 1 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
       </div>
       <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
-        Puffer 🐑
+        Puffer 
       <div class="relative group w-6 h-6">
-        <div
-          onclick="addToCart('Puffer 🐑', 30000)"
-           class="absolute inset-0 rounded-full border-2 border-[#8AD000] text-[#8AD000] flex items-center justify-center scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 cursor-pointer text-sm font-bold"
-        >+</div>
-      </div>
+          <div  tabindex="0" class="plusButton">
+  <svg onclick="addToCart('Puffer ', 30000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+    <g mask="url(#mask0_21_345)">
+      <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
+    </g>
+  </svg>
+</div>
       </h3>
-      <p class="text-sm  text-center">Precio: 30k</p>
+      <p class="text-cente">Precio: $30.000</p>
     </div>
 
     <!-- Producto 2 -->
@@ -85,51 +89,61 @@
         <a href="pages/producto2.html"><img src="imgs/producto2.jpg" alt="Producto 2 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
       </div>
       <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
-        True Religion 🙏
+        True Religion
       <div class="relative group w-6 h-6">
-        <div
-          onclick="addToCart('True Religion 🙏', 25000)"
-           class="absolute inset-0 rounded-full border-2 border-[#8AD000] text-[#8AD000] flex items-center justify-center scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 cursor-pointer text-sm font-bold"
-        >+</div>
+          
+<div tabindex="0" class="plusButton">
+  <svg onclick="addToCart('True Religion ', 25000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+    <g mask="url(#mask0_21_345)">
+      <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
+    </g>
+  </svg>
+</div>
       </div>
       </h3>
-      <p class="text-sm  text-center">Precio: 25k</p>
+      <p class="text-cente">Precio: $25.000</p>
     </div>
 
     <!-- Producto 3 -->
     <div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
       <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
-        <a href="pages/producto3.html"><img src="imgs/product3.jpg" alt="Producto 3" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
-        <a href="pages/producto3.html"><img src="imgs/producto3.jpg" alt="Producto 3 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
+        <a href="pages/producto3.html"><img src="../imgs/product3.jpg" alt="Producto 3" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
+        <a href="pages/producto3.html"><img src="../imgs/producto3.jpg" alt="Producto 3 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
       </div>
       <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
         Miss me Oxford
-      <div class="relative group w-6 h-6">
-        <div
-          onclick="addToCart('Miss me Oxford', 30000)"
-           class="absolute inset-0 rounded-full border-2 border-[#8AD000] text-[#8AD000] flex items-center justify-center scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 cursor-pointer text-sm font-bold"
-        >+</div>
+      <div class="relative group w-6 h-6">    
+<div tabindex="0" class="plusButton">
+  <svg  onclick="addToCart('Miss me Oxford', 30000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+    <g mask="url(#mask0_21_345)">
+      <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
+    </g>
+  </svg>
+</div>
       </div>
       </h3>
-      <p class="text-sm text-center">Precio: 30k</p>
+      <p class="text-cente">Precio: $30.000</p>
     </div>
 
     <!-- Producto 4 -->
     <div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
       <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
-        <a href="pages/producto4.html"><img src="imgs/product4.jpg" alt="Producto 4" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
-        <a href="pages/producto4.html"><img src="imgs/producto4.jpg" alt="Producto 4 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
+        <a href="pages/producto4.html"><img src="../imgs/product4.jpg" alt="Producto 4" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
+        <a href="pages/producto4.html"><img src="../imgs/producto4.jpg" alt="Producto 4 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
       </div>
       <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
-        Ranger jort⚡
+        Ranger jort
       <div class="relative group w-6 h-6">
-        <div
-          onclick="addToCart('Ranger jort⚡', 40000)"
-           class="absolute inset-0 rounded-full border-2 border-[#8AD000] text-[#8AD000] flex items-center justify-center scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 cursor-pointer text-sm font-bold"
-        >+</div>
+<div tabindex="0" class="plusButton">
+  <svg onclick="addToCart('Ranger jort', 40000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+    <g mask="url(#mask0_21_345)">
+      <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
+    </g>
+  </svg>
+</div>
       </div>
       </h3>
-      <p class="text-sm text-center">Precio 40k</p>
+      <p class="text-cente">Precio: $40.000</p>
     </div>
 
   </div>
@@ -145,22 +159,22 @@
     <div class="video-carousel manual-mode">
       <div class="video-wrapper active">
         <video autoplay loop muted playsinline>
-          <source src="videos/video1.mp4" type="video/mp4" />
+          <source src="../videos/video1.mp4" type="video/mp4" />
         </video>
       </div>
       <div class="video-wrapper">
         <video autoplay loop muted playsinline>
-          <source src="videos/video2.mp4" type="video/mp4" />
+          <source src="../videos/video2.mp4" type="video/mp4" />
         </video>
       </div>
       <div class="video-wrapper">
         <video autoplay loop muted playsinline>
-          <source src="videos/video3.mp4" type="video/mp4" />
+          <source src="../videos/video3.mp4" type="video/mp4" />
         </video>
       </div>
       <div class="video-wrapper">
         <video autoplay loop muted playsinline>
-          <source src="videos/video4.mp4" type="video/mp4" />
+          <source src="../videos/video4.mp4" type="video/mp4" />
         </video>
       </div>
     </div>
@@ -168,7 +182,7 @@
     <button id="nextVideoBtn" class="nav-btn">&#10095;</button>
   </div>
   <div class="feed-header-down"><a href="https://instagram.com/mantiz.xe" target="_blank" class="instagram-link">
-      Visítanos en:
+      Mira mas en:
       <i class="fab fa-instagram instagram-icon"></i>
       <h3 class="instagram-link-redirect">mantiz.xe</h3>
     </a></div>
@@ -235,7 +249,7 @@
 
     <!-- Lado derecho -->
     <div class="nav-right">
-      <a class="login-link" href="#" id="loginButton" >Login</a>
+      <a class="login-link" id="loginButton" >Login</a>
 <button id="searchToggleButton" onclick="toggleSearchBarInline()" style="background: transparent; border: none;">
   <i id="searchToggleIcon" class="fa-solid fa-magnifying-glass" style="color: white; font-size: 24px; padding: 10px;"></i>
 </button>
@@ -284,7 +298,7 @@
   <a href="pages/desarrollando.html" onclick="closeMenu()" class="close-opt">INFO</a>
   <a href="pages/desarrollando.html" onclick="closeMenu()" class="close-opt">TODOS LOS PRODUCTOS</a>
   <div class="side-menu-down">
-    <a class="sideLogin">Login</a>
+    <a href="pages/login.html" class="sideLogin">Login</a>
   </div>
 </div>
 
@@ -338,8 +352,8 @@
       </div>
 
       <!-- Derecha -->
-            <ul class="wrapper">
-  <li class="icon instagram">
+      <ul class="wrapper">
+  <a href="https://instagram.com/mantiz.xe" class="icon instagram">
     <span class="tooltip">MANTIZ</span>
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -352,11 +366,15 @@
         d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"
       ></path>
     </svg>
-  </li>
+  </a>
 </ul>
     </div>
   </div>
 </footer>
+
+
+
+
 </body>
 
 </html>
