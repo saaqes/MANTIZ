@@ -51,42 +51,46 @@
   <h2 class="producto-title">
   PRODUCTOS
 </h2>
-  
+
+<img class="mark" src="imgs/mark.png" alt="">
   <!-- Contenedor de productos SIN max-w-6xl -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
     
     <!-- Repite para cada producto -->
     <!-- Producto 1 -->
-    <div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
-      <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
-        <a href="pages/producto1.html"><img src="imgs/product1.jpg" alt="Producto 1" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
-        <a href="pages/producto1.html"><img src="imgs/producto1.jpg" alt="Producto 1 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
-      </div>
-      <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
-        Puffer 
-      <div class="relative group w-6 h-6">
-          <div  tabindex="0" class="plusButton">
-  <svg onclick="addToCart('Puffer ', 30000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
-    <g mask="url(#mask0_21_345)">
-      <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
-    </g>
-  </svg>
-</div>
-      </h3>
-      <p class="text-cente">Precio: $30.000</p>
+<div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
+  <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
+    <a href="pages/producto1.html">
+      <img src="imgs/product1.jpg" alt="Producto 1" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0">
+    </a>
+    <a href="pages/producto1.html">
+      <img src="imgs/producto1.jpg" alt="Producto 1 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100">
+    </a>
+  </div>
+  <div class="productostitle flex justify-between items-center mt-4">
+    <h3 class="titleproduct text-center w-full">Puffer</h3>
+    <div tabindex="0" class="plusButton ml-2">
+      <svg onclick="addToCart('Puffer', 30000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+        <g mask="url(#mask0_21_345)">
+          <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
+        </g>
+      </svg>
     </div>
+  </div>
+
+  <p class="text-cente mt-2">Precio: $30.000</p>
+</div>
     <!-- Producto 2 -->
     <div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
       <div class="relative w-full h-30 flex items-center justify-center overflow-hidden">
         <a href="pages/producto2.html"><img src="imgs/product2.jpg" alt="Producto 2" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
         <a href="pages/producto2.html"><img src="imgs/producto2.jpg" alt="Producto 2 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
       </div>
-      <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
-        True Religion
-      <div class="relative group w-6 h-6">
-          
-<div tabindex="0" class="plusButton">
-  <svg onclick="addToCart('True Religion ', 25000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+
+        <div class="productostitle flex justify-between items-center mt-4">
+          <h3 class="titleproduct text-center w-full">True Religion</h3>
+          <div tabindex="0" class="plusButton ml-2">
+            <svg onclick="addToCart('True Religion', 25000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
     <g mask="url(#mask0_21_345)">
       <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
     </g>
@@ -102,19 +106,18 @@
         <a href="pages/producto3.html"><img src="./imgs/product3.jpg" alt="Producto 3" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
         <a href="pages/producto3.html"><img src="./imgs/producto3.jpg" alt="Producto 3 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
       </div>
-      <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
-        Miss me Oxford
-      <div class="relative group w-6 h-6">    
-<div tabindex="0" class="plusButton">
-  <svg  onclick="addToCart('Miss me Oxford', 30000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
-    <g mask="url(#mask0_21_345)">
-      <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
-    </g>
-  </svg>
-</div>
+
+      <div class="productostitle flex justify-between items-center mt-4">
+        <h3 class="titleproduct text-center w-full">Miss me Oxford</h3>
+        <div tabindex="0" class="plusButton ml-2">
+          <svg onclick="addToCart('Miss me Oxford', 30000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+            <g mask="url(#mask0_21_345)">
+              <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
+            </g>
+          </svg>
+        </div>
       </div>
-      </h3>
-      <p class="text-cente">Precio: $30.000</p>
+      <p class="text-center">Precio: $30.000</p>
     </div>
     <!-- Producto 4 -->
     <div class="relative group bg-black text-white p-4 rounded-lg shadow-md overflow-hidden w-full">
@@ -122,58 +125,112 @@
         <a href="pages/producto4.html"><img src="./imgs/product4.jpg" alt="Producto 4" class="max-w-full max-h-full object-contain transition-opacity duration-500 group-hover:opacity-0"></a>
         <a href="pages/producto4.html"><img src="./imgs/producto4.jpg" alt="Producto 4 Hover" class="max-w-full max-h-full object-contain absolute top-0 left-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"></a>
       </div>
-      <h3 class="text-xl text-center font-bold mt-4 flex justify-center items-center gap-2">
-        Ranger jort
-      <div class="relative group w-6 h-6">
-<div tabindex="0" class="plusButton">
-  <svg onclick="addToCart('Ranger jort', 40000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
-    <g mask="url(#mask0_21_345)">
-      <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
-    </g>
-  </svg>
-</div>
+
+      <div class="productostitle flex justify-between items-center mt-4">
+        <h3 class="titleproduct text-center w-full">Ranger jort</h3>
+        <div tabindex="0" class="plusButton ml-2">
+          <svg onclick="addToCart('Ranger jort', 40000)" class="plusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+            <g mask="url(#mask0_21_345)">
+              <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
+            </g>
+          </svg>
+        </div>
       </div>
-      </h3>
-      <p class="text-cente">Precio: $40.000</p>
+      <p class="text-center">Precio: $40.000</p>
     </div>
   </div>
 </div>
+       <img class="mark mark-invertida" src="imgs/mark.png" alt="">
 <section class="feed-section">
+
   <div class="feed-header">
     <h2>Nuestro feed</h2>
   </div>
-  <div class="video-carousel-container">
-    <button id="prevVideoBtn" class="nav-btn">&#10094;</button>
-    <div class="video-carousel manual-mode">
-      <div class="video-wrapper active">
-        <video autoplay loop muted playsinline>
-          <source src="./videos/video1.mp4" type="video/mp4" />
-        </video>
-      </div>
-      <div class="video-wrapper">
-        <video autoplay loop muted playsinline>
-          <source src="./videos/video2.mp4" type="video/mp4" />
-        </video>
-      </div>
-      <div class="video-wrapper">
-        <video autoplay loop muted playsinline>
-          <source src="./videos/video3.mp4" type="video/mp4" />
-        </video>
-      </div>
-      <div class="video-wrapper">
-        <video autoplay loop muted playsinline>
-          <source src="./videos/video4.mp4" type="video/mp4" />
-        </video>
-      </div>
+
+  <!-- Mantiz Cube -->
+
+<div class="parent">
+<div class="div1">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <style>
+    .div1 {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    #mantizCubeCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <canvas id="mantizCubeCanvas"></canvas>
+  <script>
+    // Escena, cámara y renderizador
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000); // Aspect ratio 1 para cuadrado
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('mantizCubeCanvas'), alpha: true });
+    renderer.setSize(document.querySelector('.div1').clientWidth, document.querySelector('.div1').clientHeight);
+
+    // Cargar textura
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load('imgs/MANTIZ.jpeg'); // Ruta relativa a tu carpeta imgs
+
+    // Material con textura en todas las caras
+    const materials = Array(6).fill(new THREE.MeshBasicMaterial({ map: texture }));
+
+    // Cubo
+    const geometry = new THREE.BoxGeometry(2, 2, 2);
+    const cube = new THREE.Mesh(geometry, materials);
+    scene.add(cube);
+
+    // Cámara
+    camera.position.z = 4;
+
+    // Animación
+    function animate() {
+      requestAnimationFrame(animate);
+      cube.rotation.y += 0.01; // Rotación vertical
+      cube.rotation.x += 0.005; // Ligera rotación horizontal
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Resize al tamaño del div
+    window.addEventListener('resize', () => {
+      const div = document.querySelector('.div1');
+      const width = div.clientWidth;
+      const height = div.clientHeight;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    });
+  </script>
+</div>
+    <div class="div2">
+      <img src="imgs/domo.jpg" alt="Domo">
     </div>
-    <button id="nextVideoBtn" class="nav-btn">&#10095;</button>
-  </div>
+    <div class="div3">3</div>
+    <div class="div4">4</div>
+    <div class="div5">5</div>
+    <div class="div6">6</div>
+    <div class="div10">10</div>
+    <div class="div11">11</div>
+    <div class="div12">12</div>
+    <div class="div13">13</div>
+    <div class="div14">14</div>
+    <div class="div15">15</div>
+</div>
+    
   <div class="feed-header-down"><a href="https://instagram.com/mantiz.xe" target="_blank" class="instagram-link">
       Mira mas en:
       <i class="fab fa-instagram instagram-icon"></i>
       <h3 class="instagram-link-redirect">mantiz.xe</h3>
     </a></div>
 </section>
+<img class="mark2" src="imgs/mark2.png" alt="">
 <script>
   const wrappers = document.querySelectorAll(".video-wrapper");
   const nextBtn = document.getElementById("nextVideoBtn");

@@ -372,6 +372,23 @@
 }
 
 
+.productostitle {
+  position: relative;
+}
+
+.productostitle h3 {
+  margin: 0 auto;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.5rem;
+  font-family: "Neue Haas Unica", sans-serif;
+}
+
+.productostitle .plusButton {
+  position: absolute;
+  right: 0;
+}
+
 
     .icon-btn {
       background: none;
@@ -849,6 +866,18 @@ button {
   border-color:rgb(255, 255, 255);
   outline: none;
 }
+.mark {
+  display: block;
+  margin: 1rem auto;
+}
+.mark2 {
+  display: block;
+  margin: 1rem auto;
+}
+
+.mark-invertida {
+  transform: rotate(180deg);
+}
 
 .producto-title{
   font-size: 2rem;
@@ -857,13 +886,20 @@ button {
   margin-left: 5%;
   margin-right: 5%;
   text-align: center;
-  padding-bottom: 5%;
-  margin-bottom: 5%;
-  border-bottom: 1px solid;
-  border-image-slice: 1;
-  border-bottom-width: 5px;
-  border-image-source: linear-gradient(to left, transparent, #8AD000, transparent);
 }
+
+.producto-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.producto-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
 
 .feed-section {
   background: linear-gradient( #000000,#8AD000, #8AD000,#8AD000, #000000);
@@ -877,19 +913,13 @@ button {
   justify-content: center;
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
-  padding: 0 1rem;
-    border-image-slice: 1;
-    border-top-width: 5px;
-  border-image-source: linear-gradient(to left, transparent, #8AD000, transparent);
-  margin-left: 10%;
-  margin-right: 10%;
-  padding: 40px;
+  padding: 1rem;
 }
 
 .feed-header h2 {
-  font-size: 1.8rem;
+  font-size: 2em;
   font-weight: bold;
-  color: #8AD000;
+  color: #000000;
 }
 
 .feed-header-down {
@@ -901,12 +931,6 @@ button {
   margin-bottom: 1.5rem;
   display: flex;
   justify-content: center;
-      border-image-slice: 1;
-    border-bottom-width: 5px;
-  border-image-source: linear-gradient(to left, transparent, #8AD000, transparent);
-  margin-left: 10%;
-  margin-right: 10%;  
-  padding-bottom: 50px;
 }
 
 .instagram-link {
@@ -1097,7 +1121,7 @@ button {
 
 .plusButton {
   /* Config start */
-  --plus_sideLength: 1.7rem;
+  --plus_sideLength: 2.7rem;
   --plus_topRightTriangleSideLength: 0.9rem;
   /* Config end */
   margin-left: 70px;
@@ -1163,3 +1187,98 @@ button {
   color: gray;
   font-weight: bold;
 }
+
+
+.parent {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+    gap: 7px;
+}
+    
+.div1 {
+    grid-column: span 2 / span 2;
+    grid-row: span 3 / span 3;
+    background-color: #000;
+}
+
+.div1 img{
+    padding: 100px;
+}
+
+.div2 {
+    grid-column: span 2 / span 2;
+    grid-row: span 4 / span 4;
+    grid-column-start: 1;
+    grid-row-start: 4;
+        background-color: #000;
+}
+
+.div3 {
+    grid-column: span 2 / span 2;
+    grid-row: span 3 / span 3;
+    grid-column-start: 1;
+    grid-row-start: 8;
+      background-color: #000;
+}
+
+.div4 {
+    grid-column: span 4 / span 4;
+    grid-row: span 7 / span 7;
+    grid-column-start: 3;
+    grid-row-start: 1;
+    background-color: #000;
+}
+
+.div5 {
+    grid-column: span 2 / span 2;
+    grid-row: span 3 / span 3;
+    grid-column-start: 3;
+    grid-row-start: 8;
+    background-color: #000;
+}
+
+.div6 {
+    grid-column: span 2 / span 2;
+    grid-row: span 3 / span 3;
+    grid-column-start: 5;
+    grid-row-start: 8;
+    background-color: #000;
+}
+
+.div10 {
+    grid-row: span 2 / span 2;
+    grid-row-start: 11;
+    background-color: #000;
+}
+
+.div11 {
+    grid-row: span 2 / span 2;
+    grid-row-start: 11;
+    background-color: #000;
+}
+
+.div12 {
+    grid-row: span 2 / span 2;
+    grid-row-start: 11;
+    background-color: #000;
+}
+
+.div13 {
+    grid-row: span 2 / span 2;
+    grid-row-start: 11;
+    background-color: #000;
+}
+
+.div14 {
+    grid-row: span 2 / span 2;
+    grid-row-start: 11;
+    background-color: #000;
+}
+
+.div15 {
+    grid-row: span 2 / span 2;
+    grid-row-start: 11;
+    background-color: #000;
+}
+        
