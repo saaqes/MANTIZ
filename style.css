@@ -1,23 +1,23 @@
 body{
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
+    background-color: black;
 }
 
 body.menu-open{
     overflow: hidden;
 }
 
-section{
-    background-image: url(assets/images/2.png);
-    background-repeat: no-repeat;
+.cart{
+    position: relative;
+}
+.hero-section{
+    width: 100%;
+    height: 100vh;
     background-size: cover;
     background-position: center;
-    background-attachment: scroll;
-    min-height: 100vh;
-    text-align: center;
-    align-content: center;
-}
-.cart{
+    background-repeat: no-repeat;
+    transition: background-image 0.8s ease-in-out;
     position: relative;
 }
 
@@ -229,6 +229,77 @@ section{
     font-size: 14px;
 }
 /* HERO */
+.hero{
+    width: 100%;
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.8s ease-in-out;
+    position: relative;
+}
+
+/* INDICADORES */
+.hero-indicators{
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    display: flex;
+    gap: 12px;
+}
+
+.indicator{
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid white;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.indicator::after{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: white;
+    transform: scaleY(0);
+    transform-origin: bottom;
+}
+
+.indicator.active::after{
+    animation: progress 3s linear forwards;
+}
+
+@keyframes progress{
+    from{ transform: scaleY(0); }
+    to{ transform: scaleY(1); }
+}
+
+/* FLECHA */
+.scroll-down{
+    display: flex;
+    justify-content: center;
+    margin-top: -40px;
+    position: relative;
+    z-index: 10;
+}
+
+.scroll-down button{
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    cursor: pointer;
+    font-size: 20px;
+    transition: 0.3s ease;
+}
+
+.scroll-down button:hover{
+    transform: translateY(5px);
+}
+
 .hero{
     height: 100%;
     display: flex;
@@ -652,8 +723,55 @@ main{
         transition:0.4s ease;
         z-index:2500;
     }
-
+        }
+    .modal-content{
+    background: white;
+    width: 50%;
+    max-width: 900px;
+    display: flex;
+    gap: 10px;
+    padding: 30px;
+    position: relative;
+    border-radius: 10px;
+    flex-direction: column;
+    align-items: center;
 }
+
+.modal-left img{
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+}
+
+.modal-right{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-close{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.modal-right select{
+    padding: 8px;
+}
+
+.modal-right button{
+    padding: 12px;
+    background: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+
 @media (min-width:352px) and (max-width:480px){
     .menu-toggle{
         display:block;
@@ -671,11 +789,64 @@ main{
     .login-desktop{
         display:none !important;
     }
+    .modal-content{
+    background: white;
+    width: 50%;
+    max-width: 900px;
+    display: flex;
+    gap: 10px;
+    padding: 30px;
+    position: relative;
+    border-radius: 10px;
+    flex-direction: column;
+    align-items: center;
+}
+
+.modal-left img{
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+}
+
+.modal-right{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-close{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.modal-right select{
+    padding: 8px;
+}
+
+.modal-right button{
+    padding: 12px;
+    background: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
 
     .nav-right{
         display:flex;
         gap:20px;
         margin-right:60px;
+        
+    }
+    .nav-right a{
+        font-size: 25px;
+    }
+    .menu-toggle i{
+        font-size: 30px;
     }
     nav{
         display: flex;
@@ -817,6 +988,51 @@ main{
         z-index:3000;
         color: white;
     }
+    .modal-content{
+    background: white;
+    width: 80%;
+    max-width: 900px;
+    display: flex;
+    gap: 30px;
+    padding: 30px;
+    position: relative;
+    border-radius: 10px;
+}
+
+.modal-left img{
+    width: 350px;
+    height: 350px;
+    object-fit: cover;
+}
+
+.modal-right{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-close{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.modal-right select{
+    padding: 8px;
+}
+
+.modal-right button{
+    padding: 12px;
+    background: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
 
     .login-desktop{
         display:none !important;
@@ -829,6 +1045,12 @@ main{
     }
     nav{
         flex-direction: row-reverse;
+    }
+    .nav-right a{
+        font-size: 30px;
+    }
+    .menu-toggle i{
+        font-size: 30px;
     }
 
     .nav-left{
@@ -995,6 +1217,52 @@ main{
         flex-wrap: wrap;
         width: 300px;
     }
+    .modal-content{
+    background: white;
+    width: 80%;
+    max-width: 900px;
+    display: flex;
+    gap: 30px;
+    padding: 30px;
+    position: relative;
+    border-radius: 10px;
+    flex-direction: row;
+}
+
+.modal-left img{
+    width: 350px;
+    height: 350px;
+    object-fit: cover;
+}
+
+.modal-right{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-close{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.modal-right select{
+    padding: 8px;
+}
+
+.modal-right button{
+    padding: 12px;
+    background: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
     .footer-img{
         display:none; /* quitamos la imagen grande */
     }
@@ -1064,14 +1332,112 @@ main{
     .precio{
         font-size: 14px;
     }
+    .nav-right a{
+        font-size: 20px;
+    }
 }
 @media (min-width: 921px) and (max-width:1279px){
+    .modal-content{
+    background: white;
+    width: 80%;
+    max-width: 900px;
+    display: flex;
+    gap: 30px;
+    padding: 30px;
+    position: relative;
+    border-radius: 10px;
+    flex-direction: row;
+}
+
+.modal-left img{
+    width: 350px;
+    height: 350px;
+    object-fit: cover;
+}
+
+.modal-right{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-close{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+.nav-right a{
+        font-size: 15px;
+    }
+
+
+.modal-right select{
+    padding: 8px;
+}
+
+.modal-right button{
+    padding: 12px;
+    background: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
 
 }
-@media (max-width: 1280px){
+@media (min-width: 1280px){
     .nav-left{
         display: flex;
         flex-wrap: wrap;
         max-width: 500px;
     }
+    .modal-content{
+    background: white;
+    width: 80%;
+    max-width: 900px;
+    display: flex;
+    gap: 30px;
+    padding: 30px;
+    position: relative;
+    border-radius: 10px;
+    flex-direction: row;
+}
+
+.modal-left img{
+    width: 350px;
+    height: 350px;
+    object-fit: cover;
+}
+
+.modal-right{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-close{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.modal-right select{
+    padding: 8px;
+}
+
+.modal-right button{
+    padding: 12px;
+    background: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
 }

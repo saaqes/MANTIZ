@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon-preview" rel="shortcut icon" href="https://cdn.discordapp.com/attachments/1469420301992464688/1470545926895702102/547767057_17893234458317894_4598949112226174763_n.png?ex=6998365e&is=6996e4de&hm=8e19e34cfdf5d798cf6f550fd5de446e03b4a56f2737c7a22e21ea7b8ed62867" type="image/x-icon">
     <script src="https://kit.fontawesome.com/6674bb917f.js" crossorigin="anonymous"></script>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
 
-    <section>
+    <section class="hero-section">
     
     <nav class="navbar">
 
@@ -70,9 +71,21 @@
         <h1>Demo</h1>
         <button>Más</button>
     </div>
+        <!-- INDICADORES -->
+    <div class="hero-indicators">
+        <span class="indicator active" data-index="0"></span>
+        <span class="indicator" data-index="1"></span>
+        <span class="indicator" data-index="2"></span>
+    </div>
 
 </section>
-    <aside>
+<!-- BOTÓN FLECHA -->
+<div class="scroll-down">
+    <button id="scrollProducts">
+        <i class="fa-solid fa-chevron-down"></i>
+    </button>
+</div>
+    <aside id="productos">
         <div class="head">
             <h1 class="titulo-productos">PRODUCTOS</h1>
             <img src="/assets/images/productfoot.png" alt="">
@@ -270,143 +283,146 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-    const modelViewer = document.getElementById("modelViewer");
-const viewerBox = document.getElementById("viewerBox");
-
-let defaultOrbit = null;
-
-modelViewer.addEventListener("load", () => {
-    defaultOrbit = modelViewer.getCameraOrbit();
-});
-
-modelViewer.addEventListener("camera-change", () => {
-
-    if(!defaultOrbit) return;
-
-    const currentOrbit = modelViewer.getCameraOrbit();
-    const zoomDifference = Math.abs(currentOrbit.radius - defaultOrbit.radius);
-
-    if(zoomDifference > 0.2){
-        viewerBox.classList.add("viewer-hidden");
-    } else {
-        viewerBox.classList.remove("viewer-hidden");
-    }
-
-});
-
-
 /* =========================
-   VARIABLES
+   HERO BACKGROUND SLIDER
 ========================== */
 
-const navbar = document.querySelector(".navbar");
-const toggle = document.getElementById("menuToggle");
-const nav = document.getElementById("navLeft");
-const icon = toggle.querySelector("i");
+const heroSection = document.querySelector(".hero-section");
+const indicators = document.querySelectorAll(".indicator");
 
-const searchBtn = document.querySelector(".search");
-const searchBar = document.getElementById("searchBar");
-const searchOverlay = document.getElementById("searchOverlay");
-const searchInput = document.getElementById("searchInput");
-
-const cartBtn = document.querySelector(".cart");
-const cartPanel = document.getElementById("cartPanel");
-const cartClose = document.getElementById("cartClose");
-
-const modal = document.getElementById("productModal");
-const modalClose = document.getElementById("modalClose");
-const modalImage = document.getElementById("modalImage");
-const modalName = document.getElementById("modalName");
-const modalDescription = document.getElementById("modalDescription");
-const modalSize = document.getElementById("modalSize");
-const addToCartBtn = document.getElementById("addToCartBtn");
-
-let selectedProduct = null;
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-const cartCount = document.getElementById("cartCount");
-
-function updateCartCount(){
-    let totalItems = 0;
-    cart.forEach(item => {
-        totalItems += item.qty;
-    });
-    cartCount.innerText = totalItems;
-}
-
-
-const products = [
-    {id:1,name:"Puffer",category:"sacos",price:30000,img:"assets/images/product1.jpg",description:"Puffer premium edición limitada."},
-    {id:2,name:"True Religion",category:"camisas",price:25000,img:"assets/images/product2.jpg",description:"Camisa urbana estilo Y2K."},
-    {id:3,name:"Miss me Oxford",category:"camisas",price:30000,img:"assets/images/product3.jpg",description:"Camisa clásica oversize."},
-    {id:4,name:"Ranger Jort",category:"pantalones",price:40000,img:"assets/images/product4.jpg",description:"Pantalón estilo cargo urbano."}
+const images = [
+    "assets/images/1.png",
+    "assets/images/2.png",
+    "assets/images/3.png"
 ];
 
-/* =========================
-   NAVBAR HIDE
-========================== */
+let currentSlide = 0;
 
-let lastScroll = 0;
-window.addEventListener("scroll", () => {
-    const currentScroll = window.pageYOffset;
-    navbar.classList.toggle("hide", currentScroll > lastScroll);
-    lastScroll = currentScroll;
+function changeSlide(index){
+    heroSection.style.backgroundImage = `url('${images[index]}')`;
+
+    indicators.forEach(ind => ind.classList.remove("active"));
+    indicators[index].classList.add("active");
+
+    currentSlide = index;
+}
+
+// Imagen inicial
+changeSlide(0);
+
+// Auto cambio cada 3 segundos
+setInterval(() => {
+    let next = currentSlide + 1;
+    if(next >= images.length) next = 0;
+    changeSlide(next);
+}, 3000);
+
+// Click manual
+indicators.forEach(ind => {
+    ind.addEventListener("click", () => {
+        changeSlide(parseInt(ind.dataset.index));
+    });
 });
 
-/* =========================
-   MENU MOBILE
-========================== */
 
-toggle.addEventListener("click", function(){
-    const active = nav.classList.toggle("active");
-    document.body.classList.toggle("menu-open", active);
-    icon.classList.toggle("fa-bars");
-    icon.classList.toggle("fa-xmark");
+// scroll productos
+document.getElementById("scrollProducts").addEventListener("click", () => {
+    document.getElementById("productos").scrollIntoView({
+        behavior: "smooth"
+    });
 });
-
-/* =========================
-   SEARCH
-========================== */
-
-searchBtn.addEventListener("click", (e)=>{
-    e.preventDefault();
-    searchBar.classList.toggle("active");
-    searchOverlay.classList.toggle("active");
-});
-
-searchOverlay.addEventListener("click", ()=>{
-    searchBar.classList.remove("active");
-    searchOverlay.classList.remove("active");
-});
-
-searchInput.addEventListener("keypress", function(e){
-    if(e.key === "Enter"){
-        const value = this.value.toLowerCase();
-        const result = products.filter(p => p.category.includes(value));
-        localStorage.setItem("searchResults", JSON.stringify(result));
-        window.location.href = "producto.html";
+    const modelViewer = document.getElementById("modelViewer");
+    const viewerBox = document.getElementById("viewerBox");
+    let defaultOrbit = null;
+    modelViewer.addEventListener("load", () => {
+        defaultOrbit = modelViewer.getCameraOrbit();
+    });
+    modelViewer.addEventListener("camera-change", () => {
+        if(!defaultOrbit) return;
+        const currentOrbit = modelViewer.getCameraOrbit();
+        const zoomDifference = Math.abs(currentOrbit.radius - defaultOrbit.radius);
+        if(zoomDifference > 0.2){
+            viewerBox.classList.add("viewer-hidden");
+        } else {
+            viewerBox.classList.remove("viewer-hidden");
+        }
+    });
+    const navbar = document.querySelector(".navbar");
+    const toggle = document.getElementById("menuToggle");
+    const nav = document.getElementById("navLeft");
+    const icon = toggle.querySelector("i");
+    const searchBtn = document.querySelector(".search");
+    const searchBar = document.getElementById("searchBar");
+    const searchOverlay = document.getElementById("searchOverlay");
+    const searchInput = document.getElementById("searchInput");
+    const cartBtn = document.querySelector(".cart");
+    const cartPanel = document.getElementById("cartPanel");
+    const cartClose = document.getElementById("cartClose");
+    const modal = document.getElementById("productModal");
+    const modalClose = document.getElementById("modalClose");
+    const modalImage = document.getElementById("modalImage");
+    const modalName = document.getElementById("modalName");
+    const modalDescription = document.getElementById("modalDescription");
+    const modalSize = document.getElementById("modalSize");
+    const addToCartBtn = document.getElementById("addToCartBtn");
+    let selectedProduct = null;
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const cartCount = document.getElementById("cartCount");
+    function updateCartCount(){
+        let totalItems = 0;
+        cart.forEach(item => {
+            totalItems += item.qty;
+        });
+        cartCount.innerText = totalItems;
     }
-});
-
-/* =========================
-   CART PANEL
-========================== */
-
-cartBtn.addEventListener("click",(e)=>{
-    e.preventDefault();
-    cartPanel.classList.add("active");
-    renderCart();
-});
-
-cartClose.addEventListener("click",()=>{
-    cartPanel.classList.remove("active");
-});
-
+    const products = [
+        {id:1,name:"Puffer",category:"sacos",price:30000,img:"assets/images/product1.jpg",description:"Puffer premium edición limitada."},
+        {id:2,name:"True Religion",category:"camisas",price:25000,img:"assets/images/product2.jpg",description:"Camisa urbana estilo Y2K."},
+        {id:3,name:"Miss me Oxford",category:"camisas",price:30000,img:"assets/images/product3.jpg",description:"Camisa clásica oversize."},
+        {id:4,name:"Ranger Jort",category:"pantalones",price:40000,img:"assets/images/product4.jpg",description:"Pantalón estilo cargo urbano."}
+    ];
+    let lastScroll = 0;
+    window.addEventListener("scroll", () => {
+        const currentScroll = window.pageYOffset;
+        navbar.classList.toggle("hide", currentScroll > lastScroll);
+        lastScroll = currentScroll;
+    });
+    toggle.addEventListener("click", function(){
+        const active = nav.classList.toggle("active");
+        document.body.classList.toggle("menu-open", active);
+        icon.classList.toggle("fa-bars");
+        icon.classList.toggle("fa-xmark");
+    });
+    searchBtn.addEventListener("click", (e)=>{
+        e.preventDefault();
+        searchBar.classList.toggle("active");
+        searchOverlay.classList.toggle("active");
+    });
+    searchOverlay.addEventListener("click", ()=>{
+        searchBar.classList.remove("active");
+        searchOverlay.classList.remove("active");
+    });
+    searchInput.addEventListener("keypress", function(e){
+        if(e.key === "Enter"){
+            const value = this.value.toLowerCase();
+            const result = products.filter(p => p.category.includes(value));
+            localStorage.setItem("searchResults", JSON.stringify(result));
+            window.location.href = "producto.html";
+        }
+    });
+    cartBtn.addEventListener("click",(e)=>{
+        e.preventDefault();
+        cartPanel.classList.add("active");
+        renderCart();
+    });
+    cartClose.addEventListener("click",()=>{
+        cartPanel.classList.remove("active");
+    });
 function renderCart(){
     const container = document.getElementById("cartItems");
     const totalElement = document.getElementById("cartTotal");
     container.innerHTML="";
     let total=0;
-
     cart.forEach((item,index)=>{
         total+=item.price*item.qty;
         container.innerHTML+=`
@@ -420,67 +436,46 @@ function renderCart(){
             <button onclick="removeItem(${index})">X</button>
         </div>`;
     });
-
     totalElement.innerText=total;
 }
-
-window.increase=function(i){cart[i].qty++;saveCart();}
-window.decrease=function(i){if(cart[i].qty>1){cart[i].qty--;saveCart();}}
-window.removeItem=function(i){cart.splice(i,1);saveCart();}
-
-function saveCart(){
-    localStorage.setItem("cart",JSON.stringify(cart));
-    renderCart();
+    window.increase=function(i){cart[i].qty++;saveCart();}
+    window.decrease=function(i){if(cart[i].qty>1){cart[i].qty--;saveCart();}}
+    window.removeItem=function(i){cart.splice(i,1);saveCart();}
+    function saveCart(){
+        localStorage.setItem("cart",JSON.stringify(cart));
+        renderCart();
+        updateCartCount();
+    }
+    document.querySelectorAll(".btn-plus").forEach((btn,index)=>{
+        btn.addEventListener("click",()=>{
+            selectedProduct=products[index];
+            modalImage.src=selectedProduct.img;
+            modalName.innerText=selectedProduct.name;
+            modalDescription.innerText=selectedProduct.description;
+            modal.classList.add("active");
+            document.body.style.overflow="hidden";
+        });
+    });
+    modalClose.addEventListener("click",closeModal);
+    modal.addEventListener("click",(e)=>{if(e.target===modal)closeModal();});
+    function closeModal(){
+        modal.classList.remove("active");
+        document.body.style.overflow="auto";
+    }
+    addToCartBtn.addEventListener("click",()=>{
+        if(!selectedProduct) return;
+        cart.push({
+            ...selectedProduct,
+            size: modalSize.value,
+            qty: 1
+        });
+        saveCart();
+        closeModal();
+        navbar.classList.remove("hide");
+    });
     updateCartCount();
-}
 
-
-/* =========================
-   MODAL PRODUCTO "+"
-========================== */
-
-document.querySelectorAll(".btn-plus").forEach((btn,index)=>{
-    btn.addEventListener("click",()=>{
-        selectedProduct=products[index];
-        modalImage.src=selectedProduct.img;
-        modalName.innerText=selectedProduct.name;
-        modalDescription.innerText=selectedProduct.description;
-        modal.classList.add("active");
-        document.body.style.overflow="hidden";
     });
-});
-
-modalClose.addEventListener("click",closeModal);
-modal.addEventListener("click",(e)=>{if(e.target===modal)closeModal();});
-
-function closeModal(){
-    modal.classList.remove("active");
-    document.body.style.overflow="auto";
-}
-
-addToCartBtn.addEventListener("click",()=>{
-
-    if(!selectedProduct) return;
-
-    cart.push({
-        ...selectedProduct,
-        size: modalSize.value,
-        qty: 1
-    });
-
-    saveCart();
-    closeModal();
-
-    // 🔥 Mostrar navbar
-    navbar.classList.remove("hide");
-});
-
-updateCartCount();
-
-});
 </script>
-
-
-
 </body>
 </html>
