@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/6674bb917f.js" crossorigin="anonymous"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head>
+<body>
+
+    <section>
+    
+    <nav class="navbar">
+
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <div class="nav-left" id="navLeft">
+        <a href="#">FAMILIA</a>
+        <a href="#">MAS VENDIDOS</a>
+        <a href="#">CONTACTO</a>
+        <a href="#">INFO</a>
+        <a href="#">TODOS LOS PRODUCTOS</a>
+
+        <!-- LOGIN SOLO PARA MENU MOBILE -->
+        <a href="#" class="login-mobile">
+            <i class="fa-regular fa-user"></i> LOGIN
+        </a>
+    </div>
+
+    <div class="nav-center">
+        MANTIZ
+    </div>
+
+    <div class="nav-right">
+        <a href="#" class="login-desktop">
+            <i class="fa-regular fa-user"></i>
+        </a>
+
+        <a href="#" class="search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </a>
+
+        <a href="#" class="cart">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="cart-count" id="cartCount">0</span>
+        </a>
+
+    </div>
+
+</nav>
+    <div class="search-bar" id="searchBar">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Buscar camisas, sacos, pantalones...">
+            <button id="searchBtn">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </div>
+    </div>
+    <div class="search-overlay" id="searchOverlay"></div>
+
+
+
+
+
+    <div class="hero">
+        <h1>Demo</h1>
+        <button>Más</button>
+    </div>
+
+</section>
+    <aside>
+        <div class="head">
+            <h1 class="titulo-productos">PRODUCTOS</h1>
+            <img src="/assets/images/productfoot.png" alt="">
+        </div>
+        <div class="productos">
+            <!-- Card 1 -->
+        <div class="card">
+            <div class="img-container">
+                <img src="/assets/images/product1.jpg">
+                <div class="btn-plus"></div>
+            </div>
+            <div class="info">
+                <div class="nombre">Puffer</div>
+                <div class="precio">Precio: $30.000</div>
+            </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="card">
+            <div class="img-container">
+                <img src="/assets/images/product2.jpg">
+                <div class="btn-plus"></div>
+            </div>
+            <div class="info">
+                <div class="nombre">True Religion</div>
+                <div class="precio">Precio: $25.000</div>
+            </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card">
+            <div class="img-container">
+                <img src="/assets/images/product3.jpg">
+                <div class="btn-plus"></div>
+            </div>
+            <div class="info">
+                <div class="nombre">Miss me Oxford</div>
+                <div class="precio">Precio: $30.000</div>
+            </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="card">
+            <div class="img-container">
+                <img src="/assets/images/product4.jpg">
+                <div class="btn-plus"></div>
+            </div>
+            <div class="info">
+                <div class="nombre">Ranger jort</div>
+                <div class="precio">Precio: $40.000</div>
+            </div>
+        </div>
+        </div>
+        <div class="foot">
+            <button class="btn-mas">mas</button>
+            <img src="/assets/images/productfoot.png" alt="">
+        </div>
+    </aside>
+    <article>
+<div class="contenedor">
+
+    <div class="titulo">
+        LO MAS VENDIDO
+    </div>
+
+    <div class="cuadro-3d" id="viewerBox">
+
+        <!-- OVERLAY -->
+        <div class="viewer-overlay" id="viewerOverlay">
+
+            <div class="viewer-info">
+                <h3 class="viewer-title">Puffer Premium</h3>
+                <p class="viewer-desc">Edición limitada estilo urbano Y2K.</p>
+            </div>
+
+            <div class="viewer-price">
+                <span class="old-price">$60.000</span>
+                <span class="new-price">$30.000</span>
+            </div>
+
+        </div>
+
+        <model-viewer
+            id="modelViewer"
+            src="susan.glb"
+            alt="Modelo 3D"
+            auto-rotate
+            camera-controls
+            shadow-intensity="1"
+            exposure="1"
+            environment-image="neutral">
+        </model-viewer>
+
+    </div>
+
+    <!-- BOTONES FUERA DEL CUADRO -->
+    <button class="btn-comprar">COMPRAR</button>
+    <button class="btn-vermas">VER MÁS</button>
+
+</div>
+
+
+    
+    </article>
+    <main>
+    </main>
+    <footer class="footer">
+
+    <!-- suscripción -->
+    <div class="footer-top">
+        <input type="email" placeholder="@ejemplo.com" class="input-email">
+        <button class="btn-suscribir">suscribirse</button>
+    </div>
+
+    <!-- contenido -->
+    <div class="footer-content">
+
+        <!-- izquierda -->
+        <div class="footer-left">
+            <div class="copyright">
+                © 2026 MANTIZ. Todos<br>
+                los derechos reservados.
+            </div>
+        </div>
+
+        <!-- servicios -->
+        <div class="footer-col">
+            <h3>Servicios</h3>
+            <a href="#">Website Design</a>
+            <a href="#">Mobile App Design</a>
+            <a href="#">SaaS/Dashboard</a>
+            <a href="#">Consultant</a>
+        </div>
+
+        <!-- mira mas -->
+        <div class="footer-col">
+            <h3>Mira mas en</h3>
+            <a href="#">All projects</a>
+            <a href="#">Newsletter</a>
+            <a href="#">Contact</a>
+        </div>
+
+        <!-- redes -->
+        <div class="footer-col">
+            <h3>Síguenos</h3>
+            <div class="instagram">
+                <img src="assets/images/instagram.png">
+            </div>
+        </div>
+
+    </div>
+    <img src="assets/images/person.png" class="footer-img">
+</footer>
+<div class="cart-panel" id="cartPanel">
+
+    <div class="cart-header">
+        <h2>Carrito</h2>
+        <button class="cart-close" id="cartClose">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div id="cartItems"></div>
+    <div class="cart-total">
+        Total: $<span id="cartTotal">0</span>
+    </div>
+</div>
+<div class="product-modal" id="productModal">
+    <div class="modal-content">
+
+        <button class="modal-close" id="modalClose">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div class="modal-left">
+            <img id="modalImage" src="" alt="">
+        </div>
+
+        <div class="modal-right">
+            <h2 id="modalName"></h2>
+            <p id="modalDescription"></p>
+
+            <label>Talla:</label>
+            <select id="modalSize">
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+            </select>
+
+            <button id="addToCartBtn">Añadir al carrito</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+    const modelViewer = document.getElementById("modelViewer");
+const viewerBox = document.getElementById("viewerBox");
+
+let defaultOrbit = null;
+
+modelViewer.addEventListener("load", () => {
+    defaultOrbit = modelViewer.getCameraOrbit();
+});
+
+modelViewer.addEventListener("camera-change", () => {
+
+    if(!defaultOrbit) return;
+
+    const currentOrbit = modelViewer.getCameraOrbit();
+    const zoomDifference = Math.abs(currentOrbit.radius - defaultOrbit.radius);
+
+    if(zoomDifference > 0.2){
+        viewerBox.classList.add("viewer-hidden");
+    } else {
+        viewerBox.classList.remove("viewer-hidden");
+    }
+
+});
+
+
+/* =========================
+   VARIABLES
+========================== */
+
+const navbar = document.querySelector(".navbar");
+const toggle = document.getElementById("menuToggle");
+const nav = document.getElementById("navLeft");
+const icon = toggle.querySelector("i");
+
+const searchBtn = document.querySelector(".search");
+const searchBar = document.getElementById("searchBar");
+const searchOverlay = document.getElementById("searchOverlay");
+const searchInput = document.getElementById("searchInput");
+
+const cartBtn = document.querySelector(".cart");
+const cartPanel = document.getElementById("cartPanel");
+const cartClose = document.getElementById("cartClose");
+
+const modal = document.getElementById("productModal");
+const modalClose = document.getElementById("modalClose");
+const modalImage = document.getElementById("modalImage");
+const modalName = document.getElementById("modalName");
+const modalDescription = document.getElementById("modalDescription");
+const modalSize = document.getElementById("modalSize");
+const addToCartBtn = document.getElementById("addToCartBtn");
+
+let selectedProduct = null;
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+const cartCount = document.getElementById("cartCount");
+
+function updateCartCount(){
+    let totalItems = 0;
+    cart.forEach(item => {
+        totalItems += item.qty;
+    });
+    cartCount.innerText = totalItems;
+}
+
+
+const products = [
+    {id:1,name:"Puffer",category:"sacos",price:30000,img:"assets/images/product1.jpg",description:"Puffer premium edición limitada."},
+    {id:2,name:"True Religion",category:"camisas",price:25000,img:"assets/images/product2.jpg",description:"Camisa urbana estilo Y2K."},
+    {id:3,name:"Miss me Oxford",category:"camisas",price:30000,img:"assets/images/product3.jpg",description:"Camisa clásica oversize."},
+    {id:4,name:"Ranger Jort",category:"pantalones",price:40000,img:"assets/images/product4.jpg",description:"Pantalón estilo cargo urbano."}
+];
+
+/* =========================
+   NAVBAR HIDE
+========================== */
+
+let lastScroll = 0;
+window.addEventListener("scroll", () => {
+    const currentScroll = window.pageYOffset;
+    navbar.classList.toggle("hide", currentScroll > lastScroll);
+    lastScroll = currentScroll;
+});
+
+/* =========================
+   MENU MOBILE
+========================== */
+
+toggle.addEventListener("click", function(){
+    const active = nav.classList.toggle("active");
+    document.body.classList.toggle("menu-open", active);
+    icon.classList.toggle("fa-bars");
+    icon.classList.toggle("fa-xmark");
+});
+
+/* =========================
+   SEARCH
+========================== */
+
+searchBtn.addEventListener("click", (e)=>{
+    e.preventDefault();
+    searchBar.classList.toggle("active");
+    searchOverlay.classList.toggle("active");
+});
+
+searchOverlay.addEventListener("click", ()=>{
+    searchBar.classList.remove("active");
+    searchOverlay.classList.remove("active");
+});
+
+searchInput.addEventListener("keypress", function(e){
+    if(e.key === "Enter"){
+        const value = this.value.toLowerCase();
+        const result = products.filter(p => p.category.includes(value));
+        localStorage.setItem("searchResults", JSON.stringify(result));
+        window.location.href = "producto.html";
+    }
+});
+
+/* =========================
+   CART PANEL
+========================== */
+
+cartBtn.addEventListener("click",(e)=>{
+    e.preventDefault();
+    cartPanel.classList.add("active");
+    renderCart();
+});
+
+cartClose.addEventListener("click",()=>{
+    cartPanel.classList.remove("active");
+});
+
+function renderCart(){
+    const container = document.getElementById("cartItems");
+    const totalElement = document.getElementById("cartTotal");
+    container.innerHTML="";
+    let total=0;
+
+    cart.forEach((item,index)=>{
+        total+=item.price*item.qty;
+        container.innerHTML+=`
+        <div style="margin-bottom:15px;border-bottom:1px solid #ccc;padding-bottom:10px;">
+            <img src="${item.img}" width="60">
+            <p>${item.name} (${item.size})</p>
+            <p>$${item.price}</p>
+            <button onclick="decrease(${index})">-</button>
+            ${item.qty}
+            <button onclick="increase(${index})">+</button>
+            <button onclick="removeItem(${index})">X</button>
+        </div>`;
+    });
+
+    totalElement.innerText=total;
+}
+
+window.increase=function(i){cart[i].qty++;saveCart();}
+window.decrease=function(i){if(cart[i].qty>1){cart[i].qty--;saveCart();}}
+window.removeItem=function(i){cart.splice(i,1);saveCart();}
+
+function saveCart(){
+    localStorage.setItem("cart",JSON.stringify(cart));
+    renderCart();
+    updateCartCount();
+}
+
+
+/* =========================
+   MODAL PRODUCTO "+"
+========================== */
+
+document.querySelectorAll(".btn-plus").forEach((btn,index)=>{
+    btn.addEventListener("click",()=>{
+        selectedProduct=products[index];
+        modalImage.src=selectedProduct.img;
+        modalName.innerText=selectedProduct.name;
+        modalDescription.innerText=selectedProduct.description;
+        modal.classList.add("active");
+        document.body.style.overflow="hidden";
+    });
+});
+
+modalClose.addEventListener("click",closeModal);
+modal.addEventListener("click",(e)=>{if(e.target===modal)closeModal();});
+
+function closeModal(){
+    modal.classList.remove("active");
+    document.body.style.overflow="auto";
+}
+
+addToCartBtn.addEventListener("click",()=>{
+
+    if(!selectedProduct) return;
+
+    cart.push({
+        ...selectedProduct,
+        size: modalSize.value,
+        qty: 1
+    });
+
+    saveCart();
+    closeModal();
+
+    // 🔥 Mostrar navbar
+    navbar.classList.remove("hide");
+});
+
+updateCartCount();
+
+});
+</script>
+
+
+
+</body>
+</html>
