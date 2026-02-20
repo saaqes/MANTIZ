@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MANTIZ — Producto</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink: #c751e8;
+  --white: #ffffff;
+  --black: #111;
+  --gray: #f4f4f4;
+  --border: #e0e0e0;
+  --muted: #888;
+  --dark: #1a1a1a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#fff; color:var(--dark); font-family:'DM Sans',sans-serif; font-size:14px; }
+
+/* ── NAV ── */
+nav {
+  background:#fff; border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:100; padding:0 24px;
+}
+.nav-top {
+  display:flex; align-items:center; justify-content:space-between; padding:10px 0;
+}
+.nav-links { display:flex; gap:20px; }
+.nav-links a, .nav-bottom a {
+  color:var(--dark); text-decoration:none; font-size:12px;
+  font-weight:500; letter-spacing:.05em; text-transform:uppercase; transition:color .2s;
+}
+.nav-links a:hover, .nav-bottom a:hover { color:var(--pink); }
+.nav-logo {
+  font-family:'Bebas Neue',sans-serif; font-size:32px;
+  letter-spacing:.2em; color:var(--pink);
+  position:absolute; left:50%; transform:translateX(-50%);
+  text-decoration: none;
+}
+.nav-icons { display:flex; gap:16px; align-items:center; }
+.nav-icons button {
+  background:none; border:none; color:var(--dark);
+  cursor:pointer; font-size:18px; position:relative; transition:color .2s;
+}
+.nav-icons button:hover { color:var(--pink); }
+.cart-badge {
+  position:absolute; top:-6px; right:-6px; background:var(--pink); color:#fff;
+  font-size:9px; font-weight:700; width:16px; height:16px; border-radius:50%;
+  display:none; align-items:center; justify-content:center;
+}
+.nav-bottom { display:flex; gap:16px; padding:8px 0; border-top:1px solid #eee; }
+.hamburger { display:none; flex-direction:column; gap:5px; background:none; border:none; cursor:pointer; padding:4px; }
+.hamburger span { display:block; width:22px; height:2px; background:var(--dark); }
+.mobile-menu { display:none; background:#fff; border-top:1px solid var(--border); padding:12px 24px; flex-direction:column; gap:4px; }
+.mobile-menu.open { display:flex; }
+.mobile-menu a { color:var(--dark); text-decoration:none; font-size:13px; font-weight:500; text-transform:uppercase; padding:8px 0; border-bottom:1px solid #f0f0f0; }
+
+/* ── BREADCRUMB ── */
+.breadcrumb { padding:12px 32px; font-size:12px; color:var(--muted); }
+.breadcrumb a { color:var(--muted); text-decoration:none; }
+.breadcrumb a:hover { color:var(--pink); }
+.breadcrumb span { margin:0 6px; }
+
+/* ── PRODUCT SECTION ── */
+.product-section {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:40px; padding:24px 32px 40px; max-width:1100px; margin:0 auto;
+}
+
+/* ── IMAGE GALLERY ── */
+.gallery { display:flex; flex-direction:column; gap:12px; }
+.gallery-main {
+  position:relative; border-radius:12px; overflow:hidden;
+  background:#f0f0f0; aspect-ratio:4/5;
+}
+.gallery-main img {
+  width:100%; height:100%; object-fit:cover;
+  position:absolute; inset:0; transition:opacity .5s ease;
+}
+.gallery-main img.active { opacity:1; z-index:2; }
+.gallery-main img.inactive { opacity:0; z-index:1; }
+.gallery-arrow {
+  position:absolute; top:50%; transform:translateY(-50%);
+  background:rgba(255,255,255,.85); border:none; border-radius:50%;
+  width:38px; height:38px; font-size:18px; cursor:pointer; z-index:3;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s; box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
+.gallery-arrow:hover { background:#fff; }
+.gallery-arrow.prev { left:12px; }
+.gallery-arrow.next { right:12px; }
+.gallery-dots {
+  display:flex; gap:6px; justify-content:center; margin-top:4px;
+}
+.gallery-dot {
+  width:7px; height:7px; border-radius:50%; background:#ddd; cursor:pointer;
+  transition:background .2s;
+}
+.gallery-dot.active { background:var(--pink); }
+.gallery-thumbs { display:flex; gap:8px; }
+.gallery-thumb {
+  width:64px; height:64px; border-radius:8px; overflow:hidden;
+  border:2px solid transparent; cursor:pointer; transition:border-color .2s;
+  flex-shrink:0;
+}
+.gallery-thumb.active { border-color:var(--pink); }
+.gallery-thumb img { width:100%; height:100%; object-fit:cover; }
+.avatar-btn {
+  border:none; border-radius:8px; padding:12px 22px;
+  font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:.1em;
+  cursor:pointer; color:#fff; width:100%;
+  animation:avatarPulse 2s ease-in-out infinite;
+}
+@keyframes avatarPulse {
+  0%   { background:#7b2ff7; box-shadow:0 0 0 0 rgba(199,81,232,.4); }
+  50%  { background:#c751e8; box-shadow:0 0 0 10px rgba(199,81,232,0); }
+  100% { background:#7b2ff7; box-shadow:0 0 0 0 rgba(199,81,232,.4); }
+}
+
+/* ── PRODUCT INFO ── */
+.product-info-col { display:flex; flex-direction:column; gap:16px; padding-top:8px; }
+.product-cat { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.product-title { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:.06em; line-height:1; color:var(--dark); }
+.product-subtitle { font-size:13px; color:var(--muted); }
+.sold-badge {
+  font-size:11px; color:var(--pink); font-weight:600;
+  letter-spacing:.04em; background:#fdf0ff; padding:3px 10px; border-radius:20px; width:fit-content;
+}
+.product-price-big { font-size:26px; font-weight:700; color:var(--dark); }
+
+/* sizes */
+.section-label { font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.size-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.size-chip {
+  border:1.5px solid #ddd; background:#fff; color:var(--dark);
+  font-family:inherit; font-size:12px; font-weight:600;
+  padding:6px 14px; border-radius:6px; cursor:pointer; transition:all .15s;
+}
+.size-chip:hover { border-color:var(--pink); color:var(--pink); }
+.size-chip.selected { background:var(--pink); border-color:var(--pink); color:#fff; }
+.size-chip.disabled { opacity:.4; cursor:not-allowed; text-decoration:line-through; }
+.buy-btn {
+  background:var(--pink); color:#fff; border:none;
+  padding:8px 20px; border-radius:6px; font-family:'Bebas Neue',sans-serif;
+  font-size:16px; letter-spacing:.08em; cursor:pointer; transition:background .2s;
+  white-space:nowrap;
+}
+.buy-btn:hover { background:#a030c0; }
+
+/* measures table */
+.measures-table { width:100%; border-collapse:collapse; font-size:13px; }
+.measures-table th {
+  background:#f8f8f8; padding:7px 12px; font-weight:600;
+  text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+}
+.measures-table td { padding:7px 12px; border-bottom:1px solid #f4f4f4; }
+.measures-table tr:last-child td { border-bottom:none; }
+.measures-table tr.highlight td { background:#fdf0ff; color:var(--pink); font-weight:600; }
+
+.add-cart-btn {
+  width:100%; background:var(--dark); color:#fff; border:none;
+  padding:14px; border-radius:8px; font-family:'Bebas Neue',sans-serif;
+  font-size:18px; letter-spacing:.12em; cursor:pointer; transition:background .2s;
+}
+.add-cart-btn:hover { background:#333; }
+
+/* ── COMMENTS ── */
+.comments-section {
+  background:#fff; border-top:1px solid var(--border); padding:40px 32px;
+  max-width:1100px; margin:0 auto;
+}
+.comments-title {
+  font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:.1em;
+  color:var(--pink); text-align:center; margin-bottom:24px;
+}
+.comment-input-row {
+  display:flex; gap:10px; align-items:center; margin-bottom:16px;
+  background:#f8f8f8; border-radius:10px; padding:10px 14px;
+  border:1px solid var(--border);
+}
+.comment-avatar { font-size:22px; }
+.comment-input {
+  flex:1; background:none; border:none; outline:none;
+  font-family:inherit; font-size:13px; color:var(--dark);
+}
+.comment-submit {
+  background:var(--pink); color:#fff; border:none;
+  padding:6px 14px; border-radius:6px; font-family:'Bebas Neue',sans-serif;
+  font-size:14px; letter-spacing:.06em; cursor:pointer; transition:background .2s;
+}
+.comment-submit:hover { background:#a030c0; }
+.comment-list { display:flex; flex-direction:column; gap:10px; }
+.comment-item {
+  display:flex; align-items:flex-start; gap:12px;
+  background:#f8f8f8; border-radius:10px; padding:12px 14px;
+  border:1px solid var(--border);
+}
+.comment-body { flex:1; }
+.comment-user { font-weight:700; font-size:12px; color:var(--dark); margin-bottom:2px; }
+.comment-text { font-size:13px; color:#444; line-height:1.5; }
+.comment-actions { display:flex; gap:8px; margin-top:6px; align-items:center; }
+.comment-action-btn {
+  background:none; border:1px solid #ddd; border-radius:20px;
+  padding:3px 10px; font-size:11px; cursor:pointer; display:flex;
+  align-items:center; gap:4px; transition:all .15s; font-family:inherit;
+  color:var(--muted);
+}
+.comment-action-btn:hover { border-color:var(--pink); color:var(--pink); }
+.comment-action-btn.liked { background:#fdf0ff; border-color:var(--pink); color:var(--pink); }
+.comment-action-btn.disliked { background:#fff0f5; border-color:#e0305a; color:#e0305a; }
+.comment-delete {
+  background:none; border:none; color:#ccc; cursor:pointer;
+  font-size:16px; padding:0 4px; transition:color .15s; align-self:start;
+}
+.comment-delete:hover { color:#e0305a; }
+
+/* ── RELATED ── */
+.related-section { padding:40px 32px; max-width:1100px; margin:0 auto; }
+.related-title {
+  font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:.15em;
+  color:var(--pink); text-align:center; margin-bottom:24px;
+}
+.related-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.rel-card {
+  border:1.5px solid #d8d8d8; border-radius:10px; overflow:visible;
+  position:relative; background:#fff; cursor:pointer;
+  transition:border-color .2s, transform .2s, box-shadow .2s;
+  display:flex; flex-direction:column;
+}
+.rel-card:hover { border-color:#bbb; transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.09); }
+.rel-img-wrap { position:relative; overflow:hidden; border-radius:10px 10px 0 0; flex-shrink:0; }
+.rel-img {
+  width:100%; aspect-ratio:3/4; object-fit:cover;
+  background:#f0f0f0; display:block; transition:opacity .45s ease;
+}
+.rel-img.rel-hover { position:absolute; inset:0; height:100%; opacity:0; }
+.rel-card:hover .rel-img.rel-hover  { opacity:1; }
+.rel-card:hover .rel-img.rel-main   { opacity:0; }
+.rel-divider { display:flex; justify-content:flex-end; align-items:center; padding:0 12px; height:0; position:relative; z-index:3; }
+.rel-add-btn {
+  transform:translateY(-25%);
+  background:#fff; border:1.5px solid #d8d8d8; color:var(--dark);
+  width:36px; height:36px; border-radius:8px; font-size:22px;
+  cursor:pointer; font-weight:300; display:flex; align-items:center; justify-content:center;
+  transition:all .18s; box-shadow:0 2px 8px rgba(0,0,0,.13);
+}
+.rel-add-btn:hover { background:var(--pink); border-color:var(--pink); color:#fff; }
+.rel-info { padding:4px 12px 14px; }
+.rel-name { font-weight:700; font-size:13px; }
+.rel-price { font-size:12px; color:var(--muted); margin-top:2px; }
+
+/* ── FOOTER ── */
+footer { background:#f8f8f8; border-top:1px solid var(--border); padding:32px 24px 20px; }
+.footer-subscribe { display:flex; justify-content:center; margin-bottom:28px; flex-wrap:wrap; }
+.footer-subscribe input {
+  background:#fff; border:1px solid #ccc; border-right:none;
+  color:var(--dark); padding:10px 14px; font-family:inherit; font-size:13px;
+  outline:none; width:220px; flex:1; max-width:260px;
+}
+.footer-subscribe button {
+  background:var(--pink); border:none; color:#fff; padding:10px 18px;
+  font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:.08em;
+  cursor:pointer; transition:background .2s;
+}
+.footer-subscribe button:hover { background:#a030c0; }
+.footer-cols { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:20px; margin-bottom:20px; }
+.footer-col h4 { font-weight:700; font-size:13px; margin-bottom:10px; }
+.footer-col a { display:block; color:var(--muted); text-decoration:none; font-size:12px; margin-bottom:4px; transition:color .2s; }
+.footer-col a:hover { color:var(--pink); }
+.ig-icon { width:28px; height:28px; background:var(--pink); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; }
+
+/* ── CART PANEL ── */
+.cart-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
+.cart-overlay.open { display:block; }
+.cart-panel {
+  position:fixed; right:0; top:0; height:100%; width:340px;
+  background:#fff; border-left:1px solid var(--border); z-index:201;
+  transform:translateX(100%); transition:transform .3s ease;
+  display:flex; flex-direction:column; box-shadow:-4px 0 24px rgba(0,0,0,.08);
+}
+.cart-overlay.open .cart-panel { transform:translateX(0); }
+.cart-header { padding:20px 20px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.cart-header h2 { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.1em; }
+.close-btn { background:none; border:none; color:var(--dark); font-size:22px; cursor:pointer; }
+.cart-items { flex:1; overflow-y:auto; padding:16px 20px; }
+.cart-empty { color:var(--muted); text-align:center; margin-top:40px; font-size:13px; }
+.cart-item { display:flex; gap:12px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid #f0f0f0; }
+.cart-item-img { width:60px; height:80px; object-fit:cover; background:#f0f0f0; border-radius:6px; }
+.cart-item-info { flex:1; }
+.cart-item-name { font-weight:600; font-size:13px; margin-bottom:2px; }
+.cart-item-sub { font-size:11px; color:var(--muted); }
+.cart-item-price { font-size:13px; margin-top:4px; color:var(--pink); }
+.cart-item-remove { background:none; border:none; color:#ccc; cursor:pointer; font-size:16px; align-self:start; transition:color .15s; }
+.cart-item-remove:hover { color:var(--pink); }
+.cart-footer { padding:16px 20px 24px; border-top:1px solid var(--border); }
+.cart-total { display:flex; justify-content:space-between; font-weight:600; font-size:15px; margin-bottom:14px; }
+.checkout-btn { width:100%; background:var(--pink); color:#fff; border:none; padding:14px; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:.12em; cursor:pointer; transition:background .2s; border-radius:6px; }
+.checkout-btn:hover { background:#a030c0; }
+
+/* ── RESPONSIVE ── */
+@media (max-width:768px) {
+  .product-section { grid-template-columns:1fr; gap:20px; padding:16px; }
+  .related-grid { grid-template-columns:repeat(2,1fr); }
+  .footer-cols { grid-template-columns:1fr 1fr; }
+  .nav-links { display:none; }
+  .nav-bottom { display:none; }
+  .hamburger { display:flex; }
+  .nav-logo { font-size:26px; }
+  .comments-section, .related-section { padding:24px 16px; }
+}
+@media (max-width:480px) {
+  .related-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+  .footer-cols { grid-template-columns:1fr; }
+  .cart-panel { width:100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-top">
+    <div class="nav-links">
+      <a href="index.html">FAMILIA</a>
+      <a href="producto.html">MAS VENDIDOS</a>
+      <a href="#">CONTACTO</a>
+      <a href="#">INFO</a>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('mobileMenu').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="index.html" class="nav-logo">MANTIZ</a>
+    <div class="nav-icons">
+      <button title="Buscar">🔍</button>
+      <button onclick="toggleCart()" title="Carrito" style="position:relative">
+        🛒<span class="cart-badge" id="cartBadge">0</span>
+      </button>
+      <button title="Cuenta">👤</button>
+    </div>
+  </div>
+  <div class="nav-bottom">
+    <a href="producto.html">TODOS LOS PRODUCTOS</a>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="producto.html">TODOS LOS PRODUCTOS</a>
+    <a href="#">CONTACTO</a>
+    <a href="#">INFO</a>
+  </div>
+</nav>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="index.html">Inicio</a>
+  <span>›</span>
+  <a href="producto.html">Productos</a>
+  <span>›</span>
+  <span id="breadName">—</span>
+</div>
+
+<!-- PRODUCT SECTION -->
+<div class="product-section">
+  <!-- GALLERY -->
+  <div class="gallery">
+    <div class="gallery-main" id="galleryMain">
+      <img id="imgSlide0" class="active" src="" alt="">
+      <img id="imgSlide1" class="inactive" src="" alt="">
+      <img id="imgSlide2" class="inactive" src="" alt="">
+      <img id="imgSlide3" class="inactive" src="" alt="">
+      <button class="gallery-arrow prev" onclick="prevSlide()">‹</button>
+      <button class="gallery-arrow next" onclick="nextSlide()">›</button>
+    </div>
+    <div class="gallery-dots" id="galleryDots"></div>
+    <div class="gallery-thumbs" id="galleryThumbs"></div>
+    <button class="avatar-btn" onclick="alert('Función próximamente disponible 🚀')">VER CON AVATAR</button>
+  </div>
+
+  <!-- INFO -->
+  <div class="product-info-col">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="product-cat" id="pCat">—</div>
+        <div class="product-title" id="pTitle">—</div>
+        <div class="product-subtitle" id="pSubtitle">—</div>
+      </div>
+      <div class="sold-badge" id="pSold">—</div>
+    </div>
+
+    <div class="product-price-big" id="pPrice">—</div>
+
+    <!-- SIZES -->
+    <div>
+      <div class="section-label">Talla</div>
+      <div class="size-row" id="sizeRow"></div>
+    </div>
+
+    <!-- MEASURES -->
+    <div>
+      <div class="section-label">Medidas (guía)</div>
+      <table class="measures-table">
+        <thead>
+          <tr><th>Size</th><th>CM</th></tr>
+        </thead>
+        <tbody id="measuresBody"></tbody>
+      </table>
+    </div>
+
+    <!-- ADD TO CART -->
+    <button class="add-cart-btn" onclick="addProductToCart()">AGREGAR AL CARRITO</button>
+  </div>
+</div>
+
+<!-- COMMENTS -->
+<div class="comments-section">
+  <div class="comments-title">Comentarios</div>
+  <div class="comment-input-row">
+    <div class="comment-avatar">👤</div>
+    <input class="comment-input" id="commentInput" placeholder="Agregar un comentario..." onkeydown="if(event.key==='Enter')submitComment()">
+    <button class="comment-submit" onclick="submitComment()">ENVIAR</button>
+  </div>
+  <div class="comment-list" id="commentList"></div>
+</div>
+
+<!-- RELATED -->
+<div class="related-section">
+  <div class="related-title">RELACIONADOS</div>
+  <div class="related-grid" id="relatedGrid"></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-subscribe">
+    <input type="email" placeholder="@ejemplo.com">
+    <button>SUSCRIBIRSE</button>
+  </div>
+  <div class="footer-cols">
+    <div class="footer-col">
+      <div style="font-size:11px;color:var(--muted)">© 2026 MANTIZ. Todos los derechos reservados.</div>
+    </div>
+    <div class="footer-col">
+      <h4>Servicios</h4>
+      <a href="#">Website Design</a><a href="#">Mobile App Design</a>
+      <a href="#">SaaS/Dashboard</a><a href="#">Consultant</a>
+    </div>
+    <div class="footer-col">
+      <h4>Mira mas en</h4>
+      <a href="#">All Projects</a><a href="#">Newsletter</a><a href="#">Contact</a>
+    </div>
+    <div class="footer-col">
+      <h4>Síguenos</h4>
+      <div class="ig-icon">📷</div>
+    </div>
+  </div>
+</footer>
+
+<!-- CART -->
+<div class="cart-overlay" id="cartOverlay" onclick="if(event.target===this)toggleCart()">
+  <div class="cart-panel">
+    <div class="cart-header">
+      <h2>🛒 CARRITO</h2>
+      <button class="close-btn" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems"><div class="cart-empty">Tu carrito está vacío</div></div>
+    <div class="cart-footer">
+      <div class="cart-total"><span>TOTAL</span><span id="cartTotal">$0</span></div>
+      <button class="checkout-btn">FINALIZAR COMPRA</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   PRODUCTS DATA
+═══════════════════════════════════════ */
+const products = [
+  {
+    id:1, name:'Puffer', cat:'Chaqueta', subtitle:'Chaqueta holgada estilo puffer',
+    price:30000, sold:12,
+    sizes:['XS','S','M','L','XL'],
+    availSizes:['XS','S','M','L','XL'],
+    measures:[{s:'XS',cm:'52 cm'},{s:'S',cm:'54 cm'},{s:'M',cm:'56 cm'},{s:'L',cm:'58 cm'},{s:'XL',cm:'60 cm'}],
+    imgs:[
+      'assets/images/product1.jpg',
+      'assets/images/producto1.jpg',
+      'assets/images/producto111.jpg',
+    ],
+    cat_filter:'chaqueta-h', inStock:true, date:1
+  },
+  {
+    id:2, name:'True Religion', cat:'Pantalón', subtitle:'Jean wide leg premium',
+    price:25000, sold:34,
+    sizes:['28','30','32','34','36'],
+    availSizes:['28','30','32','34'],
+    measures:[{s:'28',cm:'68 cm'},{s:'30',cm:'72 cm'},{s:'32',cm:'76 cm'},{s:'34',cm:'80 cm'},{s:'36',cm:'84 cm'}],
+    imgs:[
+      'assets/images/product2.jpg',
+      'assets/images/producto2.jpg',
+      'assets/images/producto22.jpg',
+    ],
+    cat_filter:'pantalon-h', inStock:true, date:2
+  },
+  {
+    id:3, name:'Miss me Oxford', cat:'Pantalón', subtitle:'Jean ajustado con detalles únicos',
+    price:30000, sold:8,
+    sizes:['XS','S','M','L'],
+    availSizes:['S','M','L'],
+    measures:[{s:'XS',cm:'60 cm'},{s:'S',cm:'63 cm'},{s:'M',cm:'66 cm'},{s:'L',cm:'69 cm'}],
+    imgs:[
+      'assets/images/product3.jpg',
+      'assets/images/producto3.jpg',
+      'assets/images/producto333.jpg',
+    ],
+    cat_filter:'pantalon-m', inStock:true, date:3
+  },
+  {
+    id:4, name:'Ranger Jort', cat:'Short', subtitle:'Short de mezclilla estilo vintage',
+    price:40000, sold:5,
+    sizes:['S','M','L','XL'],
+    availSizes:['S','M','L','XL'],
+    measures:[{s:'S',cm:'40 cm'},{s:'M',cm:'42 cm'},{s:'L',cm:'44 cm'},{s:'XL',cm:'46 cm'}],
+    imgs:[
+      'assets/images/product4.jpg',
+      'assets/images/producto4.jpg',
+      'assets/images/producto444.jpg',
+    ],
+    cat_filter:'pantalon-h', inStock:true, date:4
+  },
+  {
+    id:5, name:'Puffer Mujer', cat:'Chaqueta', subtitle:'Chaqueta puffer oversized mujer',
+    price:30000, sold:19,
+    sizes:['XS','S','M','L'],
+    availSizes:['XS','S','M'],
+    measures:[{s:'XS',cm:'50 cm'},{s:'S',cm:'52 cm'},{s:'M',cm:'54 cm'},{s:'L',cm:'56 cm'}],
+    imgs:[
+      'assets/images/product5.jpg',
+      'assets/images/producto5.jpg',
+      'assets/images/producto555.jpg',
+    ],
+    cat_filter:'chaqueta-m', inStock:true, date:5
+  },
+  {
+    id:6, name:'Dent Jeans', cat:'Pantalón', subtitle:'Jean holgado con diseño premium',
+    price:25000, sold:41,
+    sizes:['28','30','32','34'],
+    availSizes:['28','30','32','34'],
+    measures:[{s:'28',cm:'70 cm'},{s:'30',cm:'74 cm'},{s:'32',cm:'78 cm'},{s:'34',cm:'82 cm'}],
+    imgs:[
+      'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&q=80',
+      'https://images.unsplash.com/photo-1542272604-787c3835535d?w=800&q=80',
+      'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&q=80',
+    ],
+    cat_filter:'pantalon-h', inStock:true, date:6
+  },
+  {
+    id:7, name:'Miss me Oxford II', cat:'Pantalón', subtitle:'Edición especial agotada',
+    price:30000, sold:22,
+    sizes:['XS','S','M','L'],
+    availSizes:[],
+    measures:[{s:'XS',cm:'60 cm'},{s:'S',cm:'63 cm'},{s:'M',cm:'66 cm'},{s:'L',cm:'69 cm'}],
+    imgs:[
+      'https://images.unsplash.com/photo-1551854838-212c9a5c1485?w=800&q=80',
+      'https://images.unsplash.com/photo-1604176354204-9268737828e4?w=800&q=80',
+    ],
+    cat_filter:'pantalon-m', inStock:false, date:7
+  },
+  {
+    id:8, name:'Chaqueta Vintage', cat:'Chaqueta', subtitle:'Chaqueta retro de cuero sintético',
+    price:45000, sold:7,
+    sizes:['S','M','L','XL','XXL'],
+    availSizes:['S','M','L','XL','XXL'],
+    measures:[{s:'S',cm:'54 cm'},{s:'M',cm:'56 cm'},{s:'L',cm:'58 cm'},{s:'XL',cm:'60 cm'},{s:'XXL',cm:'62 cm'}],
+    imgs:[
+      'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&q=80',
+      'https://images.unsplash.com/photo-1548126032-079a0fb0099d?w=800&q=80',
+      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80',
+    ],
+    cat_filter:'chaqueta-h', inStock:true, date:8
+  },
+];
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let currentProduct = null;
+let currentSlide = 0;
+let selectedSize = null;
+let cart = JSON.parse(localStorage.getItem('mantiz_cart') || '[]');
+let comments = [
+  { id:'default', user:'mantiz_user', text:'Ese suéter es muy bonito, lo guardaré. 🧡', likes:4, dislikes:0, deletable:false, myReaction:null }
+];
+let commentId = 1;
+
+/* ═══════════════════════════════════════
+   LOAD PRODUCT
+═══════════════════════════════════════ */
+function loadProduct(id) {
+  const p = products.find(x => x.id === id);
+  if(!p) { currentProduct = products[0]; }
+  else { currentProduct = p; }
+  selectedSize = null;
+  currentSlide = 0;
+
+  // breadcrumb
+  document.getElementById('breadName').textContent = currentProduct.name;
+  document.title = `MANTIZ — ${currentProduct.name}`;
+
+  // info
+  document.getElementById('pCat').textContent = currentProduct.cat;
+  document.getElementById('pTitle').textContent = currentProduct.name;
+  document.getElementById('pSubtitle').textContent = currentProduct.subtitle;
+  document.getElementById('pSold').textContent = `+${currentProduct.sold} vendidos`;
+  document.getElementById('pPrice').textContent = `$${currentProduct.price.toLocaleString('es-CO')}`;
+
+  // gallery
+  buildGallery(currentProduct.imgs);
+
+  // sizes
+  buildSizes(currentProduct);
+
+  // measures
+  buildMeasures(currentProduct.measures);
+
+  // related
+  buildRelated(currentProduct.id);
+
+  // save last
+  localStorage.setItem('mantiz_last_product', id);
+}
+
+function buildGallery(imgs) {
+  const slides = document.querySelectorAll('[id^="imgSlide"]');
+  slides.forEach((el,i) => {
+    el.src = imgs[i] || imgs[0];
+    el.className = i === 0 ? 'active' : 'inactive';
+  });
+
+  // dots
+  const dots = document.getElementById('galleryDots');
+  dots.innerHTML = imgs.map((_,i) => `<div class="gallery-dot${i===0?' active':''}" onclick="goSlide(${i})"></div>`).join('');
+
+  // thumbs
+  const thumbs = document.getElementById('galleryThumbs');
+  thumbs.innerHTML = imgs.map((src,i) => `
+    <div class="gallery-thumb${i===0?' active':''}" onclick="goSlide(${i})">
+      <img src="${src}" alt="thumb ${i+1}">
+    </div>
+  `).join('');
+}
+
+function goSlide(idx) {
+  const imgs = currentProduct.imgs;
+  const slides = document.querySelectorAll('[id^="imgSlide"]');
+  slides[currentSlide].className = 'inactive';
+  currentSlide = ((idx % imgs.length) + imgs.length) % imgs.length;
+  slides[currentSlide].className = 'active';
+
+  document.querySelectorAll('.gallery-dot').forEach((d,i) => d.classList.toggle('active', i===currentSlide));
+  document.querySelectorAll('.gallery-thumb').forEach((t,i) => t.classList.toggle('active', i===currentSlide));
+}
+function nextSlide() { goSlide(currentSlide + 1); }
+function prevSlide() { goSlide(currentSlide - 1); }
+
+function buildSizes(p) {
+  const row = document.getElementById('sizeRow');
+  row.innerHTML = p.sizes.map(s => {
+    const avail = p.availSizes.includes(s);
+    return `<button class="size-chip${avail?'':' disabled'}" onclick="selectSize('${s}',this,${avail})">${s}</button>`;
+  }).join('');
+}
+
+function selectSize(s, btn, avail) {
+  if(!avail) return;
+  selectedSize = s;
+  document.querySelectorAll('.size-chip').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  // highlight measure row
+  document.querySelectorAll('#measuresBody tr').forEach(tr => {
+    tr.classList.toggle('highlight', tr.dataset.size === s);
+  });
+}
+
+function buildMeasures(measures) {
+  document.getElementById('measuresBody').innerHTML = measures.map(m =>
+    `<tr data-size="${m.s}"><td>${m.s}</td><td>${m.cm}</td></tr>`
+  ).join('');
+}
+
+function buildRelated(excludeId) {
+  const related = products.filter(p => p.id !== excludeId).slice(0,4);
+  document.getElementById('relatedGrid').innerHTML = related.map(p => `
+    <div class="rel-card" onclick="loadProduct(${p.id});window.scrollTo({top:0,behavior:'smooth'})">
+      <div class="rel-img-wrap">
+        <img class="rel-img rel-main" src="${p.imgs[0]}" alt="${p.name}" loading="lazy">
+        <img class="rel-img rel-hover" src="${p.imgs[1]||p.imgs[0]}" alt="${p.name}" loading="lazy">
+      </div>
+      <div class="rel-divider">
+        <button class="rel-add-btn" onclick="event.stopPropagation();quickAdd(${p.id})" title="Agregar">+</button>
+      </div>
+      <div class="rel-info">
+        <div class="rel-name">${p.name}</div>
+        <div class="rel-price">Precio: $${p.price.toLocaleString('es-CO')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function quickAdd(id) {
+  const p = products.find(x => x.id === id);
+  if(!p) return;
+  const key = `${id}-`;
+  const ex = cart.find(x => x.key === key);
+  if(ex) ex.qty++;
+  else cart.push({...p, qty:1, size:null, key});
+  saveCart(); updateCartUI();
+  animateBadge();
+}
+
+/* ═══════════════════════════════════════
+   CART
+═══════════════════════════════════════ */
+function addProductToCart() {
+  if(!currentProduct) return;
+  const key = `${currentProduct.id}-${selectedSize||''}`;
+  const ex = cart.find(x => x.key === key);
+  if(ex) ex.qty++;
+  else cart.push({...currentProduct, imgs:undefined, qty:1, size:selectedSize, key,
+    img: currentProduct.imgs[0], price: currentProduct.price, name: currentProduct.name});
+  saveCart(); updateCartUI(); animateBadge();
+  // feedback
+  const btn = document.querySelector('.add-cart-btn');
+  btn.textContent = '✓ AGREGADO';
+  setTimeout(() => btn.textContent = 'AGREGAR AL CARRITO', 1500);
+}
+
+function saveCart() { localStorage.setItem('mantiz_cart', JSON.stringify(cart)); }
+
+function updateCartUI() {
+  const count = cart.reduce((s,x) => s+x.qty, 0);
+  const total = cart.reduce((s,x) => s+x.price*x.qty, 0);
+  const badge = document.getElementById('cartBadge');
+  badge.style.display = count ? 'flex' : 'none';
+  badge.textContent = count;
+  document.getElementById('cartTotal').textContent = `$${total.toLocaleString('es-CO')}`;
+  const el = document.getElementById('cartItems');
+  if(!cart.length) { el.innerHTML = '<div class="cart-empty">Tu carrito está vacío</div>'; return; }
+  el.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <img class="cart-item-img" src="${item.img || item.imgs?.[0] || ''}" alt="${item.name}">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-sub">${item.size ? `Talla: <strong>${item.size}</strong> · ` : ''}Cant: ${item.qty}</div>
+        <div class="cart-item-price">$${(item.price*item.qty).toLocaleString('es-CO')}</div>
+      </div>
+      <button class="cart-item-remove" onclick="removeFromCart('${item.key}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeFromCart(key) { cart = cart.filter(x => x.key !== key); saveCart(); updateCartUI(); }
+function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); }
+function animateBadge() {
+  const b = document.getElementById('cartBadge');
+  b.style.transform = 'scale(1.4)';
+  setTimeout(() => b.style.transform = '', 200);
+}
+
+/* ═══════════════════════════════════════
+   COMMENTS
+═══════════════════════════════════════ */
+function renderComments() {
+  document.getElementById('commentList').innerHTML = comments.map(c => `
+    <div class="comment-item" id="comment-${c.id}">
+      <div class="comment-avatar">👤</div>
+      <div class="comment-body">
+        <div class="comment-user">${c.user}</div>
+        <div class="comment-text">${c.text}</div>
+        <div class="comment-actions">
+          <button class="comment-action-btn${c.myReaction==='like'?' liked':''}" onclick="reactComment('${c.id}','like')">
+            👍 ${c.likes}
+          </button>
+          <button class="comment-action-btn${c.myReaction==='dislike'?' disliked':''}" onclick="reactComment('${c.id}','dislike')">
+            👎 ${c.dislikes}
+          </button>
+        </div>
+      </div>
+      ${c.deletable ? `<button class="comment-delete" onclick="deleteComment('${c.id}')" title="Eliminar">🗑</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function submitComment() {
+  const input = document.getElementById('commentInput');
+  const text = input.value.trim();
+  if(!text) return;
+  comments.push({
+    id: 'u' + commentId++, user:'Tú', text,
+    likes:0, dislikes:0, deletable:true, myReaction:null
+  });
+  input.value = '';
+  renderComments();
+}
+
+function deleteComment(id) {
+  comments = comments.filter(c => c.id !== id);
+  renderComments();
+}
+
+function reactComment(id, type) {
+  const c = comments.find(x => x.id === id);
+  if(!c) return;
+  if(c.myReaction === type) {
+    // toggle off
+    if(type === 'like') c.likes--; else c.dislikes--;
+    c.myReaction = null;
+  } else {
+    // remove previous reaction
+    if(c.myReaction === 'like') c.likes--;
+    if(c.myReaction === 'dislike') c.dislikes--;
+    // add new
+    if(type === 'like') c.likes++; else c.dislikes++;
+    c.myReaction = type;
+  }
+  renderComments();
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+// read id from URL param or localStorage
+const params = new URLSearchParams(location.search);
+const urlId = parseInt(params.get('id'));
+const lastId = parseInt(localStorage.getItem('mantiz_last_product') || '1');
+const initId = urlId || lastId || 1;
+
+loadProduct(initId);
+updateCartUI();
+renderComments();
+</script>
+</body>
+</html>
