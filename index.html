@@ -1356,7 +1356,7 @@
 
 <!-- CART DROPDOWN -->
 <div id="cart-dropdown">
-  <div class="cart-header">MI CARRITO</div>
+  <div class="cart-header" style="display:flex;justify-content:space-between;align-items:center;"><span>MI CARRITO</span><button id="cart-close-btn" style="background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'">✕</button></div>
   <div class="cart-items" id="cart-items">
     <div class="cart-empty">TU CARRITO ESTÁ VACÍO</div>
   </div>
@@ -1589,6 +1589,10 @@ cartToggle.addEventListener('click',e=>{
   cartDropdown.classList.toggle('open', cartOpen);
   if(cartOpen){ searchOpen=false; searchBar.classList.remove('open'); }
 });
+document.getElementById('cart-close-btn').addEventListener('click',e=>{
+  e.stopPropagation();
+  cartOpen=false; cartDropdown.classList.remove('open');
+});
 cartDropdown.addEventListener('click',e=>{ e.stopPropagation(); });
 document.addEventListener('click',e=>{
   if(cartOpen && !cartDropdown.contains(e.target) && e.target!==cartToggle){
@@ -1699,7 +1703,7 @@ const grid = document.getElementById('products-grid');
 
 products.forEach((p,i)=>{
   grid.innerHTML += `
-    <div class="product-card">
+    <div class="product-card" data-product-id="${i+1}" style="cursor:pointer">
       <div class="product-label-bar">
         <span class="product-label-text">${p.name}</span>
       </div>
@@ -1741,8 +1745,17 @@ function openAddModal(p){
 
 grid.addEventListener('click',e=>{
   const btn = e.target.closest('.product-add-btn');
-  if(!btn) return;
-  openAddModal(products[btn.dataset.index]);
+  if(btn){
+    e.stopPropagation();
+    e.preventDefault();
+    openAddModal(products[btn.dataset.index]);
+    return;
+  }
+  const card = e.target.closest('.product-card');
+  if(card){
+    const id = card.dataset.productId;
+    window.location.href = 'productos.html?id=' + id;
+  }
 });
 
 modalSizes.addEventListener('click',e=>{
