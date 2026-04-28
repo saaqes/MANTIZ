@@ -1,0 +1,49 @@
+<%- include('../partials/header') %>
+
+<div style="min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:40px 20px">
+  <div style="width:100%;max-width:480px">
+    <div style="background:var(--card-bg);padding:40px;position:relative">
+      <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
+      <div style="text-align:center;margin-bottom:32px">
+        <a href="/" style="font-family:'Permanent Marker',cursive;font-size:36px;color:var(--pink);text-decoration:none;display:block;text-shadow:0 0 20px rgba(233,30,140,0.4)">
+          <%= sitio.nombre_tienda || 'MANTIZ' %>
+        </a>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:5px;color:var(--white);margin-top:8px">CREAR CUENTA</div>
+        <div style="width:60px;height:2px;background:var(--pink);margin:12px auto 0;filter:url(#gb)"></div>
+      </div>
+      <form action="/auth/registro" method="POST">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div>
+            <label class="mantiz-label">Usuario</label>
+            <input type="text" name="username" class="mantiz-input" placeholder="mi_usuario" required>
+          </div>
+          <div>
+            <label class="mantiz-label">Nombre visible</label>
+            <input type="text" name="nombre_visible" class="mantiz-input" placeholder="Mi Nombre" required>
+          </div>
+        </div>
+        <div style="margin-bottom:16px">
+          <label class="mantiz-label">Email</label>
+          <input type="email" name="email" class="mantiz-input" placeholder="correo@ejemplo.com" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+          <div>
+            <label class="mantiz-label">Contrasena</label>
+            <input type="password" name="password" class="mantiz-input" placeholder="........" required minlength="6">
+          </div>
+          <div>
+            <label class="mantiz-label">Confirmar</label>
+            <input type="password" name="confirm_password" class="mantiz-input" placeholder="........" required>
+          </div>
+        </div>
+        <button type="submit" class="btn-grunge-fill" style="width:100%">REGISTRARSE &#8594;</button>
+      </form>
+      <div style="text-align:center;margin-top:24px;font-size:13px;color:var(--gray);letter-spacing:1px">
+        Ya tienes cuenta?
+        <a href="/auth/login" style="color:var(--pink);text-decoration:none;font-weight:700">INGRESAR</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

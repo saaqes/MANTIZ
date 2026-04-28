@@ -1,0 +1,162 @@
+<%- include('../partials/header', {isAdmin: true}) %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+.sect-title{font-family:var(--fd);font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sect-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.kpi-pill{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:center}
+.kpi-val{font-family:var(--fd);font-size:1.3rem;font-weight:800;color:var(--text)}
+.kpi-lbl{font-family:var(--fm);font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px}
+</style>
+
+<!-- KPI OVERVIEW -->
+<div class="sect-title"><i class="bi bi-speedometer2" style="color:var(--cp)"></i>Resumen general</div>
+<div class="row g-2 mb-4">
+  <% const kpis=[
+    {val:stats.clientes||0,lbl:'Clientes',c:'#00c8ff'},
+    {val:stats.productos||0,lbl:'Productos activos',c:'var(--cp)'},
+    {val:stats.pedidos||0,lbl:'Pedidos totales',c:'#fd7e14'},
+    {val:'$'+(parseFloat(stats.ingresos||0).toFixed(0)),lbl:'Ingresos USD',c:'#00ff64'},
+    {val:stats.pedidos_activos||0,lbl:'Pedidos activos',c:'#ffc800'},
+    {val:stats.total_visitas||0,lbl:'Visitas totales',c:'#bf00ff'},
+  ]; %>
+  <% kpis.forEach(k=>{ %>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="kpi-pill">
+      <div class="kpi-val" style="color:<%= k.c %>"><%= k.val %></div>
+      <div class="kpi-lbl"><%= k.lbl %></div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+
+<!-- MAIN CHARTS -->
+<div class="row g-3 mb-4">
+  <!-- Ingresos diarios -->
+  <div class="col-12 col-xl-8">
+    <div class="sect-title"><i class="bi bi-cash-stack" style="color:#00ff64"></i>Ingresos (últimos 30 días)</div>
+    <div class="chart-box">
+      <canvas id="ingresosChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <!-- Pedidos por estado -->
+  <div class="col-12 col-xl-4">
+    <div class="sect-title"><i class="bi bi-pie-chart" style="color:#fd7e14"></i>Pedidos por estado</div>
+    <div class="chart-box" style="height:calc(100% - 38px)">
+      <canvas id="estadosChart" height="180"></canvas>
+      <div id="estadosLegend" class="mt-3" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--fm);font-size:.62rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SEGUNDA FILA -->
+<div class="row g-3 mb-4">
+  <!-- Registros diarios -->
+  <div class="col-12 col-lg-6">
+    <div class="sect-title"><i class="bi bi-people" style="color:#00c8ff"></i>Nuevos usuarios (30 días)</div>
+    <div class="chart-box">
+      <canvas id="usuariosChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <!-- Categorías por visitas -->
+  <div class="col-12 col-lg-6">
+    <div class="sect-title"><i class="bi bi-bar-chart" style="color:#bf00ff"></i>Categorías más visitadas</div>
+    <div class="chart-box">
+      <canvas id="categoriasChart" height="120"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- TOP PRODUCTOS TABLA -->
+<div class="sect-title"><i class="bi bi-trophy" style="color:#ffd700"></i>Top 10 productos por visitas</div>
+<div class="chart-box" style="padding:0;overflow:hidden">
+  <table class="table table-hover mb-0">
+    <thead>
+      <tr><th>#</th><th>Producto</th><th>Categoría</th><th>Visitas</th><th>Precio</th><th>Stock</th><th>Estado</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% topProductos.forEach((p,i)=>{ %>
+      <tr>
+        <td style="font-family:var(--fm);font-size:.7rem;color:var(--cp)">#<%= i+1 %></td>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <img src="/uploads/products/<%= p.imagen_principal %>" width="36" height="36" style="border-radius:6px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.background='var(--dark2)'">
+            <span style="font-family:var(--fb);font-size:.82rem;font-weight:600"><%= p.titulo %></span>
+          </div>
+        </td>
+        <td style="font-family:var(--fm);font-size:.68rem;color:var(--muted)"><%= p.categoria %></td>
+        <td>
+          <div style="font-family:var(--fd);font-size:.82rem;color:#bf00ff"><%= p.total_visitas||0 %></div>
+          <div style="height:3px;background:var(--dark2);border-radius:2px;margin-top:3px;width:80px">
+            <div style="height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cp),var(--ca));width:<%= Math.min(100,Math.round((p.total_visitas||0)/(topProductos[0]?.total_visitas||1)*100)) %>%"></div>
+          </div>
+        </td>
+        <td style="font-family:var(--fd);font-size:.78rem;color:var(--cp)">$<%= parseFloat(p.precio_descuento||p.precio).toFixed(2) %></td>
+        <td style="font-family:var(--fm);font-size:.72rem;color:var(--muted)">—</td>
+        <td>
+          <span class="badge" style="background:<%= p.activo ? 'rgba(0,255,100,.15)' : 'rgba(255,60,60,.15)' %>;color:<%= p.activo ? '#00ff64' : '#ff6060' %>;border:1px solid <%= p.activo ? 'rgba(0,255,100,.3)' : 'rgba(255,60,60,.3)' %>">
+            <%= p.activo ? 'Activo' : 'Inactivo' %>
+          </span>
+        </td>
+        <td><a href="/admin/productos/<%= p.id %>/editar" class="btn btn-sm btn-om" style="padding:3px 10px;font-size:.68rem">Editar</a></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<script>
+Chart.defaults.color='#5a5a7a';
+Chart.defaults.borderColor='rgba(233,30,140,0.08)';
+Chart.defaults.font.family="'Space Mono',monospace";
+Chart.defaults.font.size=9;
+
+// ─── INGRESOS CHART ───
+const ingresosRaw = <%- JSON.stringify(ingresosDiarios.map(d=>({fecha:d.fecha,total:parseFloat(d.total)}))) %>;
+const labels30 = [];const data30 = [];
+for(let i=29;i>=0;i--){
+  const d=new Date();d.setDate(d.getDate()-i);
+  const key=d.toISOString().split('T')[0];
+  const found=ingresosRaw.find(r=>r.fecha&&r.fecha.toString().includes(key.substring(0,10)));
+  labels30.push(d.toLocaleDateString('es-CO',{day:'numeric',month:'short'}).toUpperCase());
+  data30.push(found?found.total:0);
+}
+const ingCtx=document.getElementById('ingresosChart').getContext('2d');
+const ingGrad=ingCtx.createLinearGradient(0,0,0,180);
+ingGrad.addColorStop(0,'rgba(0,255,100,0.3)');
+ingGrad.addColorStop(1,'rgba(0,255,100,0)');
+new Chart(ingCtx,{type:'bar',data:{labels:labels30,datasets:[{label:'Ingresos',data:data30,backgroundColor:labels30.map((_,i)=>i===labels30.length-1?'rgba(0,255,100,0.6)':'rgba(0,255,100,0.25)'),borderColor:'rgba(0,255,100,0.7)',borderWidth:1,borderRadius:3}]},options:{responsive:true,scales:{x:{grid:{display:false},ticks:{maxRotation:45}},y:{grid:{color:'rgba(233,30,140,0.05)'},ticks:{callback:v=>'$'+v}}},plugins:{legend:{display:false},tooltip:{backgroundColor:'var(--dark2)',borderColor:'var(--border)',borderWidth:1,callbacks:{label:ctx=>' $'+ctx.parsed.y.toFixed(2)}}}}});
+
+// ─── ESTADOS CHART ───
+const estadosData=<%- JSON.stringify(pedidosPorEstado) %>;
+const estColors=['#ffc807','#17a2b8','#6f42c1','#fd7e14','#28a745','#20c997','#6c757d','#dc3545'];
+const estCtx=document.getElementById('estadosChart').getContext('2d');
+new Chart(estCtx,{type:'doughnut',data:{labels:estadosData.map(e=>e.estado),datasets:[{data:estadosData.map(e=>e.cantidad),backgroundColor:estColors.map(c=>c+'33'),borderColor:estColors,borderWidth:1.5,hoverOffset:8}]},options:{cutout:'65%',plugins:{legend:{display:false}}}});
+document.getElementById('estadosLegend').innerHTML=estadosData.map((e,i)=>`<div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:50%;background:${estColors[i]};flex-shrink:0"></div><span style="color:var(--text)">${e.estado} (${e.cantidad})</span></div>`).join('');
+
+// ─── USUARIOS CHART ───
+const usrRaw=<%- JSON.stringify(usuariosRecientes.map(u=>({fecha:u.fecha,cantidad:parseInt(u.cantidad)}))) %>;
+const usrLabels=[];const usrData=[];
+for(let i=29;i>=0;i--){
+  const d=new Date();d.setDate(d.getDate()-i);
+  const key=d.toISOString().split('T')[0];
+  const found=usrRaw.find(r=>r.fecha&&r.fecha.toString().includes(key.substring(0,10)));
+  if(i%3===0){usrLabels.push(d.toLocaleDateString('es-CO',{day:'numeric',month:'short'}).toUpperCase());}else{usrLabels.push('');}
+  usrData.push(found?found.cantidad:0);
+}
+const usrCtx=document.getElementById('usuariosChart').getContext('2d');
+const usrGrad=usrCtx.createLinearGradient(0,0,0,160);
+usrGrad.addColorStop(0,'rgba(0,200,255,0.25)');
+usrGrad.addColorStop(1,'rgba(0,200,255,0)');
+new Chart(usrCtx,{type:'line',data:{labels:usrLabels,datasets:[{label:'Registros',data:usrData,borderColor:'#00c8ff',backgroundColor:usrGrad,borderWidth:2,pointBackgroundColor:'#00c8ff',pointRadius:3,fill:true,tension:0.4}]},options:{responsive:true,scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,200,255,0.05)'},ticks:{stepSize:1}}},plugins:{legend:{display:false}}}});
+
+// ─── CATEGORÍAS CHART ───
+const catData=<%- JSON.stringify(topCategorias) %>;
+const catCtx=document.getElementById('categoriasChart').getContext('2d');
+new Chart(catCtx,{type:'bar',data:{labels:catData.map(c=>c.categoria?.toUpperCase()||'OTRO'),datasets:[{label:'Visitas',data:catData.map(c=>parseInt(c.visitas)||0),backgroundColor:'rgba(191,0,255,0.3)',borderColor:'rgba(191,0,255,0.8)',borderWidth:1,borderRadius:4}]},options:{indexAxis:'y',responsive:true,scales:{x:{grid:{color:'rgba(191,0,255,0.05)'}},y:{grid:{display:false}}},plugins:{legend:{display:false}}}});
+</script>
+
+<%- include('../partials/footer', {isAdmin: true}) %>

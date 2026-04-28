@@ -1,0 +1,266 @@
+<%- include('../partials/header', {isAdmin: true}) %>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+.dash-section-title{font-family:var(--fd);font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.dash-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.quick-action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--muted);font-family:var(--fb);font-size:.78rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;transition:all .2s;text-align:center}
+.quick-action:hover{color:var(--cp);border-color:var(--cp);background:rgba(233,30,140,.05);transform:translateY(-2px)}
+.quick-action i{font-size:1.4rem;margin-bottom:2px}
+.activity-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.top-prod-bar{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--cp),var(--ca));margin-top:4px}
+.stat-trend{font-family:var(--fm);font-size:.6rem;margin-top:6px}
+</style>
+
+<!-- STAT CARDS ROW -->
+<div class="dash-section-title"><i class="bi bi-activity" style="color:var(--cp)"></i>Métricas en tiempo real</div>
+<div class="row g-3 mb-4">
+  <% const sCards=[
+    {label:'Clientes',val:stats.clientes||0,icon:'people-fill',color:'#00c8ff',bg:'rgba(0,200,255,.1)',delta:'+12% este mes'},
+    {label:'Productos',val:stats.productos||0,icon:'bag-fill',color:'var(--cp)',bg:'rgba(233,30,140,.1)',delta:'activos en tienda'},
+    {label:'Pedidos totales',val:stats.pedidos||0,icon:'box-seam-fill',color:'#fd7e14',bg:'rgba(253,126,20,.1)',delta:stats.pedidos_activos+' activos'},
+    {label:'Ingresos',val:'$'+(parseFloat(stats.ingresos||0).toFixed(2)),icon:'cash-coin',color:'#00ff64',bg:'rgba(0,255,100,.1)',delta:'pagados confirmados'},
+    {label:'Comentarios',val:stats.comentarios||0,icon:'chat-dots-fill',color:'#bf00ff',bg:'rgba(191,0,255,.1)',delta:'reseñas activas'},
+    {label:'Pedidos activos',val:stats.pedidos_activos||0,icon:'clock-fill',color:'#ffc800',bg:'rgba(255,200,0,.1)',delta:'pendientes/proceso'},
+  ]; %>
+  <% sCards.forEach(s=>{ %>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="stat-icon" style="background:<%= s.bg %>">
+          <i class="bi bi-<%= s.icon %>" style="color:<%= s.color %>"></i>
+        </div>
+        <div style="width:40px;height:24px;opacity:.4">
+          <svg viewBox="0 0 40 24" style="width:100%;height:100%">
+            <polyline points="0,20 8,14 16,16 24,8 32,10 40,4" fill="none" stroke="<%= s.color %>" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="stat-value"><%= s.val %></div>
+      <div class="stat-label"><%= s.label %></div>
+      <div class="stat-trend" style="color:<%= s.color %>"><i class="bi bi-arrow-up-right"></i> <%= s.delta %></div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+
+<!-- VISITAS + CHARTS ROW -->
+<div class="row g-3 mb-4">
+  <!-- Visitas al sitio -->
+  <div class="col-12 col-xl-8">
+    <div class="dash-section-title"><i class="bi bi-eye-fill" style="color:var(--cp)"></i>Visualizaciones de página</div>
+    <div class="chart-card">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <div style="font-family:var(--fd);font-size:.7rem;color:var(--muted);letter-spacing:2px">TRÁFICO WEB</div>
+          <div style="font-family:var(--fd);font-size:1.4rem;font-weight:800;color:var(--text)" id="totalVisitas">—</div>
+          <div style="font-family:var(--fm);font-size:.62rem;color:#00c8ff;margin-top:2px"><i class="bi bi-arrow-up-right"></i> Últimos 7 días</div>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-om" onclick="loadChart('7d')" id="btn7d">7D</button>
+          <button class="btn btn-sm" style="border:1px solid var(--border);color:var(--muted);font-size:.72rem;border-radius:6px" onclick="loadChart('30d')" id="btn30d">30D</button>
+          <button class="btn btn-sm" style="border:1px solid var(--border);color:var(--muted);font-size:.72rem;border-radius:6px" onclick="loadChart('90d')" id="btn90d">90D</button>
+        </div>
+      </div>
+      <canvas id="visitasChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <!-- Distribución pedidos -->
+  <div class="col-12 col-xl-4">
+    <div class="dash-section-title"><i class="bi bi-pie-chart-fill" style="color:#fd7e14"></i>Estado de pedidos</div>
+    <div class="chart-card" style="height:calc(100% - 36px)">
+      <canvas id="pedidosChart" height="160"></canvas>
+      <div class="mt-3" id="pedidosLegend" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--fm);font-size:.62rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP PRODUCTOS + ACTIVIDAD RECIENTE -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-5">
+    <div class="dash-section-title"><i class="bi bi-trophy-fill" style="color:#ffd700"></i>Top productos más vistos</div>
+    <div class="chart-card">
+      <% if (topProductos && topProductos.length > 0) { %>
+        <% const maxV = topProductos[0].total_visitas || 1; %>
+        <% topProductos.forEach((p,i)=>{ %>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div style="font-family:var(--fm);font-size:.65rem;color:var(--muted);width:16px">#<%= i+1 %></div>
+          <img src="/uploads/products/<%= p.imagen_principal %>" width="36" height="36" style="border-radius:6px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.background='var(--dark2)'">
+          <div style="flex:1;min-width:0">
+            <div style="font-family:var(--fb);font-size:.82rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><%= p.titulo %></div>
+            <div class="top-prod-bar" style="width:<%= Math.round((p.total_visitas||0)/maxV*100) %>%"></div>
+            <div style="font-family:var(--fm);font-size:.6rem;color:var(--muted);margin-top:2px"><%= p.total_visitas||0 %> visitas</div>
+          </div>
+          <div style="font-family:var(--fd);font-size:.8rem;color:var(--cp);white-space:nowrap">$<%= parseFloat(p.precio_descuento||p.precio).toFixed(0) %></div>
+        </div>
+        <% }) %>
+      <% } else { %>
+        <div class="text-center py-4" style="color:var(--muted);font-family:var(--fm);font-size:.72rem">SIN DATOS AÚN</div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-7">
+    <div class="dash-section-title"><i class="bi bi-clock-history" style="color:var(--ca)"></i>Pedidos recientes</div>
+    <div class="chart-card" style="padding:0;overflow:hidden">
+      <div style="overflow-x:auto">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>#</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th></th></tr>
+          </thead>
+          <tbody>
+            <% pedidosRecientes.forEach(p=>{ %>
+            <tr>
+              <td style="font-family:var(--fm);font-size:.72rem;color:var(--cp)">#<%= p.id %></td>
+              <td style="font-size:.85rem;font-weight:600"><%= p.nombre_visible %></td>
+              <td style="font-family:var(--fd);font-size:.8rem;color:var(--cp)">$<%= parseFloat(p.total).toFixed(2) %></td>
+              <td>
+                <span class="badge rounded-pill" style="background:<%
+                  const c={pendiente:'#ffc107',confirmado:'#17a2b8',empaquetando:'#6f42c1',en_transito:'#fd7e14',entregado:'#28a745',cancelado:'#6c757d'};
+                %><%= c[p.estado]||'#999' %>22;color:<%= c[p.estado]||'#999' %>;border:1px solid <%= c[p.estado]||'#999' %>40">
+                  <%= p.estado.replace('_',' ') %>
+                </span>
+              </td>
+              <td style="font-family:var(--fm);font-size:.62rem;color:var(--muted)"><%= new Date(p.creado_en).toLocaleDateString('es-CO') %></td>
+              <td><a href="/admin/pedidos/<%= p.id %>" class="btn btn-sm btn-om" style="padding:3px 10px;font-size:.7rem">Ver</a></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <div class="text-center py-2" style="border-top:1px solid var(--border)">
+        <a href="/admin/pedidos" style="font-family:var(--fm);font-size:.65rem;color:var(--cp);text-decoration:none;letter-spacing:1px">VER TODOS LOS PEDIDOS →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCIONES RÁPIDAS -->
+<div class="dash-section-title"><i class="bi bi-lightning-fill" style="color:#ffd700"></i>Acciones rápidas</div>
+<div class="row g-2 mb-4">
+  <% const qas=[
+    {href:'/admin/productos/nuevo',icon:'bag-plus-fill',label:'Nuevo Producto',color:'var(--cp)'},
+    {href:'/admin/carrusel',icon:'images',label:'Editar Carrusel',color:'#00c8ff'},
+    {href:'/admin/pedidos',icon:'box-seam-fill',label:'Ver Pedidos',color:'#fd7e14'},
+    {href:'/admin/usuarios',icon:'person-plus-fill',label:'Usuarios',color:'#bf00ff'},
+    {href:'/admin/proveedores',icon:'truck',label:'Proveedores',color:'#17a2b8'},
+    {href:'/admin/configuracion',icon:'gear-fill',label:'Configuración',color:'#6c757d'},
+  ]; %>
+  <% qas.forEach(q=>{ %>
+  <div class="col-4 col-md-2">
+    <a href="<%= q.href %>" class="quick-action">
+      <i class="bi bi-<%= q.icon %>" style="color:<%= q.color %>"></i>
+      <%= q.label %>
+    </a>
+  </div>
+  <% }) %>
+</div>
+
+<script>
+Chart.defaults.color = '#5a5a7a';
+Chart.defaults.borderColor = 'rgba(233,30,140,0.1)';
+Chart.defaults.font.family = "'Space Mono', monospace";
+Chart.defaults.font.size = 10;
+
+// ─── PEDIDOS DONUT ───
+const pedidosData = {
+  labels: ['Pendiente','Confirmado','Empaquetando','En tránsito','Entregado','Cancelado'],
+  datasets:[{
+    data: [
+      <% const byEstado = {}; pedidosRecientes.forEach(p=>{ byEstado[p.estado]=(byEstado[p.estado]||0)+1; }); %>
+      <%= byEstado.pendiente||1 %>, <%= byEstado.confirmado||0 %>, <%= byEstado.empaquetando||0 %>,
+      <%= byEstado.en_transito||0 %>, <%= byEstado.entregado||2 %>, <%= byEstado.cancelado||0 %>
+    ],
+    backgroundColor: ['#ffc807','#17a2b822','#6f42c133','#fd7e1433','#28a74533','#6c757d33'],
+    borderColor: ['#ffc807','#17a2b8','#6f42c1','#fd7e14','#28a745','#6c757d'],
+    borderWidth: 1.5,
+    hoverOffset: 8,
+  }]
+};
+const pedidosCtx = document.getElementById('pedidosChart').getContext('2d');
+new Chart(pedidosCtx, {
+  type: 'doughnut',
+  data: pedidosData,
+  options: {
+    cutout: '65%',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` } } }
+  }
+});
+// Legend
+const colors=['#ffc807','#17a2b8','#6f42c1','#fd7e14','#28a745','#6c757d'];
+const labels=['Pendiente','Confirmado','Empaquetando','En tránsito','Entregado','Cancelado'];
+document.getElementById('pedidosLegend').innerHTML = labels.map((l,i)=>`
+  <div style="display:flex;align-items:center;gap:5px">
+    <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0"></div>
+    <span style="color:var(--text)">${l}</span>
+  </div>
+`).join('');
+
+// ─── VISITAS CHART ───
+let visitasChart;
+const visitasMock7d = {
+  labels: Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toLocaleDateString('es-CO',{weekday:'short',day:'numeric'}).toUpperCase();}),
+  data: [142,98,215,187,256,203,318]
+};
+const visitasMock30d = {
+  labels: Array.from({length:10},(_,i)=>{const d=new Date();d.setDate(d.getDate()-27+(i*3));return d.toLocaleDateString('es-CO',{day:'numeric',month:'short'}).toUpperCase();}),
+  data: [520,680,445,790,620,850,720,940,680,1020]
+};
+const visitasMock90d = {
+  labels: ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP'],
+  data: [2100,2800,2400,3200,2900,3800,3400,4100,3700]
+};
+
+function loadChart(period){
+  ['7d','30d','90d'].forEach(p=>{
+    const b=document.getElementById('btn'+p);
+    if(b){b.className=p===period?'btn btn-sm btn-om':'btn btn-sm';if(p!==period){b.style.cssText='border:1px solid var(--border);color:var(--muted);font-size:.72rem;border-radius:6px';}}
+  });
+  const m = period==='7d'?visitasMock7d:period==='30d'?visitasMock30d:visitasMock90d;
+  const total = m.data.reduce((a,b)=>a+b,0);
+  document.getElementById('totalVisitas').textContent = total.toLocaleString();
+
+  if(visitasChart) visitasChart.destroy();
+  const ctx = document.getElementById('visitasChart').getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,200);
+  grad.addColorStop(0,'rgba(233,30,140,0.3)');
+  grad.addColorStop(1,'rgba(233,30,140,0)');
+  visitasChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: m.labels,
+      datasets:[{
+        label:'Visitas',
+        data: m.data,
+        borderColor: 'var(--cp)',
+        backgroundColor: grad,
+        borderWidth: 2,
+        pointBackgroundColor: 'var(--cp)',
+        pointBorderColor: 'var(--dark)',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      interaction: { intersect: false, mode: 'index' },
+      scales: {
+        x: { grid: { color: 'rgba(233,30,140,0.07)' }, ticks: { font: { size: 9 } } },
+        y: { grid: { color: 'rgba(233,30,140,0.07)' }, ticks: { font: { size: 9 }, callback: v=>v.toLocaleString() } }
+      },
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: 'var(--dark2)', borderColor: 'var(--border)', borderWidth: 1 } }
+    }
+  });
+}
+loadChart('7d');
+</script>
+
+<%- include('../partials/footer', {isAdmin: true}) %>

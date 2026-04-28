@@ -1,0 +1,182 @@
+<%- include('../partials/header', {isAdmin: true}) %>
+
+<style>
+.model-card { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:all .3s; }
+.model-card:hover { border-color:var(--cp); }
+.model-card.principal { border-color:var(--cp); box-shadow:0 0 0 2px rgba(233,30,140,.3); }
+.model-preview { height:180px; background:#0e0e0e; display:flex; align-items:center; justify-content:center; position:relative; font-size:40px; color:rgba(233,30,140,.3); }
+.badge-pr { background:var(--cp); color:white; font-size:.6rem; padding:2px 8px; border-radius:4px; font-family:var(--fd); letter-spacing:1px; }
+/* Edit panel */
+.edit-panel { position:fixed;top:0;right:0;bottom:0;width:420px;background:var(--dark2);border-left:1px solid var(--border);z-index:1050;transform:translateX(100%);transition:transform .3s;overflow-y:auto;box-shadow:-8px 0 40px rgba(0,0,0,.5); }
+.edit-panel.open { transform:translateX(0); }
+.panel-overlay { position:fixed;inset:0;background:rgba(0,0,0,0);pointer-events:none;z-index:1040;transition:background .3s; }
+.panel-overlay.active { background:rgba(0,0,0,.5);pointer-events:all; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 style="font-family:var(--fd);font-size:.9rem;letter-spacing:2px;color:var(--cp)">MODELOS 3D</h4>
+    <p class="small text-muted mb-0">Gestiona los modelos del viewer de la página principal</p>
+  </div>
+  <button class="btn btn-pm btn-sm" onclick="abrirSubir()">
+    <i class="bi bi-cloud-upload me-1"></i> Subir Modelo
+  </button>
+</div>
+
+<!-- Models grid -->
+<div class="row g-3 mb-4">
+  <% if (modelos && modelos.length > 0) { %>
+  <% modelos.forEach(function(m) { %>
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="model-card <%= m.es_principal ? 'principal' : '' %>">
+      <div class="model-preview">
+        <i class="bi bi-box-seam"></i>
+        <div style="position:absolute;top:10px;left:10px;display:flex;gap:6px">
+          <% if (m.es_principal) { %><span class="badge-pr">&#9733; ACTIVO EN INICIO</span><% } %>
+          <span class="badge" style="background:<%= m.activo ? 'rgba(0,255,100,.15)' : 'rgba(90,90,122,.2)' %>;color:<%= m.activo ? '#00ff64' : 'var(--muted)' %>"><%= m.activo ? 'Activo' : 'Inactivo' %></span>
+        </div>
+        <div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:.65rem;color:rgba(255,255,255,.4);font-family:var(--fd);letter-spacing:1px"><%= m.archivo %></div>
+      </div>
+      <div class="p-3">
+        <div style="font-weight:700;margin-bottom:4px"><%= m.nombre %></div>
+        <% if (m.producto_titulo) { %>
+        <div class="small text-muted mb-2"><i class="bi bi-bag me-1"></i><%= m.producto_titulo %></div>
+        <% } %>
+        <div class="small text-muted mb-3">Escala: <%= m.escala || 1 %> · Pos Y: <%= m.pos_y || 0 %></div>
+        <div class="d-flex gap-2 flex-wrap">
+          <% if (!m.es_principal) { %>
+          <form action="/admin/modelos/<%= m.id %>/principal" method="POST" class="d-inline">
+            <button type="submit" class="btn btn-pm btn-sm"><i class="bi bi-star me-1"></i>Activar en inicio</button>
+          </form>
+          <% } %>
+          <button class="btn btn-om btn-sm" onclick="abrirEditar(<%= m.id %>,'<%= m.nombre.replace(/'/g,'`') %>',<%= m.producto_id||'null' %>,<%= m.activo %>,<%= m.escala||1 %>,<%= m.pos_y||0 %>)">
+            <i class="bi bi-pencil me-1"></i>Editar
+          </button>
+          <form action="/admin/modelos/<%= m.id %>/eliminar" method="POST" class="d-inline" onsubmit="return confirm('Eliminar este modelo?')">
+            <button type="submit" class="btn btn-sm" style="border:1px solid #ff6060;color:#ff6060;background:transparent;font-size:.75rem">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+  <% } else { %>
+  <div class="col-12">
+    <div class="text-center py-5" style="border:2px dashed var(--border);border-radius:12px">
+      <i class="bi bi-box-seam fs-1 mb-3 d-block" style="color:var(--muted)"></i>
+      <div style="font-family:var(--fd);font-size:.75rem;letter-spacing:2px;color:var(--muted)">SIN MODELOS 3D</div>
+      <button class="btn btn-pm mt-3 btn-sm" onclick="abrirSubir()"><i class="bi bi-plus me-1"></i>Subir modelo</button>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<!-- Existing files on disk -->
+<% if (archivosDir && archivosDir.length > 0) { %>
+<div class="card mb-4">
+  <div class="card-body">
+    <h6 style="font-family:var(--fd);font-size:.68rem;letter-spacing:2px;color:var(--cp);margin-bottom:8px">ARCHIVOS EN /public/models/ (registrar)</h6>
+    <div class="d-flex gap-2 flex-wrap">
+      <% archivosDir.forEach(function(f) { %>
+      <form action="/admin/modelos/registrar" method="POST" class="d-inline">
+        <input type="hidden" name="archivo" value="<%= f %>">
+        <input type="hidden" name="nombre" value="<%= f.replace('.glb','').replace('.gltf','') %>">
+        <button type="submit" class="btn btn-sm btn-om"><i class="bi bi-plus me-1"></i><%= f %></button>
+      </form>
+      <% }) %>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<!-- OVERLAY -->
+<div class="panel-overlay" id="panelOverlay" onclick="cerrarPanel()"></div>
+
+<!-- EDIT PANEL -->
+<div class="edit-panel" id="editPanel">
+  <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--dark2);z-index:2">
+    <div id="editPanelTitle" style="font-family:var(--fd);font-size:.75rem;letter-spacing:2px;color:var(--cp)">EDITAR MODELO</div>
+    <button onclick="cerrarPanel()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer" onmouseover="this.style.color='var(--cp)'" onmouseout="this.style.color='var(--muted)'">&#x2715;</button>
+  </div>
+  <div style="padding:20px">
+    <form id="editForm" method="POST" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" name="nombre" id="ep-nombre" class="form-control" required>
+      </div>
+      <div class="mb-3" id="ep-file-section">
+        <label class="form-label">Archivo .glb / .gltf</label>
+        <input type="file" name="modelo" accept=".glb,.gltf" class="form-control">
+        <div class="form-text">Opcional: dejar vacío para mantener el actual. Max 50MB.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Vincular a producto (info en el viewer)</label>
+        <select name="producto_id" id="ep-producto" class="form-select">
+          <option value="">-- Sin producto --</option>
+          <% productos.forEach(function(p) { %>
+          <option value="<%= p.id %>"><%= p.titulo %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <label class="form-label">Escala</label>
+          <input type="number" name="escala" id="ep-escala" class="form-control" step="0.1" min="0.1" max="10" value="1">
+          <div class="form-text">1 = tamaño normal</div>
+        </div>
+        <div class="col-6">
+          <label class="form-label">Posición Y</label>
+          <input type="number" name="pos_y" id="ep-posy" class="form-control" step="0.1" min="-5" max="5" value="0">
+          <div class="form-text">0 = centrado</div>
+        </div>
+      </div>
+      <div class="form-check mb-4">
+        <input type="checkbox" name="activo" id="ep-activo" class="form-check-input" value="1">
+        <label class="form-check-label" for="ep-activo">Activo (visible para selección)</label>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-pm" style="flex:1" id="epSubmitBtn">
+          <i class="bi bi-check-lg me-2"></i>GUARDAR
+        </button>
+        <button type="button" class="btn btn-om" onclick="cerrarPanel()">CANCELAR</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function abrirPanel() {
+  document.getElementById('editPanel').classList.add('open');
+  document.getElementById('panelOverlay').classList.add('active');
+}
+function cerrarPanel() {
+  document.getElementById('editPanel').classList.remove('open');
+  document.getElementById('panelOverlay').classList.remove('active');
+}
+
+function abrirSubir() {
+  document.getElementById('editPanelTitle').textContent = 'SUBIR NUEVO MODELO';
+  document.getElementById('epSubmitBtn').querySelector('span') && (document.getElementById('epSubmitBtn').innerHTML = '<i class="bi bi-cloud-upload me-2"></i>SUBIR MODELO');
+  document.getElementById('editForm').action = '/admin/modelos/subir';
+  document.getElementById('editForm').reset();
+  document.getElementById('ep-file-section').querySelector('input').required = true;
+  abrirPanel();
+}
+
+function abrirEditar(id, nombre, prodId, activo, escala, posY) {
+  document.getElementById('editPanelTitle').textContent = 'EDITAR MODELO';
+  document.getElementById('editForm').action = '/admin/modelos/' + id + '/editar';
+  document.getElementById('editForm').reset();
+  document.getElementById('ep-nombre').value = nombre;
+  document.getElementById('ep-producto').value = prodId || '';
+  document.getElementById('ep-activo').checked = !!activo;
+  document.getElementById('ep-escala').value = escala || 1;
+  document.getElementById('ep-posy').value = posY || 0;
+  document.getElementById('ep-file-section').querySelector('input').required = false;
+  abrirPanel();
+}
+</script>
+
+<%- include('../partials/footer', {isAdmin: true}) %>

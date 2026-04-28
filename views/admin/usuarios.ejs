@@ -1,0 +1,285 @@
+<%- include('../partials/header', {isAdmin: true}) %>
+
+<style>
+.user-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--border)}
+.badge-rol{font-family:var(--fm);font-size:.6rem;letter-spacing:1px;padding:3px 8px;border-radius:4px;font-weight:700}
+.badge-admin{background:rgba(233,30,140,.15);color:var(--cp);border:1px solid rgba(233,30,140,.3)}
+.badge-cliente{background:rgba(0,200,255,.1);color:#00c8ff;border:1px solid rgba(0,200,255,.2)}
+.user-row td{padding:12px 10px!important;vertical-align:middle}
+.action-btn{border:none;border-radius:6px;padding:5px 10px;font-size:.72rem;font-family:var(--fb);font-weight:700;cursor:pointer;transition:all .2s}
+.btn-edit-u{background:rgba(0,200,255,.1);color:#00c8ff;border:1px solid rgba(0,200,255,.2)}
+.btn-edit-u:hover{background:rgba(0,200,255,.2)}
+.btn-del-u{background:rgba(255,60,60,.1);color:#ff6060;border:1px solid rgba(255,60,60,.2)}
+.btn-del-u:hover{background:rgba(255,60,60,.2)}
+.search-bar{background:var(--dark2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;font-family:var(--fb);font-size:.85rem;width:280px;outline:none}
+.search-bar:focus{border-color:var(--cp);box-shadow:0 0 0 3px rgba(233,30,140,.12)}
+.stat-pill{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;display:flex;flex-direction:column;gap:2px}
+.stat-pill-val{font-family:var(--fd);font-size:1.4rem;font-weight:800}
+.stat-pill-label{font-family:var(--fm);font-size:.6rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--dark2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:500px;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.8)}
+</style>
+
+<!-- Stats rápidas -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-pill">
+      <div class="stat-pill-val" style="color:var(--cp)" id="totalUsers"><%= usuarios.length %></div>
+      <div class="stat-pill-label">Total usuarios</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-pill">
+      <div class="stat-pill-val" style="color:#00c8ff" id="totalClients"><%= usuarios.filter(u=>u.rol==='cliente').length %></div>
+      <div class="stat-pill-label">Clientes</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-pill">
+      <div class="stat-pill-val" style="color:var(--cp)" id="totalAdmins"><%= usuarios.filter(u=>u.rol==='admin').length %></div>
+      <div class="stat-pill-label">Administradores</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-pill">
+      <div class="stat-pill-val" style="color:#00ff64"><%= usuarios.filter(u=>{const d=new Date(u.creado_en);const n=new Date();return (n-d)<30*24*60*60*1000}).length %></div>
+      <div class="stat-pill-label">Nuevos (30d)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Header + acciones -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <div style="font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase">GESTIÓN</div>
+    <div style="font-family:var(--fd);font-size:1.1rem;font-weight:800;color:var(--text)">Usuarios del Sistema</div>
+  </div>
+  <div class="d-flex gap-2 align-items-center">
+    <input class="search-bar" type="text" id="searchInput" placeholder="🔍 Buscar usuario..." oninput="filterUsers()">
+    <button class="btn btn-pm btn-sm" onclick="showCreateModal()"><i class="bi bi-plus-lg me-1"></i>Nuevo Usuario</button>
+  </div>
+</div>
+
+<!-- Tabla -->
+<div class="card" style="overflow:hidden">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th style="width:50px">#</th>
+          <th>Usuario</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Registrado</th>
+          <th style="text-align:right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="usersTable">
+        <% usuarios.forEach((u, idx) => { %>
+        <tr class="user-row" data-name="<%= u.nombre_visible.toLowerCase() %>" data-email="<%= u.email.toLowerCase() %>"
+            data-id="<%= u.id %>"
+            data-nombre="<%= u.nombre_visible.replace(/"/g,'&quot;').replace(/'/g,'&#39;') %>"
+            data-emailval="<%= u.email %>"
+            data-rol="<%= u.rol %>">
+          <td style="color:var(--muted);font-family:var(--fm);font-size:.7rem"><%= idx+1 %></td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="<%= u.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+u.foto_perfil : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png') %>"
+                   class="user-avatar" onerror="this.src='/img/defaults/avatars/avatar1.png'">
+              <div>
+                <div style="font-family:var(--fb);font-weight:700;font-size:.9rem"><%= u.nombre_visible %></div>
+                <div style="font-family:var(--fm);font-size:.62rem;color:var(--muted)">ID: <%= u.id %></div>
+              </div>
+            </div>
+          </td>
+          <td style="font-family:var(--fm);font-size:.75rem;color:var(--muted)"><%= u.email %></td>
+          <td>
+            <select class="badge-rol <%= u.rol==='admin'?'badge-admin':'badge-cliente' %>" 
+                    onchange="changeRole(<%= u.id %>, this.value, this)"
+                    style="background:transparent;border:none;font-family:var(--fm);font-size:.6rem;letter-spacing:1px;cursor:pointer;padding:3px 6px">
+              <option value="cliente" <%= u.rol==='cliente'?'selected':'' %>>CLIENTE</option>
+              <option value="admin" <%= u.rol==='admin'?'selected':'' %>>ADMIN</option>
+            </select>
+          </td>
+          <td style="font-family:var(--fm);font-size:.7rem;color:var(--muted)">
+            <%= new Date(u.creado_en).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) %>
+          </td>
+          <td style="text-align:right">
+            <div class="d-flex gap-1 justify-content-end">
+              <button class="action-btn btn-edit-u" onclick="showEditModalFromRow(this.closest('tr'))">
+                <i class="bi bi-pencil"></i> Editar
+              </button>
+              <button class="action-btn btn-del-u" onclick="confirmDelete(<%= u.id %>, '<%= u.nombre_visible %>')">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Crear -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal-box">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div style="font-family:var(--fd);font-size:.85rem;letter-spacing:2px;color:var(--cp)"><i class="bi bi-person-plus me-2"></i>NUEVO USUARIO</div>
+      <button style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer" onclick="hideModal('createModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <form action="/admin/usuarios/nuevo" method="POST">
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" name="nombre_visible" class="form-control" required placeholder="Nombre completo">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" required placeholder="email@ejemplo.com">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Contraseña</label>
+        <input type="password" name="password" class="form-control" required placeholder="Mínimo 6 caracteres" minlength="6">
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Rol</label>
+        <select name="rol" class="form-select">
+          <option value="cliente">Cliente</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-om btn-sm" onclick="hideModal('createModal')">Cancelar</button>
+        <button type="submit" class="btn btn-pm btn-sm"><i class="bi bi-check2 me-1"></i>Crear Usuario</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div style="font-family:var(--fd);font-size:.85rem;letter-spacing:2px;color:var(--cp)"><i class="bi bi-pencil-square me-2"></i>EDITAR USUARIO</div>
+      <button style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer" onclick="hideModal('editModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <form id="editForm" method="POST">
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" name="nombre_visible" id="editNombre" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" id="editEmail" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Nueva Contraseña <span style="color:var(--muted);font-size:.75rem">(dejar vacío para no cambiar)</span></label>
+        <input type="password" name="password" class="form-control" placeholder="Nueva contraseña" minlength="6">
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Rol</label>
+        <select name="rol" id="editRol" class="form-select">
+          <option value="cliente">Cliente</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-om btn-sm" onclick="hideModal('editModal')">Cancelar</button>
+        <button type="submit" class="btn btn-pm btn-sm"><i class="bi bi-check2 me-1"></i>Guardar Cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Confirmar Eliminar -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box" style="max-width:400px;text-align:center">
+    <div style="font-size:2.5rem;margin-bottom:12px">⚠️</div>
+    <div style="font-family:var(--fd);font-size:.85rem;letter-spacing:2px;color:#ff6060;margin-bottom:8px">ELIMINAR USUARIO</div>
+    <div style="font-family:var(--fb);color:var(--muted);margin-bottom:24px" id="deleteUserName">¿Confirmar eliminación?</div>
+    <form id="deleteForm" method="POST">
+      <div class="d-flex gap-2 justify-content-center">
+        <button type="button" class="btn btn-om btn-sm" onclick="hideModal('deleteModal')">Cancelar</button>
+        <button type="submit" class="btn btn-sm" style="background:rgba(255,60,60,.2);color:#ff6060;border:1px solid rgba(255,60,60,.3);font-family:var(--fb);font-weight:700">
+          <i class="bi bi-trash me-1"></i>Eliminar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function filterUsers() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#usersTable tr').forEach(tr => {
+    const name = tr.dataset.name || '';
+    const email = tr.dataset.email || '';
+    tr.style.display = (!q || name.includes(q) || email.includes(q)) ? '' : 'none';
+  });
+}
+
+function showCreateModal() {
+  document.getElementById('createModal').classList.add('show');
+}
+
+function showEditModalFromRow(row) {
+  const id = row.dataset.id;
+  const nombre = row.dataset.nombre;
+  const email = row.dataset.emailval;
+  const rol = row.dataset.rol;
+  document.getElementById('editNombre').value = nombre;
+  document.getElementById('editEmail').value = email;
+  document.getElementById('editRol').value = rol;
+  document.getElementById('editForm').action = `/admin/usuarios/${id}/editar`;
+  document.getElementById('editModal').classList.add('show');
+}
+
+function showEditModal(u) {
+  document.getElementById('editNombre').value = u.nombre_visible;
+  document.getElementById('editEmail').value = u.email;
+  document.getElementById('editRol').value = u.rol;
+  document.getElementById('editForm').action = `/admin/usuarios/${u.id}/editar`;
+  document.getElementById('editModal').classList.add('show');
+}
+
+function confirmDelete(id, name) {
+  document.getElementById('deleteUserName').textContent = `¿Eliminar a "${name}"?`;
+  document.getElementById('deleteForm').action = `/admin/usuarios/${id}/eliminar`;
+  document.getElementById('deleteModal').classList.add('show');
+}
+
+function hideModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+async function changeRole(id, rol, selectEl) {
+  try {
+    const res = await fetch(`/admin/usuarios/${id}/rol`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({rol})
+    });
+    const data = await res.json();
+    if (data.success) {
+      selectEl.className = `badge-rol ${rol==='admin'?'badge-admin':'badge-cliente'}`;
+      showToast(`Rol actualizado a ${rol.toUpperCase()}`, 'success');
+    }
+  } catch(e) { showToast('Error al actualizar rol', 'error'); }
+}
+
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;top:20px;right:20px;z-index:99999;background:${type==='success'?'rgba(0,255,100,.15)':'rgba(255,60,60,.15)'};color:${type==='success'?'#00ff64':'#ff6060'};border:1px solid ${type==='success'?'rgba(0,255,100,.3)':'rgba(255,60,60,.3)'};padding:12px 20px;border-radius:8px;font-family:var(--fb);font-weight:600;font-size:.85rem;backdrop-filter:blur(10px)`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// Close on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('show'); });
+});
+</script>
+
+<%- include('../partials/footer') %>

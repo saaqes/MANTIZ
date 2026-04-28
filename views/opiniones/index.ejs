@@ -1,0 +1,307 @@
+<%- include('../partials/header') %>
+
+<style>
+  .opiniones-hero { padding: 80px 0 48px; text-align: center; }
+  .encuestas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px;
+    padding: 0 40px 80px; max-width: 1200px; margin: 0 auto; }
+  .encuesta-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    position: relative; overflow: hidden; transition: border-color 0.3s;
+  }
+  .encuesta-card:hover { border-color: var(--pink); }
+  .enc-head { padding: 20px 24px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .enc-tipo { font-size: 9px; letter-spacing: 3px; color: var(--pink); font-family: 'Bebas Neue', sans-serif;
+    text-transform: uppercase; margin-bottom: 6px; }
+  .enc-titulo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; margin-bottom: 6px; }
+  .enc-desc { font-size: 13px; color: var(--gray); line-height: 1.5; }
+  .enc-body { padding: 16px 24px 20px; }
+  .enc-opciones { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Tipo botones */
+  .opc-btn {
+    position: relative; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    color: var(--white); padding: 12px 16px; cursor: pointer; transition: all 0.2s;
+    font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600;
+    letter-spacing: 0.5px; text-align: left; overflow: hidden;
+  }
+  .opc-btn:hover:not(:disabled) { border-color: var(--pink); color: var(--pink); }
+  .opc-btn.votado { border-color: var(--pink); color: white; }
+  .opc-btn.ganador { border-color: #ffd700; }
+  .opc-progress {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: rgba(233,30,140,0.15); transition: width 0.8s ease; pointer-events: none;
+  }
+  .opc-progress.ganador { background: rgba(255,215,0,0.12); }
+  .opc-label { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; }
+  .opc-pct { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--pink); }
+
+  /* Tipo imágenes */
+  .opc-imgs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .opc-img-btn {
+    position: relative; overflow: hidden; border: 2px solid var(--border);
+    cursor: pointer; transition: all 0.2s; aspect-ratio: 1;
+  }
+  .opc-img-btn:hover, .opc-img-btn.votado { border-color: var(--pink); }
+  .opc-img-btn img { width: 100%; height: 100%; object-fit: cover; }
+  .opc-img-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s; }
+  .opc-img-btn:hover .opc-img-overlay, .opc-img-btn.votado .opc-img-overlay { opacity: 1; }
+
+  .enc-meta { padding: 10px 24px 14px; display: flex; gap: 16px; align-items: center; }
+  .enc-meta span { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+  .enc-sugerencia { padding: 0 24px 20px; }
+  .enc-footer { padding: 0 24px 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px; }
+
+  /* Admin crear encuesta */
+  .crear-encuesta-toggle { cursor: pointer; }
+  .crear-form { display: none; background: var(--card-bg); border: 1px solid var(--border);
+    padding: 28px; max-width: 600px; margin: 0 auto 40px; }
+  .crear-form.open { display: block; }
+
+  @media (max-width: 768px) {
+    .encuestas-grid { grid-template-columns: 1fr; padding: 0 16px 60px; }
+    .opc-imgs { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<div class="opiniones-hero">
+  <div class="section-title">OPINIONES</div>
+  <div class="tribal-divider">
+    <svg width="200" height="14" viewBox="0 0 200 14"><path d="M0,7 L80,7 L90,2 L100,12 L110,2 L120,7 L200,7" fill="none" stroke="var(--pink)" stroke-width="1.5" opacity="0.6"/></svg>
+  </div>
+  <p style="color:var(--gray);font-size:14px;letter-spacing:1px;max-width:500px;margin:0 auto 24px">
+    Tu voz importa. Participa en encuestas y ayúdanos a construir MANTIZ contigo.
+  </p>
+
+  <% if (user && user.rol === 'admin') { %>
+  <button class="btn-grunge crear-encuesta-toggle" onclick="document.getElementById('crear-form').classList.toggle('open')">
+    + CREAR ENCUESTA
+  </button>
+  <% } %>
+</div>
+
+<!-- ADMIN: CREAR ENCUESTA -->
+<% if (user && user.rol === 'admin') { %>
+<div id="crear-form" class="crear-form">
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--pink);margin-bottom:20px">NUEVA ENCUESTA</div>
+  <div style="margin-bottom:14px">
+    <label class="mantiz-label">Título *</label>
+    <input type="text" id="ef-titulo" class="mantiz-input" placeholder="¿Cuál es tu color favorito de temporada?">
+  </div>
+  <div style="margin-bottom:14px">
+    <label class="mantiz-label">Descripción</label>
+    <textarea id="ef-desc" class="mantiz-input" rows="2" placeholder="Descripción opcional..."></textarea>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div>
+      <label class="mantiz-label">Tipo de respuesta</label>
+      <select id="ef-tipo" class="mantiz-select">
+        <option value="botones">Botones de texto</option>
+        <option value="imagenes">Imágenes</option>
+        <option value="banners">Banners</option>
+        <option value="estrellas">Estrellas</option>
+      </select>
+    </div>
+    <div>
+      <label class="mantiz-label">Fecha cierre (opcional)</label>
+      <input type="date" id="ef-cierre" class="mantiz-input">
+    </div>
+  </div>
+  <div style="margin-bottom:14px">
+    <label class="mantiz-label">Opciones (una por línea)</label>
+    <textarea id="ef-opciones" class="mantiz-input" rows="4" placeholder="Negro&#10;Blanco&#10;Gris&#10;Rosa"></textarea>
+  </div>
+  <div style="margin-bottom:20px">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--white)">
+      <input type="checkbox" id="ef-sugerencias" style="accent-color:var(--pink)">
+      Permitir que usuarios sugieran ideas
+    </label>
+  </div>
+  <button class="btn-grunge-fill" onclick="crearEncuesta()">PUBLICAR ENCUESTA</button>
+</div>
+<% } %>
+
+<!-- ENCUESTAS -->
+<div class="encuestas-grid">
+  <% if (!encuestas || encuestas.length === 0) { %>
+    <div style="grid-column:1/-1;text-align:center;padding:80px;color:var(--muted)">
+      No hay encuestas activas por el momento.
+    </div>
+  <% } else { encuestas.forEach(enc => {
+    const totalVotos = enc.opciones.reduce((s, o) => s + o.votos, 0);
+    const yaVoto = enc.mi_voto !== null;
+  %>
+  <div class="encuesta-card" id="enc-<%= enc.id %>">
+    <div class="enc-head">
+      <div class="enc-tipo">
+        <i class="bi bi-bar-chart-fill me-1"></i>
+        <%= enc.tipo_respuesta.toUpperCase() %>
+        <% if (enc.fecha_cierre) { %> · CIERRA <%= new Date(enc.fecha_cierre).toLocaleDateString('es-CO') %><% } %>
+      </div>
+      <div class="enc-titulo"><%= enc.titulo %></div>
+      <% if (enc.descripcion) { %><div class="enc-desc"><%= enc.descripcion %></div><% } %>
+    </div>
+
+    <div class="enc-body">
+      <div class="enc-opciones" id="opts-<%= enc.id %>">
+        <% if (enc.tipo_respuesta === 'imagenes') { %>
+        <div class="opc-imgs">
+          <% enc.opciones.forEach(op => {
+            const pct = totalVotos > 0 ? Math.round((op.votos / totalVotos) * 100) : 0;
+            const esGanador = op.votos === Math.max(...enc.opciones.map(o => o.votos)) && totalVotos > 0;
+          %>
+          <div class="opc-img-btn <%= enc.mi_voto === op.id ? 'votado' : '' %>" 
+               onclick="votar(<%= enc.id %>, <%= op.id %>)"
+               <% if (yaVoto) { %>title="<%= op.texto %> - <%= pct %>%"<% } %>>
+            <% if (op.imagen) { %>
+              <img src="/uploads/encuestas/<%= op.imagen %>" alt="<%= op.texto %>">
+            <% } else { %>
+              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;background:<%= op.color||'#1a1a1a' %>">
+                <%= op.texto %>
+              </div>
+            <% } %>
+            <div class="opc-img-overlay">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:white"><%= pct %>%</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.7)"><%= op.texto %></div>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+          <% enc.opciones.forEach(op => {
+            const pct = totalVotos > 0 ? Math.round((op.votos / totalVotos) * 100) : 0;
+            const esGanador = op.votos === Math.max(...enc.opciones.map(o => o.votos)) && totalVotos > 0;
+          %>
+          <button class="opc-btn <%= enc.mi_voto === op.id ? 'votado' : '' %> <%= esGanador && yaVoto ? 'ganador' : '' %>"
+                  onclick="votar(<%= enc.id %>, <%= op.id %>)"
+                  <% if (!uid) { %>title="Inicia sesión para votar"<% } %>>
+            <% if (yaVoto) { %>
+            <div class="opc-progress <%= esGanador ? 'ganador' : '' %>" style="width:<%= pct %>%"></div>
+            <% } %>
+            <div class="opc-label">
+              <span><%= op.texto %></span>
+              <% if (yaVoto) { %><span class="opc-pct"><%= pct %>%</span><% } %>
+            </div>
+          </button>
+          <% }) %>
+        <% } %>
+      </div>
+
+      <% if (enc.permite_sugerencias && user) { %>
+      <div class="enc-sugerencia" style="margin-top:12px">
+        <input type="text" id="sug-<%= enc.id %>" class="mantiz-input" 
+               placeholder="¿Tienes otra idea? Sugiérela..." style="font-size:12px;padding:8px 12px">
+      </div>
+      <% } %>
+    </div>
+
+    <div class="enc-meta">
+      <span><i class="bi bi-people me-1"></i><span id="total-<%= enc.id %>"><%= totalVotos %></span> votos</span>
+      <span>Por <%= enc.creador %></span>
+      <% if (user && user.rol === 'admin') { %>
+      <button onclick="toggleEncuesta(<%= enc.id %>)" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;margin-left:auto">
+        <i class="bi bi-power me-1"></i>CERRAR
+      </button>
+      <% } %>
+    </div>
+  </div>
+  <% }) } %>
+</div>
+
+<script>
+const userId = '<%= uid %>';
+
+async function votar(encId, opcionId) {
+  if (!userId) { window.location = '/auth/login'; return; }
+
+  const sugEl = document.getElementById(`sug-${encId}`);
+  const sugerencia = sugEl ? sugEl.value : '';
+
+  try {
+    const r = await fetch(`/opiniones/${encId}/votar`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ opcion_id: opcionId, sugerencia })
+    });
+    const d = await r.json();
+    if (!d.success) { showToast('ERROR AL VOTAR'); return; }
+
+    // Actualizar UI con resultados
+    const opts = document.getElementById(`opts-${encId}`);
+    const totalEl = document.getElementById(`total-${encId}`);
+    if (totalEl) totalEl.textContent = d.total_votos;
+
+    const maxVotos = Math.max(...d.resultados.map(r => r.votos));
+
+    d.resultados.forEach(op => {
+      const btn = opts.querySelector(`[onclick="votar(${encId}, ${op.id})"]`);
+      if (!btn) return;
+      btn.classList.toggle('votado', op.id === opcionId);
+      btn.classList.toggle('ganador', op.votos === maxVotos && d.total_votos > 0);
+
+      const prog = btn.querySelector('.opc-progress');
+      const pctEl = btn.querySelector('.opc-pct');
+
+      if (!prog) {
+        const progEl = document.createElement('div');
+        progEl.className = 'opc-progress' + (op.votos === maxVotos ? ' ganador' : '');
+        progEl.style.width = op.porcentaje + '%';
+        btn.insertBefore(progEl, btn.firstChild);
+      } else {
+        prog.style.width = op.porcentaje + '%';
+        prog.classList.toggle('ganador', op.votos === maxVotos);
+      }
+
+      const label = btn.querySelector('.opc-label');
+      if (label && !label.querySelector('.opc-pct')) {
+        const pctSpan = document.createElement('span');
+        pctSpan.className = 'opc-pct';
+        pctSpan.textContent = op.porcentaje + '%';
+        label.appendChild(pctSpan);
+      } else if (pctEl) {
+        pctEl.textContent = op.porcentaje + '%';
+      }
+    });
+
+    showToast('¡VOTO REGISTRADO!');
+  } catch(e) { showToast('ERROR DE CONEXIÓN'); }
+}
+
+<% if (user && user.rol === 'admin') { %>
+async function crearEncuesta() {
+  const titulo = document.getElementById('ef-titulo').value.trim();
+  if (!titulo) { showToast('EL TÍTULO ES OBLIGATORIO'); return; }
+  const opcionesRaw = document.getElementById('ef-opciones').value.trim();
+  const opciones = opcionesRaw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (opciones.length < 2) { showToast('NECESITAS AL MENOS 2 OPCIONES'); return; }
+
+  try {
+    const r = await fetch('/opiniones/crear', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        titulo,
+        descripcion: document.getElementById('ef-desc').value,
+        tipo_respuesta: document.getElementById('ef-tipo').value,
+        fecha_cierre: document.getElementById('ef-cierre').value || null,
+        permite_sugerencias: document.getElementById('ef-sugerencias').checked ? 1 : 0,
+        opciones
+      })
+    });
+    const d = await r.json();
+    if (d.success) { showToast('¡ENCUESTA CREADA!'); setTimeout(() => location.reload(), 1000); }
+    else showToast('ERROR: ' + (d.error || 'Desconocido'));
+  } catch(e) { showToast('ERROR DE RED'); }
+}
+
+async function toggleEncuesta(id) {
+  const r = await fetch(`/opiniones/${id}/toggle`, { method: 'POST' });
+  const d = await r.json();
+  if (d.success) {
+    showToast(d.activa ? 'ENCUESTA ACTIVADA' : 'ENCUESTA CERRADA');
+    setTimeout(() => location.reload(), 800);
+  }
+}
+<% } %>
+</script>
+
+<%- include('../partials/footer') %>

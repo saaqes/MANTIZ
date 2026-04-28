@@ -1,0 +1,36 @@
+<%- include('../partials/header') %>
+
+<div style="min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:40px 20px">
+  <div style="width:100%;max-width:420px">
+    <div style="background:var(--card-bg);padding:40px;position:relative">
+      <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
+
+      <div style="text-align:center;margin-bottom:32px">
+        <a href="/" style="font-family:'Permanent Marker',cursive;font-size:36px;color:var(--pink);text-decoration:none;display:block;text-shadow:0 0 20px rgba(233,30,140,0.4)">
+          <%= sitio.nombre_tienda || 'MANTIZ' %>
+        </a>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:5px;color:var(--white);margin-top:8px">INICIAR SESION</div>
+        <div style="width:60px;height:2px;background:var(--pink);margin:12px auto 0;filter:url(#gb)"></div>
+      </div>
+
+      <form action="/auth/login" method="POST">
+        <div style="margin-bottom:20px">
+          <label class="mantiz-label">Usuario o Email</label>
+          <input type="text" name="username" class="mantiz-input" placeholder="tu_usuario" required>
+        </div>
+        <div style="margin-bottom:24px">
+          <label class="mantiz-label">Contrasena</label>
+          <input type="password" name="password" class="mantiz-input" placeholder="........" required>
+        </div>
+        <button type="submit" class="btn-grunge-fill" style="width:100%">INGRESAR &#8594;</button>
+      </form>
+
+      <div style="text-align:center;margin-top:24px;font-size:13px;color:var(--gray);letter-spacing:1px">
+        No tienes cuenta?
+        <a href="/auth/registro" style="color:var(--pink);text-decoration:none;font-weight:700">REGISTRATE</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

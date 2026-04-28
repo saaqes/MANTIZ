@@ -1,0 +1,138 @@
+<%- include('partials/header') %>
+
+<style>
+#buscar-page { padding:40px; max-width:1300px; margin:0 auto; }
+.btab { padding:10px 20px; border:none; border-bottom:3px solid transparent; color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; text-decoration:none; white-space:nowrap; transition:all 0.2s; display:inline-block; }
+.btab:hover { color:var(--white); }
+.btab.on { color:var(--pink); border-bottom-color:var(--pink); }
+.sortlink { padding:4px 14px; border:1px solid rgba(255,255,255,0.2); color:var(--white); text-decoration:none; font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1.5px; transition:all 0.2s; }
+.sortlink:hover,.sortlink.on { border-color:var(--pink); color:var(--pink); }
+@media(max-width:1024px){.bgrid{grid-template-columns:repeat(3,1fr)!important}}
+@media(max-width:768px){.bgrid{grid-template-columns:repeat(2,1fr)!important} #buscar-page{padding:20px}}
+@media(max-width:480px){.bgrid{grid-template-columns:1fr!important}}
+</style>
+
+<div id="buscar-page">
+  <div style="text-align:center;margin-bottom:32px">
+    <h1 class="section-title" style="font-size:clamp(32px,5vw,48px)">BUSQUEDA</h1>
+    <% if (q) { %>
+    <div style="font-size:13px;color:var(--gray);letter-spacing:2px;margin-top:8px">
+      Resultados para: <span style="color:var(--pink);font-weight:700">"<%= q %>"</span>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Type tabs -->
+  <%
+    var tipoActual = tipo || 'todo';
+    var base = '/buscar?q=' + encodeURIComponent(q) + '&orden=' + (orden||'relevancia');
+  %>
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:28px;overflow-x:auto">
+    <a href="<%= base %>&tipo=todo"     class="btab <%= tipoActual==='todo'     ? 'on' : '' %>">TODO</a>
+    <a href="<%= base %>&tipo=productos" class="btab <%= tipoActual==='productos' ? 'on' : '' %>">PRODUCTOS (<%= productos.length %>)</a>
+    <a href="<%= base %>&tipo=usuarios"  class="btab <%= tipoActual==='usuarios'  ? 'on' : '' %>">USUARIOS (<%= usuarios ? usuarios.length : 0 %>)</a>
+  </div>
+
+  <!-- Sort bar (only for products) -->
+  <% if (tipoActual !== 'usuarios') { %>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <%
+        var baseSort = '/buscar?q=' + encodeURIComponent(q) + '&tipo=' + tipoActual;
+        var ordenActual = orden || 'relevancia';
+      %>
+      <a href="<%= baseSort %>&orden=relevancia" class="sortlink <%= ordenActual==='relevancia' ? 'on' : '' %>">RELEVANCIA</a>
+      <a href="<%= baseSort %>&orden=nuevo"       class="sortlink <%= ordenActual==='nuevo'       ? 'on' : '' %>">NUEVOS</a>
+      <a href="<%= baseSort %>&orden=precio_asc"  class="sortlink <%= ordenActual==='precio_asc'  ? 'on' : '' %>">PRECIO MENOR</a>
+      <a href="<%= baseSort %>&orden=precio_desc" class="sortlink <%= ordenActual==='precio_desc' ? 'on' : '' %>">PRECIO MAYOR</a>
+    </div>
+    <div style="font-size:12px;color:var(--gray);letter-spacing:1px"><%= productos.length %> resultado<%= productos.length!==1?'s':'' %></div>
+  </div>
+  <% } %>
+
+  <!-- PRODUCTS -->
+  <% if (tipoActual !== 'usuarios') { %>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:48px" class="bgrid">
+    <% if (productos.length > 0) { %>
+      <% productos.forEach(function(p) { %>
+      <div class="product-card" onclick="window.location='/productos/<%= p.id %>'">
+        <div class="pc-label">
+          <span class="pc-label-text"><%= p.titulo.substring(0,16) %></span>
+          <% if (p.precio_descuento) { %><span class="badge-oferta">-<%= Math.round((1-p.precio_descuento/p.precio)*100) %>%</span><% } %>
+        </div>
+        <div class="pc-img-wrap">
+          <div class="pc-img-clip">
+            <img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>"
+                 onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%>
+          </div>
+        </div>
+        <div class="pc-info">
+          <div>
+            <div class="pc-name"><%= p.titulo.substring(0,18) %></div>
+            <div style="font-size:10px;color:var(--gray);letter-spacing:1px"><%= p.categoria %></div>
+          </div>
+          <span class="pc-price">$<%= parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO') %></span>
+        </div>
+      </div>
+      <% }) %>
+    <% } else if (q) { %>
+    <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--gray)">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--pink);margin-bottom:8px">SIN RESULTADOS</div>
+      <p style="letter-spacing:1px">No encontramos productos para "<%= q %>"</p>
+      <a href="/productos" class="btn-grunge" style="display:inline-flex;margin-top:20px">VER TODO</a>
+    </div>
+    <% } %>
+  </div>
+  <% } %>
+
+  <!-- USERS -->
+  <% if (usuarios && usuarios.length > 0 && tipoActual !== 'productos') { %>
+  <% if (tipoActual !== 'usuarios') { %>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--pink);margin-bottom:20px;border-top:1px solid var(--border);padding-top:32px">USUARIOS</div>
+  <% } %>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <% usuarios.forEach(function(u) {
+      var av = (u.foto_perfil_tipo==='upload' && u.foto_perfil)
+        ? '/uploads/profiles/'+u.foto_perfil
+        : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png');
+    %>
+    <a href="/u/<%= u.username %>" style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:16px 20px;text-decoration:none;transition:border-color 0.2s;position:relative" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="position:absolute;inset:0;border:1px solid rgba(255,255,255,0.08);filter:url(#gb);pointer-events:none"></div>
+      <img src="<%= av %>" width="52" height="52"
+           style="border-radius:50%;object-fit:cover;border:2px solid var(--pink);flex-shrink:0"
+           onerror="this.src='/img/defaults/avatars/avatar1.png'">
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--white)"><%= u.nombre_visible %></div>
+        <div style="font-size:12px;color:var(--gray);letter-spacing:1px">@<%= u.username %></div>
+        <% if (u.bio) { %>
+        <div style="font-size:12px;color:rgba(240,240,240,0.6);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= u.bio.substring(0,60) %></div>
+        <% } %>
+      </div>
+      <div style="display:flex;gap:16px;text-align:center;flex-shrink:0">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--pink)"><%= u.total_likes||0 %></div>
+          <div style="font-size:9px;color:var(--gray);letter-spacing:1px">LIKES</div>
+        </div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--pink)"><%= u.total_tableros||0 %></div>
+          <div style="font-size:9px;color:var(--gray);letter-spacing:1px">TABLEROS</div>
+        </div>
+      </div>
+      <div style="padding:6px 16px;border:1px solid var(--pink);color:var(--pink);font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;flex-shrink:0">VER &#8594;</div>
+    </a>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <!-- Nothing at all -->
+  <% if (q && productos.length === 0 && (!usuarios || usuarios.length === 0)) { %>
+  <div style="text-align:center;padding:80px 20px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;color:var(--pink);margin-bottom:8px">SIN RESULTADOS</div>
+    <p style="color:var(--gray);letter-spacing:1px;margin-bottom:28px">No encontramos nada para "<%= q %>"</p>
+    <a href="/productos" class="btn-grunge">EXPLORAR TODO</a>
+  </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

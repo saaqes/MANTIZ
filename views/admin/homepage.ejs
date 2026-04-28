@@ -1,0 +1,371 @@
+<%- include('../partials/header', {isAdmin: true}) %>
+
+<style>
+.sec-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:12px; cursor:grab; transition:all .2s; }
+.sec-card:hover { border-color:var(--cp); }
+.sec-card.dragging { opacity:.5; border-color:var(--cp); }
+.sec-toggle { width:44px; height:24px; border-radius:12px; border:none; cursor:pointer; transition:background .2s; position:relative; flex-shrink:0; }
+.sec-toggle.on { background:var(--cp); }
+.sec-toggle.off { background:rgba(255,255,255,.15); }
+.sec-toggle::after { content:''; position:absolute; width:18px; height:18px; border-radius:50%; background:white; top:3px; transition:left .2s; }
+.sec-toggle.on::after { left:22px; }
+.sec-toggle.off::after { left:3px; }
+.slide-thumb { width:120px; height:68px; object-fit:cover; border-radius:6px; border:2px solid var(--border); flex-shrink:0; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 style="font-family:var(--fd);font-size:.9rem;letter-spacing:2px;color:var(--cp)">ESTRUCTURA DEL INICIO</h4>
+    <p class="small text-muted mb-0">Configura que secciones se muestran, su orden y contenido</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Left: Section order + toggles -->
+  <div class="col-12 col-lg-6">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h6 style="font-family:var(--fd);font-size:.7rem;letter-spacing:2px;color:var(--cp);margin-bottom:16px">ORDEN DE SECCIONES</h6>
+        <p class="small text-muted mb-3">Arrastra para reordenar. Activa/desactiva con el toggle.</p>
+
+        <form action="/admin/homepage/guardar" method="POST" id="formLayout">
+          <input type="hidden" name="seccion_orden" id="seccion_orden_input" value="<%= cfg.seccion_orden || 'hero,productos,bestsellers,carrusel_marca' %>">
+
+          <div id="secciones-list">
+            <%
+              var secOrden = (cfg.seccion_orden || 'hero,productos,bestsellers,carrusel_marca').split(',');
+              var secInfo = {
+                hero: { label: 'Hero / Carrusel principal', icon: 'bi-images', key: 'mostrar_hero' },
+                productos: { label: 'Grid de Productos', icon: 'bi-grid-3x3', key: 'mostrar_productos' },
+                bestsellers: { label: 'Lo Mas Vendido + Viewer 3D', icon: 'bi-box-seam', key: 'mostrar_bestsellers' },
+                carrusel_marca: { label: 'Carrusel de Marca', icon: 'bi-film', key: 'mostrar_carrusel_marca' }
+              };
+            %>
+            <% secOrden.forEach(function(sec) {
+              var info = secInfo[sec];
+              if (!info) return;
+              var isOn = cfg[info.key] !== '0';
+            %>
+            <div class="sec-card d-flex align-items-center gap-3" data-sec="<%= sec %>">
+              <i class="bi <%= info.icon %>" style="color:var(--cp);font-size:1.2rem;width:24px"></i>
+              <div class="flex-grow-1">
+                <div style="font-weight:600;font-size:.85rem"><%= info.label %></div>
+                <div class="small text-muted">Seccion: <code><%= sec %></code></div>
+              </div>
+              <i class="bi bi-grip-vertical text-muted" style="cursor:grab"></i>
+              <button type="button" class="sec-toggle <%= isOn ? 'on' : 'off' %>" onclick="toggleSec(this,'<%= info.key %>')"></button>
+              <input type="hidden" name="<%= info.key %>" id="hid-<%= info.key %>" value="<%= isOn ? '1' : '0' %>">
+            </div>
+            <% }) %>
+          </div>
+
+          <div class="row g-3 mt-3">
+            <div class="col-6">
+              <label class="form-label">Productos en inicio</label>
+              <input type="number" name="productos_cantidad" class="form-control" value="<%= cfg.productos_cantidad || 8 %>" min="2" max="12">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Bestsellers / Recomendados</label>
+              <input type="number" name="bestsellers_cantidad" class="form-control" value="<%= cfg.bestsellers_cantidad || 4 %>" min="2" max="8">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Titulo del carrusel de marca</label>
+              <input type="text" name="carrusel_marca_titulo" class="form-control" value="<%= cfg.carrusel_marca_titulo || 'NUEVA COLECCION' %>">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-pm w-100 mt-3">
+            <i class="bi bi-floppy me-2"></i>Guardar Configuracion
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 3D Viewer model selector -->
+    <div class="card">
+      <div class="card-body">
+        <h6 style="font-family:var(--fd);font-size:.7rem;letter-spacing:2px;color:var(--cp);margin-bottom:12px">MODELO 3D ACTIVO EN INICIO</h6>
+        <% if (modelos && modelos.length > 0) { %>
+        <div class="d-flex flex-column gap-2">
+          <% modelos.forEach(function(m) { %>
+          <div class="d-flex align-items-center gap-3 p-2 rounded" style="border:1px solid <%= m.es_principal ? 'var(--cp)' : 'var(--border)' %>;background:<%= m.es_principal ? 'rgba(233,30,140,.07)' : 'transparent' %>">
+            <div class="d-flex align-items-center justify-content-center rounded" style="width:40px;height:40px;background:#0e0e0e;flex-shrink:0">
+              <i class="bi bi-box" style="color:var(--cp)"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div style="font-weight:600;font-size:.85rem"><%= m.nombre %></div>
+              <div class="small text-muted"><%= m.archivo %></div>
+            </div>
+            <% if (m.es_principal) { %>
+            <span style="background:var(--cp);color:white;font-size:.6rem;padding:2px 8px;border-radius:4px;font-family:var(--fd);letter-spacing:1px">ACTIVO</span>
+            <% } else { %>
+            <form action="/admin/modelos/<%= m.id %>/principal" method="POST">
+              <button type="submit" class="btn btn-om btn-sm">Activar</button>
+            </form>
+            <% } %>
+          </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+        <div class="text-center py-3 text-muted small">
+          Sin modelos. <a href="/admin/modelos">Ir a Modelos 3D</a>
+        </div>
+        <% } %>
+        <a href="/admin/modelos" class="btn btn-om btn-sm w-100 mt-3">
+          <i class="bi bi-box-seam me-1"></i>Gestionar todos los modelos
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Carrusel slides manager -->
+  <div class="col-12 col-lg-6">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 style="font-family:var(--fd);font-size:.7rem;letter-spacing:2px;color:var(--cp);margin-bottom:0">SLIDES DEL CARRUSEL</h6>
+          <button class="btn btn-pm btn-sm" onclick="document.getElementById('modalNewSlide').style.display='flex'">
+            <i class="bi bi-plus me-1"></i>Nuevo Slide
+          </button>
+        </div>
+        <p class="small text-muted mb-3">Estos banners aparecen en el hero y en el carrusel de marca del inicio.</p>
+
+        <div id="slides-list" style="display:flex;flex-direction:column;gap:10px">
+          <% if (carrusel && carrusel.length > 0) { %>
+            <% carrusel.forEach(function(s) { %>
+            <div class="d-flex align-items-center gap-3 p-2 rounded" style="border:1px solid var(--border);background:rgba(255,255,255,.02)">
+              <img src="/uploads/banners/<%= s.imagen %>" class="slide-thumb" alt="<%= s.titulo %>"
+                   onerror="this.style.background='#111';this.src=''">
+              <div class="flex-grow-1 min-w-0">
+                <div style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><%= s.titulo || '(sin titulo)' %></div>
+                <div class="small text-muted">Orden: <%= s.orden %></div>
+                <div>
+                  <span class="badge" style="background:<%= s.activo ? 'rgba(0,255,100,.1)' : 'rgba(90,90,122,.2)' %>;color:<%= s.activo ? '#00ff64' : 'var(--muted)' %>">
+                    <%= s.activo ? 'Visible' : 'Oculto' %>
+                  </span>
+                </div>
+              </div>
+              <div class="d-flex flex-column gap-1">
+                <button class="btn btn-om btn-sm" style="font-size:.65rem;padding:2px 8px"
+                        onclick="abrirEditSlide(<%= s.id %>, '<%= (s.titulo||'').replace(/'/g,'') %>', '<%= (s.subtitulo||'').replace(/'/g,'') %>', <%= s.activo %>)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <form action="/admin/homepage/carrusel/<%= s.id %>/toggle" method="POST"
+                      onsubmit="event.preventDefault();fetch(this.action,{method:'POST'}).then(r=>r.json()).then(()=>location.reload())">
+                  <button type="submit" class="btn btn-sm w-100" style="font-size:.65rem;padding:2px 8px;border:1px solid var(--border);color:var(--muted);background:transparent">
+                    <i class="bi bi-eye<%= s.activo ? '-slash' : '' %>"></i>
+                  </button>
+                </form>
+                <form action="/admin/homepage/carrusel/<%= s.id %>/eliminar" method="POST"
+                      onsubmit="return confirm('Eliminar este slide?')">
+                  <button type="submit" class="btn btn-sm w-100" style="font-size:.65rem;padding:2px 8px;border:1px solid #ff6060;color:#ff6060;background:transparent">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+            <% }) %>
+          <% } else { %>
+          <div class="text-center py-4 text-muted small">Sin slides. Agrega el primero arriba.</div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: New slide -->
+<div id="modalNewSlide" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:var(--dark2);border:1px solid var(--border);max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
+      <div class="modal-header">
+        <h5 class="modal-title">Nuevo Slide / Banner</h5>
+        <button type="button" onclick="this.closest('[id^=modal]').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer"></button>
+      </div>
+      <form action="/admin/homepage/carrusel-marca/nuevo" method="POST" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Imagen del banner</label>
+            <input type="file" name="imagen" accept="image/*" class="form-control" required>
+            <div class="form-text">Tamano recomendado: 1920x600px. Max 5MB.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Titulo (opcional)</label>
+            <input type="text" name="titulo" class="form-control" placeholder="NUEVA COLECCION">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Subtitulo (opcional)</label>
+            <input type="text" name="subtitulo" class="form-control" placeholder="Temporada 2025">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" onclick="this.closest('[id^=modal]').style.display='none'">Cancelar</button>
+          <button type="submit" class="btn btn-pm btn-sm"><i class="bi bi-cloud-upload me-1"></i>Subir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit slide -->
+<div class="modal fade" id="modalEditSlide" tabindex="-1">
+  <div style="background:var(--dark2);border:1px solid var(--border);max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Slide</h5>
+        <button type="button" onclick="this.closest('[id^=modal]').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer"></button>
+      </div>
+      <form id="formEditSlide" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Titulo</label>
+            <input type="text" name="titulo" id="es-titulo" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Subtitulo</label>
+            <input type="text" name="subtitulo" id="es-subtitulo" class="form-control">
+          </div>
+          <div class="form-check">
+            <input type="checkbox" name="activo" id="es-activo" value="1" class="form-check-input">
+            <label class="form-check-label" for="es-activo">Visible en el sitio</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" onclick="this.closest('[id^=modal]').style.display='none'">Cancelar</button>
+          <button type="submit" class="btn btn-pm btn-sm">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Toggle section visibility
+function toggleSec(btn, key) {
+  var isOn = btn.classList.contains('on');
+  btn.classList.toggle('on', !isOn);
+  btn.classList.toggle('off', isOn);
+  document.getElementById('hid-' + key).value = isOn ? '0' : '1';
+}
+
+// Drag-and-drop section reorder
+var list = document.getElementById('secciones-list');
+var dragging = null;
+list.querySelectorAll('.sec-card').forEach(function(card) {
+  card.setAttribute('draggable', 'true');
+  card.addEventListener('dragstart', function() { dragging = card; card.classList.add('dragging'); });
+  card.addEventListener('dragend', function() { card.classList.remove('dragging'); updateSecOrder(); });
+  card.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    var after = getDragAfter(list, e.clientY);
+    if (after == null) list.appendChild(dragging);
+    else list.insertBefore(dragging, after);
+  });
+});
+function getDragAfter(container, y) {
+  var els = [...container.querySelectorAll('.sec-card:not(.dragging)')];
+  return els.reduce(function(closest, child) {
+    var box = child.getBoundingClientRect();
+    var offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+function updateSecOrder() {
+  var order = [...list.querySelectorAll('.sec-card')].map(function(c) { return c.dataset.sec; });
+  document.getElementById('seccion_orden_input').value = order.join(',');
+}
+
+// Edit slide modal
+function abrirEditSlide(id, titulo, subtitulo, activo) {
+  document.getElementById('formEditSlide').action = '/admin/homepage/carrusel/' + id + '/editar';
+  document.getElementById('es-titulo').value = titulo;
+  document.getElementById('es-subtitulo').value = subtitulo;
+  document.getElementById('es-activo').checked = !!activo;
+  new bootstrap.Modal(document.getElementById('modalEditSlide')).show();
+}
+</script>
+
+
+<!-- Brand Carousel Section -->
+<div class="row g-4 mt-2">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h6 style="font-family:var(--fd);font-size:.7rem;letter-spacing:2px;color:var(--cp);margin-bottom:2px">CARRUSEL DE MARCA (sección inferior)</h6>
+            <p class="small text-muted mb-0">Imágenes independientes del carrusel principal del hero</p>
+          </div>
+          <button class="btn btn-pm btn-sm" onclick="document.getElementById('modalNewMarca').style.display='flex'">
+            <i class="bi bi-plus me-1"></i>Agregar Imagen
+          </button>
+        </div>
+        <div class="row g-2">
+          <% if (carruselMarca && carruselMarca.length > 0) { %>
+            <% carruselMarca.forEach(function(s) { %>
+            <div class="col-12 col-md-4 col-lg-3">
+              <div style="position:relative;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                <img src="/uploads/banners/<%= s.imagen %>" style="width:100%;height:100px;object-fit:cover;opacity:0.8" onerror="this.style.background='#111'">
+                <div style="padding:8px 10px;background:rgba(0,0,0,0.6)">
+                  <div style="font-size:.75rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= s.titulo || '(sin titulo)' %></div>
+                  <div style="display:flex;gap:6px;margin-top:6px">
+                    <form action="/admin/homepage/carrusel-marca/<%= s.id %>/toggle" method="POST"
+                          onsubmit="event.preventDefault();fetch(this.action,{method:'POST'}).then(()=>location.reload())">
+                      <button type="submit" class="btn btn-sm" style="font-size:.6rem;padding:2px 8px;border:1px solid var(--border);color:var(--muted);background:transparent">
+                        <i class="bi bi-eye<%= s.activo ? '-slash' : '' %>"></i>
+                      </button>
+                    </form>
+                    <form action="/admin/homepage/carrusel-marca/<%= s.id %>/eliminar" method="POST"
+                          onsubmit="return confirm('Eliminar esta imagen?')">
+                      <button type="submit" class="btn btn-sm" style="font-size:.6rem;padding:2px 8px;border:1px solid #ff6060;color:#ff6060;background:transparent">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% }) %>
+          <% } else { %>
+          <div class="col-12">
+            <div class="text-center py-4 text-muted small" style="border:1px dashed var(--border);border-radius:8px">
+              Sin imágenes de marca. Agrega la primera arriba.
+            </div>
+          </div>
+          <% } %>
+        </div>
+      </div>
+  </div>
+
+<!-- Modal: New marca image -->
+<div id="modalNewMarca" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:var(--dark2);border:1px solid var(--border);max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
+      <div class="modal-header">
+        <h5 class="modal-title">Nueva Imagen - Carrusel de Marca</h5>
+        <button type="button" onclick="this.closest('[id^=modal]').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer"></button>
+      </div>
+      <form action="/admin/homepage/carrusel-marca/nuevo" method="POST" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Imagen</label>
+            <input type="file" name="imagen" accept="image/*" class="form-control" required>
+            <div class="form-text">1920×600px recomendado. Max 5MB.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Título (opcional)</label>
+            <input type="text" name="titulo" class="form-control" placeholder="NUEVA COLECCION">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Subtítulo (opcional)</label>
+            <input type="text" name="subtitulo" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" onclick="this.closest('[id^=modal]').style.display='none'">Cancelar</button>
+          <button type="submit" class="btn btn-pm btn-sm">Subir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

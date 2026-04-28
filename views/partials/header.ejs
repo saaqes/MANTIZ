@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | <%= sitio.nombre_tienda || 'MANTIZ' %></title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <!-- Bootstrap only for admin -->
+  <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <% } %>
+  <style>
+    :root {
+      --black: #0a0a0a;
+      --dark: #111111;
+      --dark2: #0d0d0d;
+      --card-bg: #1a1a1a;
+      --pink: <%= sitio.color_primario || '#e91e8c' %>;
+      --pink-light: #ff3da6;
+      --white: #f0f0f0;
+      --gray: #888;
+      --border: rgba(233,30,140,0.2);
+      --text: #e8e8f0;
+      --muted: #666;
+      --sw: 252px;
+      --cp: <%= sitio.color_primario || '#e91e8c' %>;
+      --ca: <%= sitio.color_acento || '#ff5cb8' %>;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--black); color: var(--white); font-family: 'Rajdhani', sans-serif; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: var(--pink); }
+
+    /* ── NAVBAR ── */
+    #navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: rgba(10,10,10,0.85); backdrop-filter: blur(10px);
+      height: 64px; transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    /* navbar border line removed */
+    #navbar.hidden { transform: translateY(-100%); }
+    #navbar.scrolled { background: rgba(10,10,10,0.92) !important; backdrop-filter: blur(20px) saturate(180%) !important; }
+    .nav-inner { display: flex; align-items: center; height: 64px; padding: 0 32px; gap: 16px; }
+    .nav-left { display: flex; gap: 28px; flex: 1; }
+    .nav-left a {
+      color: var(--white); text-decoration: none; font-family: 'Rajdhani', sans-serif;
+      font-weight: 600; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+      transition: color 0.2s; position: relative;
+    }
+    .nav-left a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 1px; background: var(--pink); transition: width 0.3s;
+    }
+    .nav-left a:hover { color: var(--pink); }
+    .nav-left a:hover::after { width: 100%; }
+    .nav-logo {
+      font-family: 'Permanent Marker', cursive; font-size: 32px; color: var(--pink);
+      letter-spacing: 1px; text-decoration: none; position: absolute;
+      left: 50%; transform: translateX(-50%);
+      text-shadow: 0 0 20px rgba(233,30,140,0.5);
+    }
+    .nav-right { display: flex; align-items: center; gap: 16px; flex: 1; justify-content: flex-end; }
+    .nav-btn {
+      background: none; border: none; color: var(--white); cursor: pointer;
+      font-size: 18px; padding: 6px; transition: color 0.2s, transform 0.2s; position: relative; line-height: 1;
+    }
+    .nav-btn:hover { color: var(--pink); transform: scale(1.1); }
+    .cart-count {
+      position: absolute; top: -4px; right: -4px; background: var(--pink); color: white;
+      font-size: 9px; width: 16px; height: 16px; border-radius: 50%;
+      display: none; align-items: center; justify-content: center; font-weight: 700;
+    }
+    .cart-count.show { display: flex; }
+    .login-btn {
+      background: transparent; border: 2px solid var(--pink); color: var(--pink);
+      padding: 6px 18px; font-family: 'Rajdhani', sans-serif; font-weight: 600;
+      font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+      transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center;
+      filter: url(#gb);
+    }
+    .login-btn:hover { color: white; background: var(--pink); }
+    .user-btn {
+      background: none; border: 1px solid var(--border); color: var(--white);
+      padding: 4px 12px 4px 6px; font-family: 'Rajdhani', sans-serif; font-weight: 600;
+      font-size: 12px; letter-spacing: 1px; cursor: pointer;
+      display: flex; align-items: center; gap: 8px; transition: border-color 0.2s; position: relative;
+    }
+    .user-btn:hover { border-color: var(--pink); }
+    .user-btn img { border-radius: 50%; border: 2px solid var(--pink); }
+    .user-dropdown {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: rgba(17,17,17,0.98); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); min-width: 180px; z-index: 2000; display: none;
+    }
+    .user-dropdown.open { display: block; }
+    .user-dropdown a {
+      display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+      color: var(--white); text-decoration: none; font-size: 12px;
+      letter-spacing: 1px; font-weight: 600; text-transform: uppercase;
+      transition: background 0.2s, color 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .user-dropdown a:hover { background: rgba(233,30,140,0.1); color: var(--pink); }
+
+    /* SEARCH */
+    #search-bar {
+      position: fixed; top: 64px; left: 0; right: 0;
+      background: rgba(10,10,10,0.95); backdrop-filter: blur(10px);
+      padding: 0 32px; height: 0; overflow: hidden; transition: height 0.3s ease; z-index: 999;
+    }
+    #search-bar.open { height: 64px; padding: 12px 32px; }
+    #search-bar form { position: relative; }
+    #search-bar input {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+      color: var(--white); padding: 10px 20px; font-family: 'Rajdhani', sans-serif;
+      font-size: 15px; letter-spacing: 1px; outline: none;
+    }
+    #search-bar input::placeholder { color: var(--gray); }
+    .search-suggestions {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: rgba(17,17,17,0.98); border: 1px solid var(--border);
+      z-index: 1000; max-height: 280px; overflow-y: auto; display: none;
+    }
+    .search-suggestions .item {
+      padding: 10px 20px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.2s; font-family: 'Rajdhani', sans-serif; font-size: 13px;
+    }
+    .search-suggestions .item:hover { background: rgba(233,30,140,0.1); color: var(--pink); }
+
+    /* CART PANEL */
+    #cart-panel {
+      position: fixed; top: 0; right: 0; width: 340px; height: 100vh;
+      background: rgba(17,17,17,0.98); backdrop-filter: blur(20px);
+      z-index: 1001; transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column;
+    }
+    #cart-panel::before {
+      content: ''; position: absolute; inset: 0;
+      border-left: 3px solid var(--pink); filter: url(#gb); pointer-events: none; z-index: 10;
+    }
+    #cart-panel.open { transform: translateX(0); }
+    .cart-ph { padding: 20px 24px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 3px; color: var(--pink); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .cart-pi { padding: 8px 0; flex: 1; overflow-y: auto; }
+    .cart-pf { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+    .cart-pt { display: flex; justify-content: space-between; margin-bottom: 16px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; }
+    .cart-pt span:last-child { color: var(--pink); }
+    .cart-empty-msg { text-align: center; padding: 40px; color: var(--gray); font-size: 13px; letter-spacing: 1px; }
+    .cart-pitem { display: flex; align-items: center; gap: 12px; padding: 12px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .cart-pitem img { width: 56px; height: 56px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; filter: url(#gb); }
+
+    /* GRUNGE BUTTONS */
+    .btn-grunge {
+      position: relative; background: transparent; border: 2px solid var(--pink);
+      color: var(--pink); padding: 12px 40px; font-family: 'Bebas Neue', sans-serif;
+      font-size: 15px; letter-spacing: 4px; cursor: pointer; transition: all 0.2s;
+      text-transform: uppercase; text-decoration: none; display: inline-flex;
+      align-items: center; justify-content: center; isolation: isolate;
+    }
+    .btn-grunge::after { content: ''; position: absolute; inset: 0; border: 2px solid var(--pink); background: transparent; filter: url(#gb); pointer-events: none; z-index: 2; }
+    .btn-grunge:hover { color: white; background: rgba(233,30,140,0.15); }
+    .btn-grunge-w {
+      position: relative; background: transparent; border: 2px solid white; color: white;
+      padding: 14px; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 4px;
+      cursor: pointer; transition: all 0.2s; text-transform: uppercase; width: 100%;
+      text-align: center; text-decoration: none; display: block; isolation: isolate;
+    }
+    .btn-grunge-w::after { content: ''; position: absolute; inset: 0; border: 2px solid white; filter: url(#gb); pointer-events: none; z-index: 2; }
+    .btn-grunge-w:hover { color: var(--pink); }
+    .btn-grunge-fill {
+      position: relative; background: var(--pink); border: 2px solid white; color: white;
+      padding: 14px 32px; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 4px;
+      cursor: pointer; transition: all 0.2s; text-transform: uppercase; text-decoration: none;
+      display: inline-flex; align-items: center; justify-content: center; isolation: isolate;
+    }
+    .btn-grunge-fill::after { content: ''; position: absolute; inset: 0; border: 2px solid white; filter: url(#gb); pointer-events: none; z-index: 2; }
+    .btn-grunge-fill:hover { background: var(--pink-light); color: white; transform: translateY(-2px); }
+
+    /* PRODUCT CARDS */
+    .product-card {
+      background: var(--dark); border: none; position: relative; overflow: visible;
+      transition: transform 0.3s; cursor: pointer; display: block; text-decoration: none;
+    }
+    .product-card::before {
+      content: ''; position: absolute; inset: -4px; border: 2px solid rgba(255,255,255,0.5);
+      z-index: 2; pointer-events: none; filter: url(#gb); transition: border-color 0.3s;
+    }
+    .product-card:hover::before { border-color: var(--pink); }
+    .product-card:hover { transform: translateY(-5px); }
+    .pc-label {
+      background: var(--pink); padding: 5px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; z-index: 3; filter: url(#gb);
+    }
+    .pc-label-text { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 3px; color: white; }
+    .pc-img-wrap { position: relative; overflow: visible; }
+    .pc-img-clip { overflow: hidden; position: relative; }
+    .pc-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; transition: transform 0.5s; }
+    .pc-img-hover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s ease; }
+    .product-card:hover .pc-img-hover { opacity: 1; }
+    .product-card:hover .pc-img { transform: scale(1.04); }
+    .pc-add-btn {
+      position: absolute; bottom: -16px; right: 12px;
+      width: 32px; height: 32px; background: var(--pink); border: 2px solid white;
+      border-radius: 50%; color: white; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; z-index: 6; filter: url(#gb); line-height: 1;
+    }
+    .pc-add-btn:hover { background: white; color: var(--pink); transform: scale(1.15) rotate(90deg); }
+    .pc-info { padding: 12px 14px 16px; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; min-height: 54px; }
+    .pc-name { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px; color: var(--white); }
+    .pc-price { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--pink); letter-spacing: 1px; }
+    .badge-oferta { font-family: 'Bebas Neue', sans-serif; font-size: 11px; background: var(--pink); color: white; padding: 2px 8px; letter-spacing: 1px; }
+
+    /* SECTION TITLES */
+    .section-title {
+      font-family: 'Permanent Marker', cursive; font-size: clamp(36px,6vw,52px);
+      letter-spacing: 2px; font-weight: lighter; text-align: center; color: var(--pink); margin-bottom: 16px;
+    }
+    .tribal-divider { text-align: center; margin: 16px 0 40px; opacity: 0.8; }
+
+    /* FORMS */
+    .mantiz-input {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--white); padding: 12px 16px; font-family: 'Rajdhani', sans-serif;
+      font-size: 14px; letter-spacing: 0.5px; outline: none; transition: border-color 0.2s;
+    }
+    .mantiz-input:focus { border-color: var(--pink); }
+    .mantiz-input::placeholder { color: var(--gray); }
+    .mantiz-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gray); margin-bottom: 6px; }
+    .mantiz-select { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--white); padding: 12px 16px; font-family: 'Rajdhani', sans-serif; font-size: 14px; outline: none; cursor: pointer; }
+    .mantiz-select:focus { border-color: var(--pink); }
+    .mantiz-select option { background: var(--dark); }
+    textarea.mantiz-input { resize: vertical; }
+
+    /* ALERTS */
+    .alert-mantiz { padding: 12px 16px; font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; margin-bottom: 16px; }
+    .alert-success { background: rgba(0,255,100,0.07); color: #00ff64; border: 1px solid rgba(0,255,100,0.2); }
+    .alert-danger  { background: rgba(255,60,60,0.07);  color: #ff6060; border: 1px solid rgba(255,60,60,0.2); }
+    .alert-warning { background: rgba(255,200,0,0.07);  color: #ffc800; border: 1px solid rgba(255,200,0,0.2); }
+    .alert-info    { background: rgba(0,200,255,0.07);  color: #00c8ff; border: 1px solid rgba(0,200,255,0.2); }
+
+    /* TABLES */
+    .mantiz-table { width: 100%; border-collapse: collapse; }
+    .mantiz-table thead th { background: rgba(17,17,17,0.8); color: var(--pink); padding: 10px 14px; font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    .mantiz-table tbody td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; color: var(--white); vertical-align: middle; }
+    .mantiz-table tbody tr:hover td { background: rgba(233,30,140,0.04); }
+
+    /* TOAST */
+    #toast {
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(80px); background: var(--pink);
+      color: white; padding: 12px 32px; font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px; letter-spacing: 3px; z-index: 9999;
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); pointer-events: none; filter: url(#gb);
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* CHAT FAB */
+    .chat-fab {
+      position: fixed; bottom: 24px; right: 24px; width: 54px; height: 54px;
+      border-radius: 50%; background: var(--pink); color: white; border: 2px solid rgba(255,255,255,0.3);
+      font-size: 1.3rem; display: flex; align-items: center; justify-content: center;
+      z-index: 2000; box-shadow: 0 4px 20px rgba(233,30,140,0.6); cursor: pointer;
+      transition: all 0.3s; filter: url(#gb); animation: fabP 3s infinite;
+    }
+    @keyframes fabP { 0%,100%{box-shadow:0 4px 20px rgba(233,30,140,0.6)} 50%{box-shadow:0 4px 30px rgba(233,30,140,0.9),0 0 40px rgba(233,30,140,0.4)} }
+    .chat-fab:hover { transform: scale(1.1); animation: none; }
+    .chat-window {
+      position: fixed; bottom: 90px; right: 24px; width: 340px; height: 480px;
+      background: rgba(17,17,17,0.98); border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8); z-index: 1999;
+      display: none; flex-direction: column; overflow: hidden;
+    }
+    .chat-window.active { display: flex; }
+    .chat-header-bar { background: var(--pink); color: white; padding: 14px 16px; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 3px; display: flex; justify-content: space-between; align-items: center; }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .chat-msg { max-width: 84%; padding: 10px 14px; font-size: 13px; line-height: 1.5; font-family: 'Rajdhani', sans-serif; }
+    .chat-msg.user { background: var(--pink); color: white; align-self: flex-end; }
+    .chat-msg.bot { background: rgba(255,255,255,0.06); color: var(--white); align-self: flex-start; border-left: 2px solid var(--pink); }
+    .chat-input-row { padding: 12px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; background: rgba(0,0,0,0.3); }
+    .chat-input-row input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--white); padding: 8px 12px; font-family: 'Rajdhani', sans-serif; font-size: 13px; outline: none; }
+    .chat-send-btn { background: var(--pink); border: none; color: white; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    .chat-send-btn:hover { background: var(--pink-light); }
+
+    /* HAMBURGER */
+    .hamburger-btn { display: none; background: none; border: none; color: var(--white); cursor: pointer; padding: 6px; flex-direction: column; gap: 5px; }
+    .hamburger-btn span { display: block; width: 22px; height: 2px; background: var(--white); transition: all 0.3s ease; transform-origin: center; }
+    .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    #mobile-menu { display: none; position: fixed; top: 64px; left: 0; right: 0; background: rgba(10,10,10,0.98); backdrop-filter: blur(16px); z-index: 1000; transform: translateY(-110%); transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); border-bottom: 1px solid var(--border); pointer-events: none; }
+    #mobile-menu.open { transform: translateY(0); pointer-events: all; }
+    .mobile-menu-inner { display: flex; flex-direction: column; padding: 8px 0 24px; }
+    .mobile-menu-inner a { color: var(--white); text-decoration: none; font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; padding: 14px 28px; border-bottom: 1px solid rgba(255,255,255,0.04); transition: color 0.2s, background 0.2s; }
+    .mobile-menu-inner a:hover { color: var(--pink); background: rgba(233,30,140,0.05); }
+
+    /* ADMIN */
+    .admin-wrapper { display: flex; min-height: 100vh; }
+    .admin-sidebar { width: var(--sw); background: #0a0a0a; border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 999; display: flex; flex-direction: column; transition: transform 0.3s; }
+    .admin-sidebar::-webkit-scrollbar { width: 2px; }
+    .admin-sidebar::-webkit-scrollbar-thumb { background: var(--pink); }
+    .admin-content { margin-left: var(--sw); flex: 1; min-height: 100vh; }
+    .sl-logo { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); position: relative; }
+    .sl-logo::after { content: ''; position: absolute; bottom: 0; left: 18px; right: 18px; height: 1px; background: linear-gradient(90deg,var(--pink),transparent); }
+    .sl-brand { font-family: 'Permanent Marker', cursive; font-size: 1.2rem; color: var(--pink); letter-spacing: 2px; text-shadow: 0 0 15px rgba(233,30,140,0.5); }
+    .sl-sub { font-family: 'Bebas Neue', sans-serif; font-size: 9px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 3px; }
+    .sl-section { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; padding: 14px 18px 5px; font-family: 'Bebas Neue', sans-serif; }
+    .sl-link { display: flex; align-items: center; gap: 10px; padding: 9px 18px; color: var(--muted); text-decoration: none; font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; transition: all 0.2s; border-left: 2px solid transparent; }
+    .sl-link:hover { color: var(--white); background: rgba(233,30,140,0.07); border-left-color: var(--pink); }
+    .sl-link.active { color: var(--pink); background: rgba(233,30,140,0.1); border-left-color: var(--pink); }
+    .sl-badge { margin-left: auto; background: var(--pink); color: white; font-size: 9px; padding: 2px 6px; font-family: 'Bebas Neue', sans-serif; }
+    .sl-bottom { margin-top: auto; padding: 14px 18px; border-top: 1px solid var(--border); }
+    .sl-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); text-decoration: none; transition: border-color 0.2s; }
+    .sl-user:hover { border-color: var(--pink); }
+    .sl-name { color: var(--white); font-weight: 600; font-size: 13px; }
+    .sl-role { color: var(--pink); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; }
+    .admin-topbar { background: rgba(10,10,10,0.97); border-bottom: 1px solid var(--border); padding: 12px 22px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+    .admin-topbar::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg,transparent,var(--pink),transparent); }
+    .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--white); letter-spacing: 3px; text-transform: uppercase; }
+    .page-bc { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+    .sidebar-toggle-btn { display: none; background: none; border: none; color: var(--white); font-size: 1.4rem; padding: 4px; cursor: pointer; }
+    .stat-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 20px; transition: all 0.3s; }
+    .stat-card:hover { border-color: var(--pink); box-shadow: 0 10px 30px rgba(233,30,140,0.15); transform: translateY(-2px); }
+    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--white); letter-spacing: 2px; }
+    .stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 3px; margin-top: 4px; font-family: 'Rajdhani', sans-serif; font-weight: 600; }
+
+    /* UTILITIES */
+    .text-pink { color: var(--pink) !important; }
+    .bebas { font-family: 'Bebas Neue', sans-serif !important; }
+    .pm { font-family: 'Permanent Marker', cursive !important; }
+    .stars { color: #ffd700; }
+
+    /* ── BOOTSTRAP ALIASES FOR ADMIN ── */
+    .btn-primary-mantiz,.btn-pm { background: linear-gradient(135deg,var(--pink),var(--pink-light)); border: none; color: white; font-family: 'Rajdhani',sans-serif; font-weight: 700; font-size:.82rem; letter-spacing: 1px; text-transform: uppercase; transition: all .3s; }
+    .btn-primary-mantiz:hover,.btn-pm:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(233,30,140,.5); color: white; }
+    .btn-outline-mantiz,.btn-om { border: 1px solid var(--pink); color: var(--pink); font-family: 'Rajdhani',sans-serif; font-weight: 700; font-size:.82rem; letter-spacing: 1px; text-transform: uppercase; transition: all .3s; background: transparent; }
+    .btn-outline-mantiz:hover,.btn-om:hover { background: var(--pink); color: white; }
+    .card { background: rgba(255,255,255,0.03) !important; border: 1px solid var(--border) !important; }
+    .card-dark { background: rgba(255,255,255,0.02); border: 1px solid var(--border); }
+    .card-body { color: var(--white); }
+    .card-producto { background: rgba(255,255,255,0.03); border: 1px solid var(--border) !important; overflow: hidden; transition: all .35s; }
+    .card-producto:hover { transform: translateY(-4px); border-color: var(--pink) !important; box-shadow: 0 20px 50px rgba(233,30,140,.2); }
+    .form-control,.form-select { background: rgba(255,255,255,0.04) !important; border: 1px solid var(--border) !important; color: var(--white) !important; font-family: 'Rajdhani',sans-serif; }
+    .form-control:focus,.form-select:focus { background: rgba(255,255,255,0.06) !important; border-color: var(--pink) !important; box-shadow: 0 0 0 3px rgba(233,30,140,.15) !important; color: var(--white) !important; }
+    .form-control::placeholder { color: var(--muted) !important; }
+    .form-label { color: var(--text); font-weight: 600; font-size:.82rem; letter-spacing:.5px; text-transform: uppercase; }
+    .table { color: var(--white) !important; }
+    .table thead th { background: rgba(17,17,17,.8) !important; color: var(--pink) !important; border-color: var(--border) !important; font-family: 'Bebas Neue',sans-serif; font-size:.7rem; text-transform: uppercase; letter-spacing: 1px; }
+    .table tbody tr { border-color: var(--border) !important; }
+    .table tbody td { border-color: var(--border) !important; background: transparent !important; vertical-align: middle; }
+    .table-hover tbody tr:hover td { background: rgba(233,30,140,.04) !important; }
+    .alert { border: none; font-family: 'Rajdhani',sans-serif; font-weight: 600; }
+    .alert-success { background: rgba(0,255,100,.08); color: #00ff64; border: 1px solid rgba(0,255,100,.2) !important; }
+    .alert-danger  { background: rgba(255,60,60,.08);  color: #ff6060; border: 1px solid rgba(255,60,60,.2) !important; }
+    .alert-warning { background: rgba(255,200,0,.08);  color: #ffc800; border: 1px solid rgba(255,200,0,.2) !important; }
+    .alert-info    { background: rgba(0,200,255,.08);  color: #00c8ff; border: 1px solid rgba(0,200,255,.2) !important; }
+    .badge { font-family: 'Bebas Neue',sans-serif; letter-spacing:.5px; }
+    .dropdown-menu { background: rgba(17,17,17,.98) !important; border: 1px solid var(--border) !important; }
+    .dropdown-item { color: var(--white) !important; font-family: 'Rajdhani',sans-serif; font-weight: 500; transition: all .2s; }
+    .dropdown-item:hover { background: rgba(233,30,140,.1) !important; color: var(--pink) !important; }
+    .modal-content { background: rgba(17,17,17,.98) !important; border: 1px solid var(--border) !important; }
+    .modal-header { border-bottom: 1px solid var(--border) !important; background: rgba(0,0,0,.3) !important; }
+    .modal-footer { border-top: 1px solid var(--border) !important; }
+    .modal-title { font-family: 'Bebas Neue',sans-serif; letter-spacing: 2px; color: var(--pink); }
+    .btn-close { filter: invert(1); }
+    .progress { background: rgba(255,255,255,.07) !important; }
+    .progress-bar { background: linear-gradient(90deg,var(--pink),var(--pink-light)) !important; }
+    .nav-tabs { border-color: var(--border) !important; }
+    .nav-tabs .nav-link { color: var(--muted) !important; font-family: 'Rajdhani',sans-serif; font-weight: 600; font-size:.82rem; border: none !important; border-bottom: 2px solid transparent !important; text-transform: uppercase; letter-spacing:.5px; }
+    .nav-tabs .nav-link:hover { color: var(--white) !important; background: transparent !important; }
+    .nav-tabs .nav-link.active { color: var(--pink) !important; border-bottom-color: var(--pink) !important; background: transparent !important; }
+    .accordion-item { background: rgba(255,255,255,.03) !important; border: 1px solid var(--border) !important; margin-bottom: 6px; }
+    .accordion-button { background: rgba(255,255,255,.03) !important; color: var(--white) !important; font-family: 'Rajdhani',sans-serif; font-weight: 600; box-shadow: none !important; }
+    .accordion-button:not(.collapsed) { color: var(--pink) !important; background: rgba(233,30,140,.05) !important; }
+    .accordion-button::after { filter: invert(1) sepia(1) saturate(5) hue-rotate(290deg); }
+    .accordion-body { background: rgba(0,0,0,.2) !important; color: var(--white); }
+    .text-muted { color: var(--muted) !important; }
+    .bg-dark { background: var(--dark) !important; }
+    .border { border-color: var(--border) !important; }
+    .rounded-4 { border-radius: 4px !important; }
+    input[type="color"] { background: transparent; border: 1px solid var(--border); padding: 2px; cursor: pointer; }
+    select option { background: var(--dark); color: var(--white); }
+
+    /* ── DARK MODE / LIGHT MODE ── */
+    body.light-mode {
+      --black: #f0f0f0; --dark: #e4e4e4; --dark2: #d8d8d8; --card-bg: #ffffff;
+      --white: #111111; --gray: #555; --border: rgba(233,30,140,0.3);
+      --text: #111111; --muted: #777;
+    }
+    body.light-mode #navbar { background: rgba(240,240,240,0.92); }
+    body.light-mode #cart-panel,
+    body.light-mode .notif-panel,
+    body.light-mode .user-dropdown { background: rgba(240,240,240,0.98); }
+    body.light-mode .product-card { background: #fff; }
+    body.light-mode .chat-window { background: rgba(240,240,240,0.98); }
+    .theme-transition { transition: background 0.3s, color 0.3s, border-color 0.3s; }
+
+    /* ── NOTIFICATION PANEL ── */
+    .notif-panel {
+      position: fixed; top: 0; right: 0; width: 360px; height: 100vh;
+      background: rgba(17,17,17,0.98); backdrop-filter: blur(20px);
+      z-index: 1002; transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column; border-left: 3px solid var(--pink);
+    }
+    .notif-panel.open { transform: translateX(0); }
+    .notif-ph { padding: 20px 24px 12px; border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-family: 'Bebas Neue',sans-serif; font-size: 18px; letter-spacing: 3px; color: var(--pink);
+      display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .notif-list { flex: 1; overflow-y: auto; }
+    .notif-item { display: flex; gap: 12px; padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer; transition: background 0.2s; position: relative; }
+    .notif-item:hover { background: rgba(233,30,140,0.08); }
+    .notif-item.unread::before { content: ''; position: absolute; left: 8px; top: 50%;
+      transform: translateY(-50%); width: 6px; height: 6px; border-radius: 50%; background: var(--pink); }
+    .notif-icon { width: 36px; height: 36px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+    .notif-title { font-weight: 700; font-size: 13px; margin-bottom: 2px; color: var(--white); }
+    .notif-msg { font-size: 12px; color: var(--gray); line-height: 1.4; }
+    .notif-time { font-size: 10px; color: var(--muted); margin-top: 4px; }
+    .notif-badge {
+      position: absolute; top: -5px; right: -5px; background: var(--pink); color: white;
+      font-size: 9px; min-width: 16px; height: 16px; border-radius: 8px; padding: 0 4px;
+      display: none; align-items: center; justify-content: center; font-weight: 700;
+    }
+    .notif-badge.show { display: flex; }
+
+    /* ── CHAT SOCIAL PANEL (bandeja de mensajes) ── */
+    .chat-social-panel {
+      position: fixed; bottom: 0; right: 90px; width: 280px;
+      background: rgba(17,17,17,0.98); border: 1px solid var(--border); border-bottom: none;
+      z-index: 1500; display: none; flex-direction: column; max-height: 380px;
+    }
+    .chat-social-panel.open { display: flex; }
+    .csp-header { background: var(--pink); padding: 10px 14px; font-family:'Bebas Neue',sans-serif;
+      font-size: 13px; letter-spacing: 2px; display: flex; justify-content: space-between; align-items: center; }
+    .csp-body { flex: 1; overflow-y: auto; }
+    .csp-contact { display: flex; gap: 10px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer; transition: background 0.2s; align-items: center; text-decoration: none; color: var(--white); }
+    .csp-contact:hover { background: rgba(233,30,140,0.08); color: var(--white); }
+    .csp-unread { background: var(--pink); color: white; font-size: 9px; font-weight: 700;
+      min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; margin-left: auto; padding: 0 4px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .nav-left { display: none; } .login-btn { display: none; } .hamburger-btn { display: flex; }
+      .nav-inner { padding: 0 20px; } .nav-logo { font-size: 26px; }
+      #mobile-menu { display: block; visibility: hidden; opacity: 0; transition: transform 0.4s, opacity 0.4s, visibility 0.4s; }
+      #mobile-menu.open { visibility: visible; opacity: 1; }
+      .admin-sidebar { transform: translateX(-100%); } .admin-sidebar.open { transform: translateX(0); }
+      .admin-content { margin-left: 0; } .sidebar-toggle-btn { display: block; }
+      #cart-panel { width: 100%; } .chat-window { width: calc(100vw - 32px); right: 16px; }
+      .notif-panel { width: 100%; } .chat-social-panel { width: calc(100vw - 32px); right: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SVG GRUNGE FILTERS -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="gb" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="linearRGB">
+      <feTurbulence type="turbulence" baseFrequency="0.018 0.032" numOctaves="3" seed="12" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="grunge-border" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="linearRGB">
+      <feTurbulence type="turbulence" baseFrequency="0.018 0.032" numOctaves="3" seed="12" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<% const isAdminPage = typeof isAdmin !== 'undefined' && isAdmin; %>
+
+<% if (!isAdminPage) { %>
+<!-- PUBLIC NAVBAR -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="nav-left">
+      <a href="/">INICIO</a>
+      <a href="/productos">TIENDA</a>
+      <a href="/comunidad">COMUNIDAD</a>
+      <a href="/opiniones">OPINIONES</a>
+      <a href="/tiendas">TIENDAS</a>
+      <a href="/ia/chat">IA</a>
+    </div>
+    <a href="/" class="nav-logo"><%= sitio.nombre_tienda || 'MANTIZ' %></a>
+    <div class="nav-right">
+      <button class="nav-btn" id="search-toggle" title="Buscar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="nav-btn" id="cart-toggle" title="Carrito">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span class="cart-count <%= carritoCount > 0 ? 'show' : '' %>" id="cart-count"><%= carritoCount %></span>
+      </button>
+      <% if (user) { %>
+      <!-- NOTIFICACIONES -->
+      <div style="position:relative">
+        <button class="nav-btn" id="notif-toggle" title="Notificaciones">
+          <i class="bi bi-bell-fill" style="font-size:16px"></i>
+          <span class="notif-badge" id="notif-badge"></span>
+        </button>
+      </div>
+      <!-- MENSAJES -->
+      <div style="position:relative">
+        <button class="nav-btn" id="chat-social-toggle" title="Mensajes">
+          <i class="bi bi-chat-dots-fill" style="font-size:16px"></i>
+          <span class="notif-badge" id="chat-badge"></span>
+        </button>
+      </div>
+      <!-- USER DROPDOWN -->
+      <div style="position:relative" id="user-wrap">
+        <button class="user-btn" id="user-btn">
+          <img src="<%= user.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+user.foto_perfil : '/img/defaults/avatars/'+(user.foto_perfil_preset||'avatar1.png') %>" width="28" height="28" style="object-fit:cover" onerror="this.src='/img/defaults/avatars/avatar1.png'">
+          <span><%= user.nombre_visible.split(' ')[0].toUpperCase() %></span>
+          <i class="bi bi-chevron-down" style="font-size:10px;color:var(--gray)"></i>
+        </button>
+        <div class="user-dropdown" id="user-dd">
+          <a href="/perfil"><i class="bi bi-person me-2" style="color:var(--pink)"></i>MI PERFIL</a>
+          <a href="/pedidos"><i class="bi bi-box-seam me-2" style="color:var(--pink)"></i>MIS PEDIDOS</a>
+          <a href="/carrito"><i class="bi bi-bag me-2" style="color:var(--pink)"></i>MI CARRITO</a>
+          <a href="/comunidad"><i class="bi bi-people-fill me-2" style="color:var(--pink)"></i>COMUNIDAD</a>
+          <% if (user.rol==='admin') { %><a href="/admin" style="color:var(--pink)"><i class="bi bi-shield-lock me-2"></i>ADMIN</a><% } %>
+          <a href="#" id="theme-toggle-btn" onclick="toggleTheme();return false;" style="cursor:pointer">
+            <i class="bi bi-moon-stars-fill me-2" id="theme-icon" style="color:var(--pink)"></i>
+            <span id="theme-label">MODO CLARO</span>
+          </a>
+          <a href="/auth/logout" style="color:#ff6060"><i class="bi bi-box-arrow-right me-2"></i>SALIR</a>
+        </div>
+      </div>
+      <% } else { %>
+      <a href="/auth/login" class="login-btn">INGRESAR</a>
+      <% } %>
+    </div>
+  </div>
+</nav>
+
+<!-- PANEL NOTIFICACIONES -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-ph">
+    <span><i class="bi bi-bell-fill me-2"></i>NOTIFICACIONES</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="marcarTodasLeidas()" style="background:none;border:none;color:var(--gray);font-size:11px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;padding:0">LEER TODAS</button>
+      <button id="notif-close" style="background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;line-height:1;transition:color 0.2s" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'">✕</button>
+    </div>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div style="text-align:center;padding:40px;color:var(--gray);font-size:13px;letter-spacing:1px">Cargando...</div>
+  </div>
+</div>
+
+<!-- PANEL CHAT SOCIAL -->
+<div class="chat-social-panel" id="chat-social-panel">
+  <div class="csp-header">
+    <span><i class="bi bi-chat-dots-fill me-2"></i>MENSAJES</span>
+    <button onclick="document.getElementById('chat-social-panel').classList.remove('open')" style="background:none;border:none;color:white;font-size:14px;cursor:pointer;line-height:1">✕</button>
+  </div>
+  <div class="csp-body" id="csp-body">
+    <div style="text-align:center;padding:30px;color:var(--gray);font-size:12px">Cargando...</div>
+  </div>
+</div>
+
+<!-- MOBILE MENU -->
+<div id="mobile-menu">
+  <div class="mobile-menu-inner">
+    <a href="/">INICIO</a>
+    <a href="/productos">TIENDA</a>
+    <a href="/comunidad">COMUNIDAD</a>
+    <a href="/opiniones">OPINIONES</a>
+    <a href="/tiendas">TIENDAS</a>
+    <a href="/ia/chat">ASISTENTE IA</a>
+    <% if (user) { %>
+    <a href="/perfil">MI PERFIL</a>
+    <a href="/pedidos">MIS PEDIDOS</a>
+    <a href="#" onclick="toggleTheme();return false;" id="mobile-theme-btn">🌙 MODO CLARO</a>
+    <a href="/auth/logout" style="color:#ff6060">CERRAR SESIÓN</a>
+    <% } else { %>
+    <a href="/auth/login">INGRESAR</a>
+    <a href="/auth/registro">REGISTRARSE</a>
+    <% } %>
+  </div>
+</div>
+
+<!-- SEARCH -->
+<div id="search-bar" style="position:relative">
+  <form action="/buscar" method="GET">
+    <input type="text" name="q" id="searchInput" placeholder="BUSCAR PRODUCTOS..." autocomplete="off" value="<%= typeof q !== 'undefined' ? q : '' %>">
+  </form>
+  <div class="search-suggestions" id="searchSugg"></div>
+</div>
+
+<!-- CART PANEL -->
+<div id="cart-panel">
+  <div class="cart-ph"><span>MI CARRITO</span><button id="cart-close" style="background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;line-height:1;transition:color 0.2s" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'">✕</button></div>
+  <div class="cart-pi" id="cartItems"><div class="cart-empty-msg">TU CARRITO ESTÁ VACÍO</div></div>
+  <div class="cart-pf">
+    <div class="cart-pt"><span>TOTAL</span><span id="cartTotal">$0</span></div>
+    <a href="/carrito" class="btn-grunge-w" style="color:white;text-decoration:none">VER CARRITO →</a>
+  </div>
+</div>
+
+<!-- ALERTS OVERLAY -->
+<div style="position:fixed;top:72px;right:16px;z-index:3000;min-width:280px;max-width:360px">
+  <% if (success&&success.length>0){success.forEach(msg=>{%><div class="alert-mantiz alert-success" style="margin-bottom:8px"><i class="bi bi-check-circle me-2"></i><%=msg%></div><%})}%>
+  <% if (error&&error.length>0){error.forEach(msg=>{%><div class="alert-mantiz alert-danger" style="margin-bottom:8px"><i class="bi bi-exclamation-circle me-2"></i><%=msg%></div><%})}%>
+</div>
+
+<!-- TOAST -->
+<div id="toast">¡PRODUCTO AÑADIDO!</div>
+
+<!-- CHAT FAB -->
+<button class="chat-fab" onclick="toggleChat()" title="Asistente IA"><i class="bi bi-robot" id="chatFabIc"></i></button>
+<div class="chat-window" id="chatWin">
+  <div class="chat-header-bar"><span><i class="bi bi-robot me-2"></i>ASISTENTE MANTIZ</span><button onclick="toggleChat()" style="background:none;border:none;color:white;cursor:pointer;font-size:16px">✕</button></div>
+  <div class="chat-messages" id="chatMsgs"><div class="chat-msg bot">👋 ¡Hola! Soy el asistente de <strong>Mantiz</strong>. ¿En qué te ayudo?</div></div>
+  <div class="chat-input-row"><input type="text" id="chatInp" placeholder="Escribe tu mensaje..." onkeydown="if(event.key==='Enter')sendChat()"><button class="chat-send-btn" onclick="sendChat()"><i class="bi bi-send-fill" style="font-size:13px"></i></button></div>
+</div>
+
+<main style="padding-top:64px;position:relative;z-index:1">
+
+<% } else { %>
+<!-- ADMIN LAYOUT -->
+<div class="admin-wrapper">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="sl-logo">
+      <div class="sl-brand"><%= sitio.nombre_tienda || 'MANTIZ' %></div>
+      <div class="sl-sub">CONTROL PANEL</div>
+    </div>
+    <nav style="flex:1;padding:6px 0">
+      <div class="sl-section">Principal</div>
+      <a href="/admin" class="sl-link <%= title&&title.includes('Dashboard')?'active':'' %>"><i class="bi bi-grid-1x2-fill" style="width:18px"></i>Dashboard</a>
+      <a href="/admin/estadisticas" class="sl-link <%= title&&title.includes('Estadísticas')?'active':'' %>"><i class="bi bi-graph-up-arrow" style="width:18px"></i>Estadísticas</a>
+      <div class="sl-section">Tienda</div>
+      <a href="/admin/productos" class="sl-link <%= title&&title.includes('Producto')?'active':'' %>"><i class="bi bi-bag-fill" style="width:18px"></i>Productos</a>
+      <a href="/admin/carrusel" class="sl-link <%= title&&title.includes('Carrusel')?'active':'' %>"><i class="bi bi-images" style="width:18px"></i>Carrusel / Banners</a>
+      <a href="/admin/pedidos" class="sl-link <%= title&&title.includes('Pedidos')?'active':'' %>"><i class="bi bi-box-seam-fill" style="width:18px"></i>Pedidos<% if(typeof stats!=='undefined'&&stats.pedidos_activos>0){%><span class="sl-badge"><%=stats.pedidos_activos%></span><%}%></a>
+      <div class="sl-section">Gestión</div>
+      <a href="/admin/usuarios" class="sl-link <%= title&&title.includes('Usuarios')?'active':'' %>"><i class="bi bi-people-fill" style="width:18px"></i>Usuarios</a>
+      <a href="/admin/proveedores" class="sl-link <%= title&&title.includes('Proveedores')?'active':'' %>"><i class="bi bi-truck" style="width:18px"></i>Proveedores</a>
+      <a href="/admin/tiendas" class="sl-link <%= title&&title.includes('Tiendas')?'active':'' %>"><i class="bi bi-shop" style="width:18px"></i>Tiendas</a>
+      <a href="/admin/comentarios" class="sl-link <%= title&&title.includes('Comentarios')?'active':'' %>"><i class="bi bi-chat-dots-fill" style="width:18px"></i>Comentarios</a>
+      <div class="sl-section">Sistema</div>
+      <a href="/admin/modelos" class="sl-link <%= title&&title.includes('Modelos')?'active':'' %>"><i class="bi bi-box-seam" style="width:18px"></i>Modelos 3D</a>
+      <a href="/admin/homepage" class="sl-link <%= title&&title.includes('Estructura')?'active':'' %>"><i class="bi bi-layout-three-columns" style="width:18px"></i>Estructura Inicio</a>
+      <a href="/admin/configuracion" class="sl-link <%= title&&title.includes('Configuración')?'active':'' %>"><i class="bi bi-gear-fill" style="width:18px"></i>Configuración</a>
+      <div class="sl-section">Comunidad</div>
+      <a href="/opiniones" class="sl-link"><i class="bi bi-bar-chart-fill" style="width:18px"></i>Encuestas</a>
+      <a href="/comunidad" class="sl-link"><i class="bi bi-people-fill" style="width:18px"></i>Comunidad</a>
+      <a href="/admin/notificaciones" class="sl-link <%= title&&title.includes('Notificaciones')?'active':'' %>"><i class="bi bi-megaphone-fill" style="width:18px"></i>Notificaciones</a>
+      <a href="/" class="sl-link"><i class="bi bi-globe" style="width:18px"></i>Ver tienda</a>
+    </nav>
+    <div class="sl-bottom">
+      <a href="/perfil" class="sl-user">
+        <img src="<%= user.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+user.foto_perfil : '/img/defaults/avatars/'+(user.foto_perfil_preset||'avatar1.png') %>" width="34" height="34" style="border-radius:50%;object-fit:cover;border:2px solid var(--pink)" onerror="this.src='/img/defaults/avatars/avatar1.png'">
+        <div><div class="sl-name"><%= user.nombre_visible.split(' ')[0] %></div><div class="sl-role">ADMINISTRADOR</div></div>
+        <a href="/auth/logout" style="color:var(--muted);margin-left:auto" title="Salir"><i class="bi bi-power"></i></a>
+      </a>
+    </div>
+  </aside>
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="sidebar-toggle-btn" onclick="document.getElementById('adminSidebar').classList.toggle('open')"><i class="bi bi-list"></i></button>
+        <div><div class="page-title"><%= title||'Admin' %></div><div class="page-bc">MANTIZ / ADMIN / <%= (title||'').toUpperCase() %></div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <% if(success&&success.length>0){%><div class="alert-mantiz alert-success" style="margin:0;padding:6px 12px;font-size:12px"><i class="bi bi-check-circle me-1"></i><%=success[0]%></div><%}%>
+        <% if(error&&error.length>0){%><div class="alert-mantiz alert-danger" style="margin:0;padding:6px 12px;font-size:12px"><i class="bi bi-exclamation-circle me-1"></i><%=error[0]%></div><%}%>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--muted);letter-spacing:1px" id="adminClock"></span>
+      </div>
+    </div>
+    <div style="padding:22px;position:relative;z-index:1">
+<% } %>
+
+<script>
+// NAVBAR SCROLL
+let lastY=0;const navEl=document.getElementById('navbar');
+if(navEl){window.addEventListener('scroll',()=>{const y=window.scrollY;if(y>lastY&&y>100)navEl.classList.add('hidden');else navEl.classList.remove('hidden');lastY=y;});}
+
+// HAMBURGER
+const hBtn=document.getElementById('hamburger-btn'),mMenu=document.getElementById('mobile-menu');
+let mOpen=false;
+if(hBtn){hBtn.addEventListener('click',e=>{e.stopPropagation();mOpen=!mOpen;hBtn.classList.toggle('open',mOpen);mMenu.classList.toggle('open',mOpen);});document.addEventListener('click',e=>{if(mOpen&&mMenu&&!mMenu.contains(e.target)&&e.target!==hBtn){mOpen=false;hBtn.classList.remove('open');mMenu.classList.remove('open');}});}
+
+// SEARCH
+const sTgl=document.getElementById('search-toggle'),sBar=document.getElementById('search-bar'),sInp=document.getElementById('searchInput');
+let sOpen=false;
+if(sTgl){sTgl.addEventListener('click',e=>{e.stopPropagation();sOpen=!sOpen;sBar.classList.toggle('open',sOpen);if(sOpen&&sInp)setTimeout(()=>sInp.focus(),300);});document.addEventListener('click',e=>{if(sOpen&&sBar&&!sBar.contains(e.target)&&e.target!==sTgl){sOpen=false;sBar.classList.remove('open');}});}
+// Suggestions
+const sSugg=document.getElementById('searchSugg');let sTimer;
+if(sInp){sInp.addEventListener('input',()=>{clearTimeout(sTimer);const q=sInp.value.trim();if(q.length<2){if(sSugg)sSugg.style.display='none';return;}sTimer=setTimeout(async()=>{try{const r=await fetch(`/buscar/sugerencias?q=${encodeURIComponent(q)}`);const d=await r.json();if(!d.length){sSugg.style.display='none';return;}sSugg.innerHTML=d.map(p=>`<div class="item" onclick="window.location='/productos/${p.id}'">${p.titulo}<span style="color:var(--pink);font-size:11px;margin-left:8px">${p.categoria}</span></div>`).join('');sSugg.style.display='block';}catch(e){}},300);});document.addEventListener('click',e=>{if(sSugg&&sInp&&!sInp.closest('form').contains(e.target))sSugg.style.display='none';});}
+
+// USER DROPDOWN
+const uBtn=document.getElementById('user-btn'),uDd=document.getElementById('user-dd');
+if(uBtn){uBtn.addEventListener('click',e=>{e.stopPropagation();uDd.classList.toggle('open');});document.addEventListener('click',e=>{if(uDd&&!uBtn.contains(e.target))uDd.classList.remove('open');});}
+
+// CART PANEL
+const cTgl=document.getElementById('cart-toggle'),cPanel=document.getElementById('cart-panel'),cClose=document.getElementById('cart-close');
+let cOpen=false;
+if(cTgl){cTgl.addEventListener('click',e=>{e.stopPropagation();cOpen=!cOpen;cPanel.classList.toggle('open',cOpen);if(cOpen)loadCartPanel();});cClose&&cClose.addEventListener('click',e=>{e.stopPropagation();cOpen=false;cPanel.classList.remove('open');});cPanel&&cPanel.addEventListener('click',e=>e.stopPropagation());document.addEventListener('click',e=>{if(cOpen&&cPanel&&!cPanel.contains(e.target)&&e.target!==cTgl){cOpen=false;cPanel.classList.remove('open');}});}
+
+async function loadCartPanel(){
+  const iEl=document.getElementById('cartItems'),tEl=document.getElementById('cartTotal'),cEl=document.getElementById('cart-count');
+  if(!iEl)return;
+  try{const r=await fetch('/carrito/panel');const d=await r.json();
+    if(!d.items||!d.items.length){iEl.innerHTML='<div class="cart-empty-msg">TU CARRITO ESTÁ VACÍO</div>';if(tEl)tEl.textContent='$0';if(cEl){cEl.textContent='0';cEl.classList.remove('show');}return;}
+    const total=d.items.reduce((s,i)=>s+(i.precio*i.cantidad),0);
+    iEl.innerHTML=d.items.map(i=>`<div class="cart-pitem"><img src="/uploads/products/${i.imagen_principal}" alt="${i.titulo}" onerror="this.src='https://via.placeholder.com/56x56/111/888?text=?'" style="width:56px;height:56px;object-fit:cover"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.titulo}</div>${i.talla?`<div style="font-size:11px;color:var(--pink)">Talla: ${i.talla}</div>`:''}<div style="font-size:11px;color:var(--gray)">x${i.cantidad}</div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--pink);flex-shrink:0">$${(i.precio*i.cantidad).toLocaleString('es-CO')}</div></div>`).join('');
+    if(tEl)tEl.textContent='$'+total.toLocaleString('es-CO');
+    const qty=d.items.reduce((s,i)=>s+i.cantidad,0);
+    if(cEl){cEl.textContent=qty;cEl.classList.toggle('show',qty>0);}
+  }catch(e){}
+}
+loadCartPanel();
+
+function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg||'¡PRODUCTO AÑADIDO!';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// CHAT
+let chatH=[],chatOpen2=false;
+function toggleChat(){chatOpen2=!chatOpen2;document.getElementById('chatWin')?.classList.toggle('active',chatOpen2);const ic=document.getElementById('chatFabIc');if(ic)ic.className=chatOpen2?'bi bi-x-lg':'bi bi-robot';if(chatOpen2)document.getElementById('chatInp')?.focus();}
+async function sendChat(){const inp=document.getElementById('chatInp');const msg=inp.value.trim();if(!msg)return;appendCM(msg,'user');inp.value='';const msgs=document.getElementById('chatMsgs');const el=document.createElement('div');el.className='chat-msg bot';el.id='cLoad';el.textContent='...';msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight;try{const r=await fetch('/ia/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mensaje:msg,historial:chatH})});const d=await r.json();document.getElementById('cLoad')?.remove();const resp=d.respuesta||'Sin respuesta.';appendCM(resp,'bot');chatH.push({rol:'user',contenido:msg},{rol:'assistant',contenido:resp});if(chatH.length>12)chatH=chatH.slice(-12);}catch(e){document.getElementById('cLoad')?.remove();appendCM('Error de conexión.','bot');}}
+function appendCM(text,role){const msgs=document.getElementById('chatMsgs');if(!msgs)return;const d=document.createElement('div');d.className=`chat-msg ${role}`;d.textContent=text;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;}
+
+// ADMIN CLOCK
+const cl=document.getElementById('adminClock');if(cl){const uc=()=>{const n=new Date();cl.textContent=n.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};uc();setInterval(uc,1000);}
+document.addEventListener('click',e=>{const sb=document.getElementById('adminSidebar');if(sb&&sb.classList.contains('open')&&!sb.contains(e.target)&&!e.target.closest('.sidebar-toggle-btn'))sb.classList.remove('open');});
+
+// AUTO DISMISS ALERTS
+setTimeout(()=>{document.querySelectorAll('.alert-mantiz').forEach(a=>{a.style.transition='opacity 0.5s';a.style.opacity='0';setTimeout(()=>a.remove(),500);});},5000);
+
+// ── DARK MODE ──────────────────────────────────────────────────────────────────
+function applyTheme(t){
+  document.body.classList.toggle('light-mode',t==='claro');
+  const icon=document.getElementById('theme-icon'),label=document.getElementById('theme-label');
+  const mBtn=document.getElementById('mobile-theme-btn');
+  if(icon)icon.className=t==='claro'?'bi bi-sun-fill me-2':'bi bi-moon-stars-fill me-2';
+  if(label)label.textContent=t==='claro'?'MODO OSCURO':'MODO CLARO';
+  if(mBtn)mBtn.textContent=t==='claro'?'☀️ MODO OSCURO':'🌙 MODO CLARO';
+}
+function toggleTheme(){
+  const actual=localStorage.getItem('mantiz_tema')||'oscuro';
+  const nuevo=actual==='oscuro'?'claro':'oscuro';
+  localStorage.setItem('mantiz_tema',nuevo);
+  applyTheme(nuevo);
+  fetch('/perfil/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tema_global:nuevo})}).catch(()=>{});
+}
+(function(){applyTheme(localStorage.getItem('mantiz_tema')||'oscuro');})();
+
+<% if (user) { %>
+// ── NOTIFICACIONES ─────────────────────────────────────────────────────────────
+let notifOpen=false;
+const notifPanel=document.getElementById('notif-panel');
+const notifClose=document.getElementById('notif-close');
+const notifBadge=document.getElementById('notif-badge');
+
+document.getElementById('notif-toggle')?.addEventListener('click',e=>{
+  e.stopPropagation();
+  notifOpen=!notifOpen;
+  notifPanel?.classList.toggle('open',notifOpen);
+  // Cerrar carrito si está abierto
+  if(notifOpen){cOpen=false;document.getElementById('cart-panel')?.classList.remove('open');}
+  if(notifOpen)cargarNotificaciones();
+});
+notifClose?.addEventListener('click',()=>{notifOpen=false;notifPanel?.classList.remove('open');});
+document.addEventListener('click',e=>{
+  if(notifOpen&&notifPanel&&!notifPanel.contains(e.target)&&!e.target.closest('#notif-toggle')){
+    notifOpen=false;notifPanel.classList.remove('open');
+  }
+});
+
+async function cargarNotificaciones(){
+  const list=document.getElementById('notif-list');
+  if(!list)return;
+  try{
+    const r=await fetch('/notificaciones');const d=await r.json();
+    if(!d.notificaciones?.length){list.innerHTML='<div style="text-align:center;padding:40px;color:var(--gray);font-size:13px;letter-spacing:1px">Sin notificaciones aún</div>';return;}
+    list.innerHTML=d.notificaciones.map(n=>`
+      <div class="notif-item ${n.leida?'':'unread'}" onclick="abrirNotif(${n.id},'${(n.enlace||'').replace(/'/g,'')}')">
+        <div class="notif-icon" style="background:${n.color||'var(--pink)'}22;color:${n.color||'var(--pink)'}">
+          <i class="${n.icono||'bi-bell'}"></i>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="notif-title">${n.titulo}</div>
+          ${n.mensaje?`<div class="notif-msg">${String(n.mensaje).substring(0,75)}${n.mensaje.length>75?'...':''}</div>`:''}
+          <div class="notif-time">${relTime(n.creado_en)}</div>
+        </div>
+      </div>`).join('');
+  }catch(e){list.innerHTML='<div style="text-align:center;padding:40px;color:#ff6060;font-size:12px">Error al cargar</div>';}
+}
+
+async function abrirNotif(id,enlace){
+  await fetch(`/notificaciones/${id}/leer`,{method:'POST'}).catch(()=>{});
+  checkNotifCount();
+  if(enlace&&enlace!=='null'&&enlace!=='')window.location=enlace;
+  else{const el=document.querySelector(`.notif-item[onclick*="${id},"]`)||document.querySelector(`.notif-item[onclick*="${id}'"]`);if(el)el.classList.remove('unread');}
+}
+
+async function marcarTodasLeidas(){
+  await fetch('/notificaciones/leer-todas',{method:'POST'}).catch(()=>{});
+  document.querySelectorAll('.notif-item').forEach(el=>el.classList.remove('unread'));
+  if(notifBadge){notifBadge.textContent='';notifBadge.classList.remove('show');}
+}
+
+async function checkNotifCount(){
+  try{
+    const r=await fetch('/notificaciones/count');const d=await r.json();
+    if(notifBadge){notifBadge.textContent=d.count>9?'9+':d.count||'';notifBadge.classList.toggle('show',d.count>0);}
+  }catch(e){}
+}
+
+function relTime(ts){
+  if(!ts)return'';const diff=(Date.now()-new Date(ts).getTime())/1000;
+  if(diff<60)return'hace un momento';if(diff<3600)return`hace ${Math.floor(diff/60)}m`;
+  if(diff<86400)return`hace ${Math.floor(diff/3600)}h`;return`hace ${Math.floor(diff/86400)}d`;
+}
+
+checkNotifCount();setInterval(checkNotifCount,30000);
+
+// SSE tiempo real
+try{
+  const es=new EventSource('/chat/stream');
+  es.onmessage=e=>{
+    try{
+      const d=JSON.parse(e.data);
+      if(d.tipo==='mensaje'){const cb=document.getElementById('chat-badge');if(cb){const n=parseInt(cb.textContent)||0;cb.textContent=n+1>9?'9+':n+1;cb.classList.add('show');}}
+    }catch(er){}
+  };
+  es.onerror=()=>{es.close();};
+}catch(e){}
+
+// ── CHAT SOCIAL ────────────────────────────────────────────────────────────────
+const chatSocialPanel=document.getElementById('chat-social-panel');
+document.getElementById('chat-social-toggle')?.addEventListener('click',e=>{
+  e.stopPropagation();
+  chatSocialPanel?.classList.toggle('open');
+  if(chatSocialPanel?.classList.contains('open'))cargarConversaciones();
+});
+
+async function cargarConversaciones(){
+  const body=document.getElementById('csp-body');if(!body)return;
+  try{
+    const r=await fetch('/chat/conversaciones');const d=await r.json();
+    if(!d.conversaciones?.length){body.innerHTML='<div style="text-align:center;padding:30px;color:var(--gray);font-size:12px;letter-spacing:1px">Sin conversaciones</div>';return;}
+    body.innerHTML=d.conversaciones.map(c=>`
+      <a href="/u/${c.username}" class="csp-contact">
+        <img src="${c.foto_perfil_tipo==='upload'?'/uploads/profiles/'+c.foto_perfil:'/img/defaults/avatars/'+(c.foto_perfil_preset||'avatar1.png')}"
+             width="36" height="36" style="border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nombre_visible}</div>
+          ${c.ultimo_mensaje?`<div style="font-size:11px;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${String(c.ultimo_mensaje).substring(0,28)}</div>`:''}
+        </div>
+        ${c.no_leidos>0?`<span class="csp-unread">${c.no_leidos}</span>`:''}
+      </a>`).join('');
+  }catch(e){}
+}
+
+// ── PING TIEMPO (gamificación) ──────────────────────────────────────────────────
+setInterval(()=>{fetch('/gamificacion/ping-tiempo',{method:'POST'}).catch(()=>{});},60000);
+<% } %>
+</script>

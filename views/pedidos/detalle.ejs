@@ -1,0 +1,159 @@
+<%- include('../partials/header') %>
+
+<div style="padding:40px;max-width:1000px;margin:0 auto">
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:12px">
+    <div>
+      <a href="/pedidos" style="font-size:11px;color:var(--gray);text-decoration:none;letter-spacing:2px;display:flex;align-items:center;gap:6px;margin-bottom:8px" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'">
+        <i class="bi bi-arrow-left"></i> MIS PEDIDOS
+      </a>
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,5vw,42px);letter-spacing:4px;line-height:1;color:var(--white)">
+        PEDIDO <span style="color:var(--pink)">#<%= String(pedido.id).padStart(5,'0') %></span>
+      </h2>
+      <div style="font-size:12px;color:var(--gray);margin-top:4px;letter-spacing:1px">
+        <%= new Date(pedido.creado_en).toLocaleDateString('es-CO', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) %>
+      </div>
+    </div>
+    <%
+      var stMap = {pendiente:'#ffc800',confirmado:'#00c8ff',en_transito:'#60a5fa',entregado:'#00ff64',cancelado:'#ff6060'};
+      var stColor = stMap[pedido.estado] || 'var(--gray)';
+    %>
+    <div style="text-align:right">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;padding:6px 18px;border:2px solid <%= stColor %>;color:<%= stColor %>;letter-spacing:2px;display:inline-block"><%= (pedido.estado||'').toUpperCase().replace('_',' ') %></div>
+      <% if (pedido.numero_tracking) { %>
+      <div style="font-size:11px;color:var(--pink);margin-top:6px;letter-spacing:1px"><i class="bi bi-box-seam me-1"></i>Tracking: <%= pedido.numero_tracking %></div>
+      <% } %>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:24px" class="pedido-det-grid">
+    <!-- LEFT -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <!-- Items -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:1px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:16px">PRODUCTOS</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <% if (items && items.length > 0) { %>
+            <% items.forEach(function(item) { %>
+            <div style="display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05)">
+              <img src="/uploads/products/<%= item.imagen_principal %>" width="72" height="72"
+                   style="object-fit:cover;border:2px solid var(--border);flex-shrink:0"
+                   onerror="this.src='https://via.placeholder.com/72x72/111/888?text=P'">
+              <div style="flex:1;min-width:0">
+                <a href="/productos/<%= item.producto_id %>" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--white);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--white)'"><%= item.titulo %></a>
+                <div style="font-size:12px;color:var(--gray);margin-top:3px;letter-spacing:0.5px">
+                  <% if (item.talla) { %><span style="border:1px solid var(--border);padding:1px 8px;margin-right:8px">T: <%= item.talla %></span><% } %>
+                  <span>Qty: <%= item.cantidad %></span>
+                </div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--pink)">$<%= parseFloat(item.precio_unitario||0).toLocaleString('es-CO') %></div>
+                <div style="font-size:11px;color:var(--gray)">c/u</div>
+              </div>
+            </div>
+            <% }) %>
+          <% } else { %>
+          <div style="color:var(--gray);text-align:center;padding:20px">Sin detalles de productos</div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Tracking timeline -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:1px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:20px">SEGUIMIENTO</div>
+        <%
+          var estadosOrden = ['pendiente','confirmado','en_transito','entregado'];
+          var idxActual = estadosOrden.indexOf(pedido.estado);
+        %>
+        <div style="display:flex;flex-direction:column;gap:0">
+          <% estadosOrden.forEach(function(est, i) {
+            var done = i <= idxActual;
+            var active = i === idxActual;
+            var labels = {pendiente:'Pedido recibido',confirmado:'Confirmado',en_transito:'En camino',entregado:'Entregado'};
+            var icons = {pendiente:'bi-cart-check',confirmado:'bi-check-circle',en_transito:'bi-truck',entregado:'bi-house-check'};
+          %>
+          <div style="display:flex;gap:16px;align-items:flex-start;padding-bottom:<%= i<estadosOrden.length-1?'20px':'0' %>">
+            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+              <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid <%= done?stColor:'rgba(255,255,255,0.15)' %>;background:<%= active?stColor+'20':'transparent' %>;color:<%= done?stColor:'rgba(255,255,255,0.2)' %>;transition:all 0.3s">
+                <i class="bi <%= icons[est] %>"></i>
+              </div>
+              <% if (i < estadosOrden.length-1) { %>
+              <div style="width:2px;flex:1;background:<%= done&&i<idxActual?stColor:'rgba(255,255,255,0.08)' %>;min-height:20px;margin-top:4px"></div>
+              <% } %>
+            </div>
+            <div style="padding-top:6px;flex:1">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:<%= done?'var(--white)':'rgba(255,255,255,0.3)' %>"><%= labels[est] %></div>
+              <% if (seguimiento) { var track = seguimiento.find(function(s){ return s.estado===est; }); if(track){ %>
+              <div style="font-size:11px;color:var(--gray);margin-top:2px"><%= new Date(track.fecha).toLocaleDateString('es-CO') %></div>
+              <% if(track.comentario){ %><div style="font-size:11px;color:var(--pink);margin-top:2px"><%= track.comentario %></div><% } %>
+              <% }} %>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- Summary -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:20px;position:relative">
+        <div style="position:absolute;inset:0;border:1px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">RESUMEN</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gray)">
+            <span>Subtotal</span>
+            <span>$<%= parseFloat(pedido.subtotal||pedido.total||0).toLocaleString('es-CO') %></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gray)">
+            <span>Envío</span>
+            <span>$<%= parseFloat(pedido.envio||8.99).toLocaleString('es-CO') %></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--pink);border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+            <span>TOTAL</span>
+            <span>$<%= parseFloat(pedido.total||0).toLocaleString('es-CO') %></span>
+          </div>
+          <div style="font-size:11px;letter-spacing:1px;padding:6px 10px;border:1px solid rgba(255,255,255,0.1);text-align:center;margin-top:4px">
+            <span style="color:var(--gray)">Pago: </span>
+            <span style="color:<%= pedido.estado_pago==='pagado'?'#00ff64':'#ffc800' %>"><%= (pedido.metodo_pago||'—').toUpperCase() %></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shipping address -->
+      <% if (pedido.direccion_texto || pedido.ciudad) { %>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:20px;position:relative">
+        <div style="position:absolute;inset:0;border:1px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--pink);margin-bottom:10px">ENTREGA</div>
+        <div style="font-size:12px;color:rgba(240,240,240,0.75);line-height:1.7">
+          <% if (pedido.nombre_destinatario) { %><strong><%= pedido.nombre_destinatario %></strong><br><% } %>
+          <%= pedido.direccion_texto || '' %><br>
+          <%= pedido.ciudad || '' %><% if(pedido.departamento){ %>, <%= pedido.departamento %><% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- Actions -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <a href="/productos" class="btn-grunge" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center">
+          <i class="bi bi-bag"></i> SEGUIR COMPRANDO
+        </a>
+        <% if (pedido.estado === 'pendiente') { %>
+        <form action="/pedidos/<%= pedido.id %>/cancelar" method="POST" onsubmit="return confirm('Cancelar este pedido?')">
+          <button type="submit" style="width:100%;background:none;border:1px solid #ff6060;color:#ff6060;padding:10px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,96,96,0.1)'" onmouseout="this.style.background='none'">
+            CANCELAR PEDIDO
+          </button>
+        </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@media(max-width:768px){ .pedido-det-grid{grid-template-columns:1fr!important} div[style*="padding:40px"]{padding:20px!important} }
+</style>
+<%- include('../partials/footer') %>

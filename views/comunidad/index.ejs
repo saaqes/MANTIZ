@@ -1,0 +1,269 @@
+<%- include('../partials/header') %>
+
+<style>
+  .comunidad-hero { padding: 80px 0 48px; text-align: center; }
+  .comunidad-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 40px; margin-bottom: 40px; overflow-x: auto; }
+  .com-tab { padding: 12px 24px; font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 3px;
+    color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s;
+    white-space: nowrap; text-decoration: none; }
+  .com-tab:hover { color: var(--white); }
+  .com-tab.active { color: var(--pink); border-bottom-color: var(--pink); }
+  .com-section { display: none; padding: 0 40px 80px; }
+  .com-section.active { display: block; }
+  .boards-grid { columns: 5 200px; gap: 16px; }
+  .board-card {
+    break-inside: avoid; margin-bottom: 16px; position: relative; cursor: pointer;
+    background: var(--card-bg); border: 1px solid var(--border); transition: all 0.3s;
+    overflow: hidden;
+  }
+  .board-card:hover { transform: translateY(-4px); border-color: var(--pink); box-shadow: 0 12px 40px rgba(233,30,140,0.2); }
+  .board-cover { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .board-cover-color { width: 100%; aspect-ratio: 1; }
+  .board-info { padding: 10px 12px; }
+  .board-name { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px; margin-bottom: 4px; }
+  .board-meta { font-size: 11px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+  .board-author { display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+    border-top: 1px solid rgba(255,255,255,0.05); }
+  .board-author img { border-radius: 50%; border: 1px solid var(--border); }
+  .board-actions { display: flex; gap: 4px; padding: 6px 12px 10px; }
+  .react-btn { background: none; border: 1px solid var(--border); color: var(--gray);
+    padding: 4px 10px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  .react-btn:hover, .react-btn.active { background: rgba(233,30,140,0.1); color: var(--pink); border-color: var(--pink); }
+  .save-btn { background: none; border: 1px solid var(--border); color: var(--gray);
+    padding: 4px 10px; font-size: 11px; letter-spacing: 1px; font-family: 'Bebas Neue', sans-serif;
+    cursor: pointer; transition: all 0.2s; margin-left: auto; }
+  .save-btn:hover, .save-btn.saved { background: var(--pink); color: white; border-color: var(--pink); }
+
+  .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+  .user-card { background: var(--card-bg); border: 1px solid var(--border); padding: 20px 16px; text-align: center;
+    transition: all 0.3s; cursor: pointer; text-decoration: none; display: block; }
+  .user-card:hover { border-color: var(--pink); transform: translateY(-4px); }
+  .user-card img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+    border: 3px solid var(--border); margin-bottom: 10px; }
+  .user-card:hover img { border-color: var(--pink); }
+
+  .stickers-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+  .sticker-cat { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 2px;
+    color: var(--pink); margin: 16px 0 8px; width: 100%; }
+  .sticker-item { width: 72px; height: 72px; background: var(--card-bg); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: all 0.2s; font-size: 28px; }
+  .sticker-item:hover { border-color: var(--pink); transform: scale(1.1); }
+
+  .imagenes-masonry { columns: 6 120px; gap: 8px; }
+  .img-pin { break-inside: avoid; margin-bottom: 8px; overflow: hidden; cursor: pointer; }
+  .img-pin img { width: 100%; display: block; transition: transform 0.4s; }
+  .img-pin:hover img { transform: scale(1.05); }
+</style>
+
+<div class="comunidad-hero">
+  <div class="section-title">COMUNIDAD</div>
+  <div class="tribal-divider">
+    <svg width="200" height="14" viewBox="0 0 200 14"><path d="M0,7 L80,7 L90,2 L100,12 L110,2 L120,7 L200,7" fill="none" stroke="var(--pink)" stroke-width="1.5" opacity="0.6"/></svg>
+  </div>
+  <p style="color:var(--gray);font-size:14px;letter-spacing:1px;max-width:480px;margin:0 auto">
+    Explora tableros, conjuntos y usuarios de la comunidad MANTIZ
+  </p>
+</div>
+
+<!-- TABS -->
+<div class="comunidad-tabs">
+  <a class="com-tab active" onclick="cambiarTab('tableros',this)">TABLEROS</a>
+  <a class="com-tab" onclick="cambiarTab('imagenes',this)">IMÁGENES</a>
+  <a class="com-tab" onclick="cambiarTab('stickers',this)">STICKERS</a>
+  <a class="com-tab" onclick="cambiarTab('usuarios',this)">USUARIOS</a>
+</div>
+
+<!-- TABLEROS -->
+<div class="com-section active" id="tab-tableros">
+  <% if (!tableros || tableros.length === 0) { %>
+    <div style="text-align:center;padding:60px;color:var(--muted)">No hay tableros públicos aún</div>
+  <% } else { %>
+  <div class="boards-grid">
+    <% tableros.forEach(t => {
+      const coverImg = t.imagen_portada ? '/uploads/pines/'+t.imagen_portada : null;
+    %>
+    <div class="board-card" id="board-<%= t.id %>">
+      <% if (coverImg) { %>
+        <img class="board-cover" src="<%= coverImg %>" alt="<%= t.nombre %>" onerror="this.style.display='none'">
+      <% } else { %>
+        <div class="board-cover-color" style="background:<%= t.color_portada||'#1a1a1a' %>"></div>
+      <% } %>
+      <div class="board-info">
+        <div class="board-name"><%= t.nombre %></div>
+        <div class="board-meta">
+          <span><i class="bi bi-pin-fill me-1"></i><%= t.total_pines %></span>
+          <span><i class="bi bi-eye me-1"></i><%= t.total_vistas||0 %></span>
+          <span><i class="bi bi-heart me-1"></i><%= t.total_reacciones||0 %></span>
+        </div>
+      </div>
+      <div class="board-author">
+        <img src="<%= t.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+t.foto_perfil : '/img/defaults/avatars/'+(t.foto_perfil_preset||'avatar1.png') %>" width="22" height="22" onerror="this.src='/img/defaults/avatars/avatar1.png'">
+        <a href="/u/<%= t.username %>" style="font-size:11px;color:var(--gray);text-decoration:none">@<%= t.username %></a>
+      </div>
+      <div class="board-actions">
+        <button class="react-btn" onclick="reaccionar(<%= t.id %>,'fuego',this)" title="Fuego">🔥</button>
+        <button class="react-btn" onclick="reaccionar(<%= t.id %>,'love',this)" title="Love">❤️</button>
+        <button class="react-btn" onclick="reaccionar(<%= t.id %>,'wow',this)" title="Wow">😮</button>
+        <% if (user) { %>
+        <button class="save-btn" id="save-<%= t.id %>" onclick="guardarTablero(<%= t.id %>)">
+          <i class="bi bi-bookmark"></i> GUARDAR
+        </button>
+        <% } %>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<!-- IMÁGENES -->
+<div class="com-section" id="tab-imagenes">
+  <% if (!imagenes || imagenes.length === 0) { %>
+    <div style="text-align:center;padding:60px;color:var(--muted)">Sin imágenes aún</div>
+  <% } else { %>
+  <div class="imagenes-masonry">
+    <% imagenes.forEach(img => { %>
+    <div class="img-pin" title="<%= img.titulo || img.tablero_nombre %>">
+      <img src="<%= img.imagen_url %>" alt="<%= img.titulo || '' %>" onerror="this.parentElement.remove()">
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<!-- STICKERS -->
+<div class="com-section" id="tab-stickers">
+  <% if (!stickers || stickers.length === 0) { %>
+    <div style="text-align:center;padding:60px;color:var(--muted)">No hay stickers disponibles</div>
+  <% } else {
+    const cats = [...new Set(stickers.map(s => s.categoria))];
+  %>
+  <div class="stickers-grid">
+    <% cats.forEach(cat => { %>
+    <div class="sticker-cat"><%= cat.toUpperCase() %></div>
+    <% stickers.filter(s => s.categoria === cat).forEach(s => { %>
+    <div class="sticker-item" title="<%= s.nombre %>">
+      <img src="/uploads/stickers/<%= s.archivo %>" alt="<%= s.nombre %>" style="width:52px;height:52px;object-fit:contain"
+        onerror="this.parentElement.innerHTML='<span>❓</span>'">
+    </div>
+    <% }) %>
+    <% }) %>
+  </div>
+
+  <% if (user) { %>
+  <div style="margin-top:40px;padding:24px;border:1px solid var(--border);max-width:400px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:16px">SUBIR MI STICKER</div>
+    <form id="stickerForm">
+      <div style="margin-bottom:12px">
+        <input type="text" id="stk-nombre" placeholder="Nombre del sticker" class="mantiz-input" required>
+      </div>
+      <div style="margin-bottom:12px">
+        <input type="file" id="stk-file" accept="image/*,.gif" style="color:var(--white);font-size:13px" required>
+      </div>
+      <button type="submit" class="btn-grunge" style="padding:10px 24px;font-size:13px">ENVIAR PARA REVISIÓN</button>
+    </form>
+  </div>
+  <% } %>
+</div>
+
+<!-- USUARIOS -->
+<div class="com-section" id="tab-usuarios">
+  <div class="users-grid">
+    <% if (!usuarios || usuarios.length === 0) { %>
+      <div style="text-align:center;padding:60px;color:var(--muted);grid-column:1/-1">Sin usuarios destacados</div>
+    <% } else { usuarios.forEach(u => { %>
+    <a href="/u/<%= u.username %>" class="user-card">
+      <img src="<%= u.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+u.foto_perfil : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png') %>"
+           onerror="this.src='/img/defaults/avatars/avatar1.png'">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;margin-bottom:4px"><%= u.nombre_visible %></div>
+      <div style="font-size:11px;color:var(--muted)">@<%= u.username %></div>
+      <% if (u.bio) { %><div style="font-size:11px;color:var(--gray);margin-top:6px;line-height:1.3"><%= u.bio.substring(0,50) %>...</div><% } %>
+      <div style="display:flex;justify-content:center;gap:16px;margin-top:10px">
+        <div style="text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--pink)"><%= u.total_tableros %></div>
+          <div style="font-size:9px;color:var(--muted);letter-spacing:1px">TABLEROS</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--pink)"><%= u.total_likes %></div>
+          <div style="font-size:9px;color:var(--muted);letter-spacing:1px">LIKES</div>
+        </div>
+      </div>
+    </a>
+    <% }) } %>
+  </div>
+</div>
+
+<script>
+function cambiarTab(id, el) {
+  document.querySelectorAll('.com-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.com-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+async function reaccionar(tableroId, tipo, btn) {
+  <% if (!user) { %>
+  window.location='/auth/login'; return;
+  <% } %>
+  try {
+    const r = await fetch(`/comunidad/tablero/${tableroId}/reaccion`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ tipo })
+    });
+    const d = await r.json();
+    btn.classList.toggle('active', !!d.reaccion);
+    // Registrar vista
+    fetch(`/comunidad/tablero/${tableroId}/vista`, { method: 'POST' }).catch(()=>{});
+  } catch(e) {}
+}
+
+async function guardarTablero(id) {
+  <% if (!user) { %>
+  window.location='/auth/login'; return;
+  <% } %>
+  try {
+    const r = await fetch(`/comunidad/tablero/${id}/guardar`, { method: 'POST' });
+    const d = await r.json();
+    const btn = document.getElementById(`save-${id}`);
+    if (btn) {
+      btn.classList.toggle('saved', d.guardado);
+      btn.innerHTML = d.guardado
+        ? '<i class="bi bi-bookmark-check-fill"></i> GUARDADO'
+        : '<i class="bi bi-bookmark"></i> GUARDAR';
+    }
+    showToast(d.guardado ? '¡TABLERO GUARDADO!' : 'TABLERO REMOVIDO');
+  } catch(e) {}
+}
+
+// Registrar vistas al ver tableros
+document.querySelectorAll('.board-card').forEach(card => {
+  const id = card.id.replace('board-','');
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      fetch(`/comunidad/tablero/${id}/vista`, { method: 'POST' }).catch(()=>{});
+      obs.disconnect();
+    }
+  }, { threshold: 0.5 });
+  obs.observe(card);
+});
+
+// Upload sticker
+const stickerForm = document.getElementById('stickerForm');
+if (stickerForm) {
+  stickerForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData();
+    fd.append('nombre', document.getElementById('stk-nombre').value);
+    fd.append('sticker', document.getElementById('stk-file').files[0]);
+    try {
+      const r = await fetch('/comunidad/stickers/subir', { method: 'POST', body: fd });
+      const d = await r.json();
+      showToast(d.success ? 'STICKER ENVIADO PARA REVISIÓN' : 'ERROR AL SUBIR');
+      if (d.success) stickerForm.reset();
+    } catch(e) { showToast('ERROR DE RED'); }
+  });
+}
+</script>
+
+<%- include('../partials/footer') %>

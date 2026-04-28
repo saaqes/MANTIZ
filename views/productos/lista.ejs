@@ -1,0 +1,141 @@
+<%- include('../partials/header') %>
+
+<style>
+#productos-page { padding:60px 40px 80px; max-width:1400px; margin:0 auto; }
+.ftag { padding:5px 16px; border:2px solid rgba(255,255,255,0.2); color:var(--white); text-decoration:none; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; transition:all 0.2s; filter:url(#gb); display:inline-block; }
+.ftag:hover { border-color:var(--pink); color:var(--pink); }
+.ftag.on { border-color:var(--pink); color:var(--pink); background:rgba(233,30,140,0.1); }
+.sort-sel { background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--white); padding:8px 14px; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:1px; cursor:pointer; outline:none; }
+.pgrid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
+@media(max-width:1200px){.pgrid4{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.pgrid4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.pgrid4{grid-template-columns:1fr}}
+@media(max-width:768px){#productos-page{padding:40px 20px 60px}}
+</style>
+
+<div id="productos-page">
+  <h1 class="section-title">TIENDA</h1>
+  <div style="text-align:center;margin:10px 0 36px;opacity:0.7">
+    <svg width="300" height="22" viewBox="0 0 300 22" fill="none">
+      <line x1="0" y1="11" x2="118" y2="11" stroke="rgba(233,30,140,0.4)" stroke-width="1"/>
+      <path d="M128 11 L138 4 L148 11 L138 18 Z" fill="var(--pink)" opacity="0.6"/>
+      <path d="M148 11 L158 4 L168 11 L158 18 Z" fill="var(--pink)"/>
+      <path d="M168 11 L178 4 L188 11 L178 18 Z" fill="var(--pink)" opacity="0.6"/>
+      <line x1="198" y1="11" x2="300" y2="11" stroke="rgba(233,30,140,0.4)" stroke-width="1"/>
+    </svg>
+  </div>
+
+  <!-- Filter bar -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;flex-wrap:wrap;gap:14px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="/productos?orden=<%= orden %>" class="ftag <%= !cat ? 'on' : '' %>">TODO</a>
+      <% categorias.forEach(function(c) { %>
+      <a href="/productos?categoria=<%= encodeURIComponent(c.categoria) %>&orden=<%= orden %>"
+         class="ftag <%= cat === c.categoria ? 'on' : '' %>"><%= c.categoria.toUpperCase() %></a>
+      <% }) %>
+      <% if (cat) { %>
+      <a href="/productos" style="padding:5px 14px;border:1px solid #ff4444;color:#ff4444;text-decoration:none;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1.5px">&#x2715; LIMPIAR</a>
+      <% } %>
+    </div>
+    <select class="sort-sel" onchange="window.location=this.value">
+      <option value="/productos?<%= cat ? 'categoria='+encodeURIComponent(cat)+'&' : '' %>orden=nuevo"
+        <%= orden === 'nuevo' ? 'selected' : '' %>>MAS NUEVOS</option>
+      <option value="/productos?<%= cat ? 'categoria='+encodeURIComponent(cat)+'&' : '' %>orden=populares"
+        <%= orden === 'populares' ? 'selected' : '' %>>MAS POPULARES</option>
+      <option value="/productos?<%= cat ? 'categoria='+encodeURIComponent(cat)+'&' : '' %>orden=precio_asc"
+        <%= orden === 'precio_asc' ? 'selected' : '' %>>PRECIO: MENOR</option>
+      <option value="/productos?<%= cat ? 'categoria='+encodeURIComponent(cat)+'&' : '' %>orden=precio_desc"
+        <%= orden === 'precio_desc' ? 'selected' : '' %>>PRECIO: MAYOR</option>
+    </select>
+  </div>
+
+  <!-- Grid -->
+  <div class="pgrid4">
+    <% if (productos.length === 0) { %>
+    <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--gray)">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;color:var(--pink);margin-bottom:8px">SIN PRODUCTOS</div>
+      <a href="/productos" class="btn-grunge" style="display:inline-flex;margin-top:20px">VER TODO</a>
+    </div>
+    <% } %>
+    <% productos.forEach(function(p) { %>
+    <div class="product-card" onclick="window.location='/productos/<%= p.id %>'">
+      <div class="pc-label">
+        <span class="pc-label-text"><%= p.titulo.substring(0,16) %></span>
+        <% if (p.precio_descuento) { %><span class="badge-oferta">-<%= Math.round((1-p.precio_descuento/p.precio)*100) %>%</span><% } %>
+      </div>
+      <div class="pc-img-wrap">
+        <div class="pc-img-clip">
+          <img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>"
+               onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%>
+        </div>
+        <button class="pc-add-btn"
+                onclick="event.stopPropagation();quickAdd(<%= p.id %>,'<%= p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39)) %>',<%= p.precio_descuento||p.precio %>,'<%= p.imagen_principal %>')">+</button>
+      </div>
+      <div class="pc-info">
+        <div>
+          <div class="pc-name"><%= p.titulo.substring(0,18) %></div>
+          <div style="font-size:10px;color:var(--gray);letter-spacing:1px;margin-top:2px"><%= p.categoria %></div>
+        </div>
+        <span class="pc-price">$<%= parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO') %></span>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</div>
+
+<!-- SIZE MODAL -->
+<div id="size-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
+  <div style="background:var(--card-bg);max-width:400px;width:90%;padding:32px;position:relative">
+    <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
+    <button onclick="closeSzModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;z-index:20">&#x2715;</button>
+    <div id="sz-name" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--pink);margin-bottom:8px"></div>
+    <div id="sz-price" style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);margin-bottom:20px"></div>
+    <div style="font-size:11px;letter-spacing:2px;color:var(--gray);margin-bottom:10px">SELECCIONA TALLA</div>
+    <div id="sz-btns" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px"></div>
+    <button onclick="confirmAdd()" style="width:100%;background:var(--pink);border:2px solid white;color:white;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:4px;cursor:pointer;filter:url(#gb)">AÑADIR AL CARRITO</button>
+  </div>
+</div>
+
+<script>
+var pendProd=null,selSz=null;
+async function quickAdd(id,name,price,img){
+  try{
+    var r=await fetch('/productos/'+id+'/tallas');
+    var d=await r.json();
+    if(d.tallas&&d.tallas.length>0){
+      document.getElementById('sz-name').textContent=name;
+      document.getElementById('sz-price').textContent='$'+parseFloat(price).toLocaleString('es-CO');
+      var h='';
+      d.tallas.forEach(function(t){
+        h+='<button onclick="selSzBtn(this,\''+t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid rgba(255,255,255,0.3);background:none;color:var(--white);font-family:Rajdhani,sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';
+      });
+      document.getElementById('sz-btns').innerHTML=h;
+      pendProd={id:id,name:name,price:price,img:img};selSz=null;
+      var m=document.getElementById('size-modal');m.style.opacity='1';m.style.pointerEvents='all';
+    }else{await addCart(id,null);}
+  }catch(e){await addCart(id,null);}
+}
+function selSzBtn(btn,t){
+  if(btn.dataset.stock==='0')return;
+  document.querySelectorAll('.sz-b').forEach(function(b){b.style.background='none';b.style.borderColor='rgba(255,255,255,0.3)';b.style.color='var(--white)';});
+  btn.style.background='var(--pink)';btn.style.borderColor='var(--pink)';selSz=t;
+}
+function closeSzModal(){var m=document.getElementById('size-modal');m.style.opacity='0';m.style.pointerEvents='none';pendProd=null;selSz=null;}
+document.getElementById('size-modal').addEventListener('click',function(e){if(e.target===document.getElementById('size-modal'))closeSzModal();});
+async function confirmAdd(){
+  if(!pendProd)return;
+  if(!selSz){var sb=document.getElementById('sz-btns');sb.style.outline='1px solid var(--pink)';setTimeout(function(){sb.style.outline='';},500);return;}
+  await addCart(pendProd.id,selSz);closeSzModal();
+}
+async function addCart(id,talla){
+  try{
+    var r=await fetch('/carrito/agregar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto_id:id,talla:talla,cantidad:1})});
+    var d=await r.json();
+    if(d.success){showToast('PRODUCTO ANADIDO');var cc=document.getElementById('cart-count');if(cc){var n=(parseInt(cc.textContent)||0)+1;cc.textContent=n;cc.classList.add('show');}var cp=document.getElementById('cart-panel');if(cp){cp.classList.add('open');loadCartPanel();}}
+    else if(d.redirect){window.location=d.redirect;}
+  }catch(e){}
+}
+</script>
+
+<%- include('../partials/footer') %>

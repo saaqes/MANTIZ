@@ -1,0 +1,235 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div style="padding:40px;max-width:1100px;margin:0 auto">
+  <h2 class="section-title">FINALIZAR COMPRA</h2>
+  <div style="text-align:center;margin:8px 0 28px;opacity:0.7">
+    <svg width="200" height="20" viewBox="0 0 200 20" fill="none"><line x1="0" y1="10" x2="80" y2="10" stroke="rgba(233,30,140,0.4)" stroke-width="1"/><circle cx="100" cy="10" r="5" fill="var(--pink)"/><line x1="120" y1="10" x2="200" y2="10" stroke="rgba(233,30,140,0.4)" stroke-width="1"/></svg>
+  </div>
+
+  <form action="/pedidos/checkout" method="POST" id="checkoutForm">
+    <div style="display:grid;grid-template-columns:1fr 360px;gap:32px" class="checkout-grid">
+
+      <!-- LEFT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- 1. DIRECCIÓN -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:28px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--pink);margin-bottom:20px">
+            <i class="bi bi-geo-alt-fill me-2"></i>DIRECCIÓN DE ENTREGA
+          </div>
+
+          <% if (direcciones && direcciones.length > 0) { %>
+          <!-- Saved addresses -->
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+            <% direcciones.forEach(function(d) { %>
+            <label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--border);cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">
+              <input type="radio" name="direccion_id" value="<%= d.id %>" <%= d.predeterminada?'checked':'' %> style="margin-top:3px;accent-color:var(--pink)">
+              <div>
+                <div style="font-weight:700;font-size:13px;letter-spacing:1px"><%= d.alias %> — <%= d.nombre_destinatario %></div>
+                <div style="font-size:12px;color:var(--gray);margin-top:3px"><%= d.direccion %>, <%= d.ciudad %>, <%= d.departamento %></div>
+                <% if (d.lat && d.lng) { %>
+                <div style="font-size:10px;color:var(--pink);margin-top:2px"><i class="bi bi-pin-map me-1"></i>Ubicacion guardada en mapa</div>
+                <% } %>
+              </div>
+            </label>
+            <% }) %>
+          </div>
+          <button type="button" onclick="toggleNuevaDireccion()" style="background:none;border:1px solid rgba(255,255,255,0.2);color:var(--pink);padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'">
+            + AGREGAR NUEVA DIRECCIÓN
+          </button>
+          <div id="nueva-dir-section" style="display:none;margin-top:16px">
+            <% } %>
+
+            <!-- New address form -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="grid-column:1/-1">
+                <label class="mantiz-label">Nombre del destinatario</label>
+                <input type="text" name="nombre_destinatario" class="mantiz-input" placeholder="Nombre completo">
+              </div>
+              <div>
+                <label class="mantiz-label">Ciudad</label>
+                <input type="text" name="ciudad" class="mantiz-input" placeholder="Bogotá" id="ciudadInput">
+              </div>
+              <div>
+                <label class="mantiz-label">Departamento</label>
+                <input type="text" name="departamento" class="mantiz-input" placeholder="Cundinamarca">
+              </div>
+              <div style="grid-column:1/-1">
+                <label class="mantiz-label">Dirección</label>
+                <div style="display:flex;gap:8px">
+                  <input type="text" name="direccion" id="direccionInput" class="mantiz-input" placeholder="Calle 123 #45-67" style="flex:1">
+                  <button type="button" onclick="abrirMapa()" style="background:var(--pink);border:none;color:white;padding:0 14px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;white-space:nowrap" title="Ubicar en mapa">
+                    <i class="bi bi-pin-map-fill"></i> MAPA
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Hidden coords -->
+            <input type="hidden" name="lat" id="latInput">
+            <input type="hidden" name="lng" id="lngInput">
+
+            <!-- Map picker (collapsible) -->
+            <div id="map-picker-wrap" style="display:none;margin-top:14px">
+              <div style="font-size:11px;color:var(--gray);letter-spacing:1px;margin-bottom:8px">
+                <i class="bi bi-hand-index me-1"></i>Haz clic en el mapa para marcar tu ubicación exacta
+              </div>
+              <div id="map-picker" style="height:280px;border:2px solid var(--border);position:relative"></div>
+              <div id="coords-display" style="font-size:11px;color:var(--pink);margin-top:6px;letter-spacing:1px"></div>
+              <button type="button" onclick="confirmarUbicacion()" class="btn-grunge" style="margin-top:10px;padding:8px 24px;font-size:13px">
+                <i class="bi bi-check2 me-1"></i>CONFIRMAR UBICACIÓN
+              </button>
+            </div>
+
+          <% if (direcciones && direcciones.length > 0) { %>
+          </div><!-- end nueva-dir-section -->
+          <% } %>
+        </div>
+
+        <!-- 2. MÉTODO DE PAGO -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:28px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--pink);margin-bottom:20px">
+            <i class="bi bi-credit-card-fill me-2"></i>MÉTODO DE PAGO
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <% var metodos = [
+              ['tarjeta',      'bi-credit-card-fill',  'Tarjeta crédito/débito'],
+              ['nequi',        'bi-phone-fill',         'Nequi'],
+              ['daviplata',    'bi-phone-vibrate-fill', 'Daviplata'],
+              ['transferencia','bi-bank2',              'Transferencia bancaria'],
+              ['contraentrega','bi-truck',              'Contraentrega'],
+              ['paypal',       'bi-paypal',             'PayPal']
+            ]; %>
+            <% metodos.forEach(function(m) { %>
+            <label class="metodo-card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;position:relative" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">
+              <input type="radio" name="metodo_pago" value="<%= m[0] %>" style="accent-color:var(--pink);flex-shrink:0">
+              <i class="bi <%= m[1] %>" style="color:var(--pink);font-size:18px;flex-shrink:0"></i>
+              <span style="font-size:13px;letter-spacing:0.5px"><%= m[2] %></span>
+            </label>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- 3. NOTAS -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
+          <label class="mantiz-label"><i class="bi bi-chat-left-text me-2"></i>Notas adicionales</label>
+          <textarea name="notas" class="mantiz-input" rows="3" placeholder="Instrucciones especiales para tu pedido..."></textarea>
+        </div>
+      </div>
+
+      <!-- RIGHT: ORDER SUMMARY -->
+      <div style="display:flex;flex-direction:column;gap:16px;position:sticky;top:84px;align-self:start">
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--pink);margin-bottom:16px">RESUMEN DEL PEDIDO</div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+            <% if (items && items.length > 0) { %>
+              <% items.forEach(function(item) { %>
+              <div style="display:flex;align-items:center;gap:10px">
+                <img src="/uploads/products/<%= item.imagen_principal %>" width="48" height="48"
+                     style="object-fit:cover;border:1px solid var(--border);flex-shrink:0"
+                     onerror="this.style.background='#111'">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= item.titulo %></div>
+                  <% if (item.talla) { %><div style="font-size:10px;color:var(--gray)">Talla: <%= item.talla %></div><% } %>
+                  <div style="font-size:11px;color:var(--gray)">x<%= item.cantidad %></div>
+                </div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--pink);white-space:nowrap">
+                  $<%= parseFloat((item.precio_descuento||item.precio)*item.cantidad).toLocaleString('es-CO') %>
+                </div>
+              </div>
+              <% }) %>
+            <% } %>
+          </div>
+
+          <div style="border-top:1px solid var(--border);padding-top:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gray)">
+              <span>Subtotal</span>
+              <span>$<%= parseFloat(subtotal||0).toLocaleString('es-CO') %></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gray)">
+              <span>Envío</span>
+              <span>$<%= parseFloat(envio||8.99).toLocaleString('es-CO') %></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--pink);border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+              <span>TOTAL</span>
+              <span>$<%= parseFloat(total||0).toLocaleString('es-CO') %></span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-grunge-fill" style="width:100%;font-size:18px;padding:18px;letter-spacing:4px">
+          CONFIRMAR PEDIDO &#8594;
+        </button>
+        <a href="/carrito" style="text-align:center;font-size:12px;color:var(--gray);text-decoration:none;letter-spacing:1px" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'">&#8592; Volver al carrito</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<style>
+.metodo-card:has(input:checked) { border-color: var(--pink) !important; background: rgba(233,30,140,0.08); }
+@media(max-width:900px){ .checkout-grid{grid-template-columns:1fr!important} div[style*="position:sticky"]{position:static!important} }
+@media(max-width:600px){ div[style*="padding:40px"]{padding:20px!important} }
+</style>
+
+<script>
+function toggleNuevaDireccion() {
+  var s = document.getElementById('nueva-dir-section');
+  if (s) s.style.display = s.style.display === 'none' ? 'block' : 'none';
+}
+
+var pickerMap = null, pickerMarker = null;
+function abrirMapa() {
+  var wrap = document.getElementById('map-picker-wrap');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+  if (pickerMap) { pickerMap.invalidateSize(); return; }
+
+  pickerMap = L.map('map-picker').setView([4.7110, -74.0721], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(pickerMap);
+
+  pickerMap.on('click', function(e) {
+    var lat = e.latlng.lat.toFixed(6);
+    var lng = e.latlng.lng.toFixed(6);
+    document.getElementById('latInput').value = lat;
+    document.getElementById('lngInput').value = lng;
+    document.getElementById('coords-display').textContent = 'Lat: ' + lat + ' | Lng: ' + lng;
+    if (pickerMarker) pickerMap.removeLayer(pickerMarker);
+    pickerMarker = L.marker(e.latlng).addTo(pickerMap);
+    // Reverse geocode hint
+    fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.display_name) {
+          var parts = d.display_name.split(',');
+          var addr = parts.slice(0,3).join(',').trim();
+          if (!document.getElementById('direccionInput').value)
+            document.getElementById('direccionInput').value = addr;
+        }
+      }).catch(function(){});
+  });
+
+  // Try geolocation
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      pickerMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+    }, function(){});
+  }
+}
+
+function confirmarUbicacion() {
+  var lat = document.getElementById('latInput').value;
+  var lng = document.getElementById('lngInput').value;
+  if (!lat || !lng) { alert('Haz clic en el mapa para seleccionar tu ubicacion'); return; }
+  document.getElementById('map-picker-wrap').style.display = 'none';
+  showToast('UBICACION GUARDADA');
+}
+</script>
+
+<%- include('../partials/footer') %>

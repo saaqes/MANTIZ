@@ -1,0 +1,37 @@
+<%- include('../partials/header') %>
+<div style="padding:40px;max-width:1000px;margin:0 auto">
+  <h2 class="section-title">MIS PEDIDOS</h2>
+  <div class="tribal-divider"><svg width="200" height="20" viewBox="0 0 200 20" fill="none"><line x1="0" y1="10" x2="80" y2="10" stroke="rgba(233,30,140,0.4)" stroke-width="1"/><circle cx="100" cy="10" r="5" fill="var(--pink)"/><line x1="120" y1="10" x2="200" y2="10" stroke="rgba(233,30,140,0.4)" stroke-width="1"/></svg></div>
+  <% if(pedidos&&pedidos.length>0){ %>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <%pedidos.forEach(p=>{
+      const statusMap={pendiente:{c:'#ffc800',l:'PENDIENTE'},confirmado:{c:'#00c8ff',l:'CONFIRMADO'},empaquetando:{c:'#a78bfa',l:'EMPAQUETANDO'},en_transito:{c:'#60a5fa',l:'EN TRÁNSITO'},con_conductor:{c:'#34d399',l:'CON CONDUCTOR'},entregado:{c:'#00ff64',l:'ENTREGADO'},cancelado:{c:'#ff6060',l:'CANCELADO'}};
+      const st=statusMap[p.estado]||{c:'var(--gray)',l:(p.estado||'').toUpperCase()};
+    %>
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.15);filter:url(#gb);pointer-events:none"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--white)">PEDIDO #<%=String(p.id).padStart(5,'0')%></div>
+          <div style="font-size:12px;color:var(--gray);letter-spacing:1px;margin-top:3px"><%=new Date(p.creado_en).toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'})%></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;padding:4px 12px;border:1px solid <%=st.c%>;color:<%=st.c%>"><%=st.l%></div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--pink);margin-top:6px;letter-spacing:1px">$<%=parseFloat(p.total).toLocaleString('es-CO')%></div>
+        </div>
+      </div>
+      <% if(p.numero_tracking){%><div style="margin-top:10px;font-size:12px;color:var(--gray);letter-spacing:1px"><i class="bi bi-truck me-1" style="color:var(--pink)"></i>Tracking: <span style="color:var(--white)"><%=p.numero_tracking%></span></div><%}%>
+      <a href="/pedidos/<%=p.id%>" style="display:inline-flex;margin-top:14px;padding:6px 18px;border:1px solid var(--pink);color:var(--pink);text-decoration:none;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;transition:all 0.2s;filter:url(#gb)" onmouseover="this.style.background='var(--pink)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--pink)'">VER DETALLES →</a>
+    </div>
+    <%})%>
+  </div>
+  <%}else{%>
+  <div style="text-align:center;padding:80px 20px">
+    <div style="font-size:60px;margin-bottom:16px;opacity:0.3">📦</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--gray);margin-bottom:8px">SIN PEDIDOS AÚN</div>
+    <a href="/productos" class="btn-grunge" style="display:inline-flex;margin-top:16px">EXPLORAR TIENDA →</a>
+  </div>
+  <%}%>
+</div>
+<style>@media(max-width:768px){div[style*="padding:40px"]{padding:20px!important}}</style>
+<%- include('../partials/footer') %>

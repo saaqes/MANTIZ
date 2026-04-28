@@ -1,0 +1,176 @@
+<%- include('../partials/header', {isAdmin: true}) %>
+
+<style>
+.comment-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .2s}
+.comment-card:hover{border-color:rgba(233,30,140,.3)}
+.comment-card.inactive{opacity:.45;border-style:dashed}
+.stars-sm{color:#ffd700;font-size:.7rem}
+.badge-active{background:rgba(0,255,100,.1);color:#00ff64;border:1px solid rgba(0,255,100,.2);font-family:var(--fm);font-size:.6rem;padding:2px 8px;border-radius:4px}
+.badge-inactive{background:rgba(255,60,60,.08);color:#ff6060;border:1px solid rgba(255,60,60,.2);font-family:var(--fm);font-size:.6rem;padding:2px 8px;border-radius:4px}
+.filter-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);font-family:var(--fb);font-weight:600;font-size:.75rem;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .2s}
+.filter-btn.active{border-color:var(--cp);color:var(--cp);background:rgba(233,30,140,.07)}
+.comment-text{font-family:var(--fb);color:var(--text);font-size:.9rem;line-height:1.5;margin:8px 0}
+.user-badge{display:inline-flex;align-items:center;gap:6px;background:var(--dark2);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 3px}
+.user-badge img{width:22px;height:22px;border-radius:50%;object-fit:cover}
+.product-link{font-family:var(--fm);font-size:.65rem;color:var(--cp);text-decoration:none;background:rgba(233,30,140,.08);padding:2px 8px;border-radius:4px;border:1px solid rgba(233,30,140,.2)}
+.product-link:hover{background:rgba(233,30,140,.15);color:var(--cp)}
+</style>
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+  <div>
+    <div style="font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase">GESTIÓN</div>
+    <div style="font-family:var(--fd);font-size:1.1rem;font-weight:800;color:var(--text)">Comentarios y Reseñas</div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="filter-btn active" onclick="filterComments('all', this)" id="filterAll">
+      Todos (<%= comentarios.length %>)
+    </button>
+    <button class="filter-btn" onclick="filterComments('active', this)" id="filterActive">
+      Activos (<%= comentarios.filter(c=>c.activo).length %>)
+    </button>
+    <button class="filter-btn" onclick="filterComments('inactive', this)" id="filterInactive">
+      Ocultos (<%= comentarios.filter(c=>!c.activo).length %>)
+    </button>
+  </div>
+</div>
+
+<!-- Stats rápidas -->
+<div class="row g-3 mb-4">
+  <% const totalC = comentarios.length;
+     const activeC = comentarios.filter(c=>c.activo).length;
+     const avgRating = comentarios.length ? (comentarios.reduce((s,c)=>s+(c.calificacion||0),0)/comentarios.length).toFixed(1) : '0.0';
+     const stats5 = [{bg:'rgba(0,255,100,.1)',color:'#00ff64',val:activeC,label:'Activos'},
+       {bg:'rgba(233,30,140,.1)',color:'var(--cp)',val:totalC,label:'Total'},
+       {bg:'rgba(255,200,0,.1)',color:'#ffc800',val:avgRating+'★',label:'Calificación media'},
+       {bg:'rgba(255,60,60,.1)',color:'#ff6060',val:totalC-activeC,label:'Ocultos'}
+     ]; %>
+  <% stats5.forEach(s=>{ %>
+  <div class="col-6 col-md-3">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
+      <div style="font-family:var(--fd);font-size:1.3rem;font-weight:800;color:<%= s.color %>"><%= s.val %></div>
+      <div style="font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px"><%= s.label %></div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+
+<!-- Lista comentarios -->
+<div id="commentsList">
+  <% if (comentarios.length === 0) { %>
+    <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+      <i class="bi bi-chat-dots" style="font-size:2rem;display:block;margin-bottom:10px"></i>
+      <div style="font-family:var(--fb)">No hay comentarios registrados</div>
+    </div>
+  <% } %>
+  <% comentarios.forEach(c => { %>
+  <div class="comment-card mb-3 <%= c.activo ? '' : 'inactive' %>" 
+       data-status="<%= c.activo ? 'active' : 'inactive' %>"
+       id="comment-<%= c.id %>">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="user-badge">
+          <img src="<%= c.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+c.foto_perfil : '/img/defaults/avatars/'+(c.foto_perfil_preset||'avatar1.png') %>"
+               onerror="this.src='/img/defaults/avatars/avatar1.png'">
+          <span style="font-family:var(--fb);font-weight:700;font-size:.8rem;color:var(--text)"><%= c.nombre_visible %></span>
+        </div>
+        <div class="stars-sm">
+          <% for(let i=1;i<=5;i++){%><i class="bi bi-star<%= i<=(c.calificacion||0)?'-fill':'' %>"></i><%}%>
+        </div>
+        <a href="/productos/<%= c.producto_id %>" class="product-link">
+          <i class="bi bi-bag me-1"></i><%= c.producto_titulo %>
+        </a>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span style="font-family:var(--fm);font-size:.6rem;color:var(--muted)">
+          <%= new Date(c.creado_en).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) %>
+        </span>
+        <span class="<%= c.activo ? 'badge-active' : 'badge-inactive' %>">
+          <%= c.activo ? 'VISIBLE' : 'OCULTO' %>
+        </span>
+        <button onclick="toggleComment(<%= c.id %>, this)" 
+                class="btn btn-sm" 
+                style="background:<%= c.activo ? 'rgba(255,200,0,.1)' : 'rgba(0,255,100,.1)' %>;color:<%= c.activo ? '#ffc800' : '#00ff64' %>;border:1px solid <%= c.activo ? 'rgba(255,200,0,.3)' : 'rgba(0,255,100,.3)' %>;font-family:var(--fb);font-weight:700;font-size:.7rem;border-radius:5px">
+          <i class="bi bi-<%= c.activo ? 'eye-slash' : 'eye' %> me-1"></i><%= c.activo ? 'Ocultar' : 'Mostrar' %>
+        </button>
+        <button onclick="deleteComment(<%= c.id %>, this)"
+                class="btn btn-sm"
+                style="background:rgba(255,60,60,.1);color:#ff6060;border:1px solid rgba(255,60,60,.2);font-family:var(--fb);font-weight:700;font-size:.7rem;border-radius:5px">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+    <p class="comment-text"><%= c.contenido %></p>
+    <% if (c.respuesta_admin) { %>
+    <div style="background:rgba(233,30,140,.06);border:1px solid rgba(233,30,140,.15);border-radius:8px;padding:10px 14px;margin-top:6px">
+      <div style="font-family:var(--fm);font-size:.6rem;color:var(--cp);margin-bottom:4px;letter-spacing:1px">◈ RESPUESTA ADMIN</div>
+      <div style="font-family:var(--fb);font-size:.85rem;color:var(--text)"><%= c.respuesta_admin %></div>
+    </div>
+    <% } %>
+    <!-- Responder -->
+    <div class="mt-2" id="replyArea-<%= c.id %>" style="display:none">
+      <div class="d-flex gap-2">
+        <input type="text" class="form-control form-control-sm" id="replyText-<%= c.id %>" placeholder="Escribe una respuesta...">
+        <button class="btn btn-pm btn-sm" onclick="sendReply(<%= c.id %>)"><i class="bi bi-send"></i></button>
+        <button class="btn btn-om btn-sm" onclick="document.getElementById('replyArea-<%= c.id %>').style.display='none'"><i class="bi bi-x"></i></button>
+      </div>
+    </div>
+    <button onclick="document.getElementById('replyArea-<%= c.id %>').style.display='block'" 
+            style="background:none;border:none;color:var(--muted);font-family:var(--fm);font-size:.62rem;cursor:pointer;padding:0;margin-top:6px">
+      <i class="bi bi-reply me-1"></i>Responder
+    </button>
+  </div>
+  <% }) %>
+</div>
+
+<script>
+function filterComments(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.comment-card').forEach(card => {
+    if (type === 'all') card.style.display = '';
+    else card.style.display = card.dataset.status === type ? '' : 'none';
+  });
+}
+
+async function toggleComment(id, btn) {
+  try {
+    const res = await fetch(`/admin/comentarios/${id}/toggle`, {method:'POST', headers:{'Content-Type':'application/json'}});
+    const data = await res.json();
+    if (data.success) {
+      const card = document.getElementById(`comment-${id}`);
+      card.dataset.status = data.activo ? 'active' : 'inactive';
+      card.classList.toggle('inactive', !data.activo);
+      const badge = card.querySelector('.badge-active, .badge-inactive');
+      if (data.activo) { badge.className = 'badge-active'; badge.textContent = 'VISIBLE'; }
+      else { badge.className = 'badge-inactive'; badge.textContent = 'OCULTO'; }
+      btn.innerHTML = `<i class="bi bi-${data.activo?'eye-slash':'eye'} me-1"></i>${data.activo?'Ocultar':'Mostrar'}`;
+      btn.style.background = data.activo ? 'rgba(255,200,0,.1)' : 'rgba(0,255,100,.1)';
+      btn.style.color = data.activo ? '#ffc800' : '#00ff64';
+    }
+  } catch(e) { alert('Error al actualizar comentario'); }
+}
+
+async function deleteComment(id, btn) {
+  if (!confirm('¿Eliminar este comentario definitivamente?')) return;
+  try {
+    const res = await fetch(`/admin/comentarios/${id}/eliminar`, {method:'POST', headers:{'Content-Type':'application/json'}});
+    const data = await res.json();
+    if (data.success) document.getElementById(`comment-${id}`).remove();
+  } catch(e) { alert('Error al eliminar'); }
+}
+
+async function sendReply(id) {
+  const text = document.getElementById(`replyText-${id}`).value.trim();
+  if (!text) return;
+  try {
+    const res = await fetch(`/admin/comentarios/${id}/responder`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({respuesta:text})
+    });
+    const data = await res.json();
+    if (data.success) { location.reload(); }
+  } catch(e) { alert('Error al responder'); }
+}
+</script>
+
+<%- include('../partials/footer') %>

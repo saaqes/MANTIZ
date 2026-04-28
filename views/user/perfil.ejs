@@ -1,0 +1,932 @@
+<%- include('../partials/header') %>
+<%
+// Pre-calculate ALL conditional values BEFORE HTML to avoid single-quote issues
+var bannerSrc = (usuario.banner_tipo==='upload' && usuario.banner)
+  ? '/uploads/banners/'+usuario.banner
+  : '/img/defaults/banners/'+(usuario.banner_preset||'banner1.jpg');
+var avatarSrc = (usuario.foto_perfil_tipo==='upload' && usuario.foto_perfil)
+  ? '/uploads/profiles/'+usuario.foto_perfil
+  : '/img/defaults/avatars/'+(usuario.foto_perfil_preset||'avatar1.png');
+var cfgColor  = (perfilConfig && perfilConfig.color_primario) ? perfilConfig.color_primario : '#e91e8c';
+var cfgTema   = (perfilConfig && perfilConfig.tema) ? perfilConfig.tema : 'oscuro';
+var cfgPais   = (perfilConfig && perfilConfig.pais) ? perfilConfig.pais : 'Colombia';
+var cfgIdioma = (perfilConfig && perfilConfig.idioma) ? perfilConfig.idioma : 'es';
+var cfgPago   = (perfilConfig && perfilConfig.metodo_pago_pref) ? perfilConfig.metodo_pago_pref : 'tarjeta';
+var cfgFondoTipo  = (perfilConfig && perfilConfig.fondo_tipo) ? perfilConfig.fondo_tipo : 'color';
+var cfgFondoColor = (perfilConfig && perfilConfig.fondo_valor) ? perfilConfig.fondo_valor : '#0a0a0a';
+var cfgBlur   = (perfilConfig && perfilConfig.fondo_blur) ? perfilConfig.fondo_blur : 0;
+var avsList   = ['avatar1.png','avatar2.png','avatar3.png','avatar4.png','avatar5.png','avatar6.png'];
+var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner5.jpg','banner6.jpg'];
+%>
+
+<div style="max-width:1100px;margin:0 auto;padding-bottom:80px">
+
+  <!-- BANNER -->
+  <div style="position:relative;height:240px;overflow:hidden;background:#111">
+    <img src="<%= bannerSrc %>" style="width:100%;height:100%;object-fit:cover;opacity:0.7" onerror="this.style.display='none'">
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(10,10,10,0.8))"></div>
+    <button onclick="showTab('avatar')" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 16px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer;backdrop-filter:blur(6px)">
+      CAMBIAR BANNER
+    </button>
+  </div>
+
+  <!-- AVATAR -->
+  <div style="display:flex;align-items:flex-end;gap:24px;padding:0 40px;margin-top:-56px;position:relative;z-index:10;flex-wrap:wrap">
+    <div style="position:relative;flex-shrink:0">
+      <img src="<%= avatarSrc %>" width="112" height="112"
+           style="border-radius:50%;object-fit:cover;border:4px solid var(--black);box-shadow:0 0 0 3px var(--pink),0 4px 24px rgba(233,30,140,0.4)"
+           onerror="this.src='/img/defaults/avatars/avatar1.png'">
+      <button onclick="showTab('avatar')" style="position:absolute;bottom:4px;right:4px;width:28px;height:28px;background:var(--pink);border-radius:50%;border:2px solid var(--black);cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </button>
+    </div>
+    <div style="flex:1;min-width:200px;padding-bottom:8px">
+      <div style="font-family:'Permanent Marker',cursive;font-size:28px;color:var(--pink)"><%= usuario.nombre_visible %></div>
+      <div style="font-size:13px;color:var(--gray);letter-spacing:1.5px;margin-top:2px">@<%= usuario.username %></div>
+      <% if (usuario.bio) { %><div style="font-size:13px;color:rgba(240,240,240,0.7);margin-top:6px;max-width:400px"><%= usuario.bio %></div><% } %>
+    </div>
+    <div style="display:flex;gap:8px;padding-bottom:12px;flex-wrap:wrap">
+      <div style="text-align:center;padding:8px 16px;border:1px solid var(--border);min-width:70px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--pink)"><%= favoritos ? favoritos.length : 0 %></div>
+        <div style="font-size:10px;color:var(--gray);letter-spacing:1.5px">FAVORITOS</div>
+      </div>
+      <div style="text-align:center;padding:8px 16px;border:1px solid var(--border);min-width:70px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--pink)"><%= tableros ? tableros.length : 0 %></div>
+        <div style="font-size:10px;color:var(--gray);letter-spacing:1.5px">TABLEROS</div>
+      </div>
+      <div style="text-align:center;padding:8px 16px;border:1px solid var(--border);min-width:70px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--pink)"><%= pedidos ? pedidos.length : 0 %></div>
+        <div style="font-size:10px;color:var(--gray);letter-spacing:1.5px">PEDIDOS</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div style="display:flex;border-bottom:1px solid var(--border);margin:24px 0 0;padding:0 40px;overflow-x:auto">
+    <button onclick="showTab('info')"          id="tab-info"          class="ptab">PERFIL</button>
+    <button onclick="showTab('favoritos')"     id="tab-favoritos"     class="ptab">FAVORITOS</button>
+    <button onclick="showTab('tableros')"      id="tab-tableros"      class="ptab">MIS PINES</button>
+    <button onclick="showTab('pedidos_tab')"   id="tab-pedidos_tab"   class="ptab">PEDIDOS</button>
+    <button onclick="showTab('configuracion')" id="tab-configuracion" class="ptab">CONFIG</button>
+    <button onclick="showTab('avatar')"        id="tab-avatar"        class="ptab">APARIENCIA</button>
+    <button onclick="showTab('seguridad')"     id="tab-seguridad"     class="ptab">SEGURIDAD</button>
+    <button onclick="showTab('conexiones');cargarConexionesPerfil()"  id="tab-conexiones"  class="ptab">CONEXIONES</button>
+    <button onclick="showTab('logros');cargarLogrosPerfil()"          id="tab-logros"      class="ptab">🏆 LOGROS</button>
+    <button onclick="showTab('amigos');cargarAmigos()"                id="tab-amigos"      class="ptab">AMIGOS</button>
+  </div>
+
+  <!-- PANEL: INFO -->
+  <div id="panel-info" style="display:none;padding:32px 40px">
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:28px;position:relative;max-width:600px">
+      <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.15);filter:url(#gb);pointer-events:none"></div>
+      <form action="/perfil/actualizar" method="POST">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div><label class="mantiz-label">Nombre visible</label><input type="text" name="nombre_visible" class="mantiz-input" value="<%= usuario.nombre_visible %>" required></div>
+          <div><label class="mantiz-label">Telefono</label><input type="text" name="telefono" class="mantiz-input" value="<%= usuario.telefono||'' %>"></div>
+        </div>
+        <div style="margin-bottom:20px"><label class="mantiz-label">Bio</label><textarea name="bio" class="mantiz-input" rows="3" placeholder="Cuentanos sobre ti..."><%= usuario.bio||'' %></textarea></div>
+        <button type="submit" class="btn-grunge-fill">GUARDAR</button>
+      </form>
+
+      <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:20px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">DIRECCIONES</div>
+        <% if (direcciones && direcciones.length > 0) { %>
+          <% direcciones.forEach(function(d) { %>
+          <%
+            var dirBorder = d.predeterminada ? '#e91e8c' : 'rgba(255,255,255,0.1)';
+          %>
+          <div style="border:1px solid <%= dirBorder %>;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:13px;font-weight:600"><%= d.alias %>
+                <% if (d.predeterminada) { %><span style="background:var(--pink);color:white;font-size:9px;padding:1px 7px;margin-left:8px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">DEFAULT</span><% } %>
+              </div>
+              <div style="font-size:11px;color:var(--gray);margin-top:2px"><%= d.direccion %>, <%= d.ciudad %></div>
+            </div>
+            <form action="/perfil/direccion/eliminar/<%= d.id %>" method="POST">
+              <button type="submit" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:16px" onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">&#x2715;</button>
+            </form>
+          </div>
+          <% }) %>
+        <% } %>
+        <form action="/perfil/direcciones" method="POST" style="margin-top:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div><label class="mantiz-label">Alias</label><input type="text" name="alias" class="mantiz-input" placeholder="Casa, Trabajo..."></div>
+            <div><label class="mantiz-label">Destinatario</label><input type="text" name="nombre_destinatario" class="mantiz-input" required></div>
+            <div><label class="mantiz-label">Ciudad</label><input type="text" name="ciudad" class="mantiz-input" required></div>
+            <div><label class="mantiz-label">Departamento</label><input type="text" name="departamento" class="mantiz-input" required></div>
+            <div style="grid-column:1/-1"><label class="mantiz-label">Direccion</label><input type="text" name="direccion" class="mantiz-input" required></div>
+          </div>
+          <button type="submit" class="btn-grunge" style="font-size:12px;padding:8px 20px">+ AGREGAR</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: FAVORITOS -->
+  <div id="panel-favoritos" style="display:none;padding:32px 40px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px" class="fav-grid">
+      <% if (favoritos && favoritos.length > 0) { %>
+        <% favoritos.forEach(function(p) { %>
+        <div class="product-card" onclick="window.location='/productos/<%= p.id %>'">
+          <div class="pc-label"><span class="pc-label-text"><%= p.titulo.substring(0,16) %></span></div>
+          <div class="pc-img-wrap"><div class="pc-img-clip">
+            <img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+          </div>
+            <button class="pc-add-btn" onclick="event.stopPropagation();quitarFav(<%= p.id %>,this)" style="background:#ff4444">&#9825;</button>
+          </div>
+          <div class="pc-info"><span class="pc-name"><%= p.titulo.substring(0,18) %></span><span class="pc-price">$<%= parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO') %></span></div>
+        </div>
+        <% }) %>
+      <% } else { %>
+      <div style="grid-column:1/-1;text-align:center;padding:80px;color:var(--gray)">
+        <div style="font-size:48px;margin-bottom:16px;opacity:0.3">&#9825;</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:4px">SIN FAVORITOS</div>
+        <a href="/productos" class="btn-grunge" style="display:inline-flex;margin-top:20px">EXPLORAR</a>
+      </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- PANEL: TABLEROS -->
+  <div id="panel-tableros" style="display:none;padding:32px 40px">
+    <div id="vista-tableros">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px">MIS TABLEROS</div>
+        <button onclick="abrirCrearTablero()" class="btn-grunge" style="font-size:12px;padding:8px 20px">+ NUEVO TABLERO</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" class="tb-grid">
+        <% if (tableros && tableros.length > 0) { %>
+          <% tableros.forEach(function(t) { %>
+          <%
+            var tbColor = t.color_portada || '#e91e8c';
+            var tbNombre = t.nombre;
+          %>
+          <div class="tablero-card" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);overflow:hidden;transition:all 0.3s;position:relative"
+               onmouseover="this.querySelector('.tb-cover').style.opacity='0.9'" onmouseout="this.querySelector('.tb-cover').style.opacity='0.75'">
+            <div class="tb-cover" style="height:90px;background:<%= tbColor %>;opacity:0.75;cursor:pointer;transition:opacity 0.2s"
+                 data-tb-id="<%= t.id %>" data-tb-nombre="<%= t.nombre %>"></div>
+            <div style="padding:12px 14px 10px;display:flex;justify-content:space-between;align-items:flex-start">
+              <div style="cursor:pointer" data-tb-id="<%= t.id %>" data-tb-nombre="<%= t.nombre %>">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--white)"><%= tbNombre %></div>
+                <div style="font-size:11px;color:var(--gray);margin-top:2px"><%= t.total_pines||0 %> pines &bull; <span style="color:<%= t.privacidad==='publico'?'#00c853':'var(--muted)' %>"><%= t.privacidad %></span></div>
+              </div>
+              <!-- MENÚ 3 PUNTOS -->
+              <div style="position:relative">
+                <button class="tb-menu-btn" data-id="<%= t.id %>"
+                        style="background:none;border:none;color:var(--gray);cursor:pointer;padding:4px 8px;font-size:18px;line-height:1;transition:color 0.2s"
+                        onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'"
+                        onclick="toggleTbMenu(<%= t.id %>,event)">⋮</button>
+                <div id="tb-menu-<%= t.id %>" style="display:none;position:absolute;right:0;top:28px;background:rgba(17,17,17,0.98);border:1px solid var(--border);min-width:140px;z-index:100">
+                  <button data-tb-id="<%= t.id %>" data-tb-nombre="<%= t.nombre %>" class="tb-btn-ver"
+                          style="display:block;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--white);padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left"
+                          onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--white)'">
+                    <i class="bi bi-eye me-2"></i>VER PINES
+                  </button>
+                  <button data-tb-id="<%= t.id %>" data-tb-nombre="<%= t.nombre %>" data-tb-priv="<%= t.privacidad %>" data-tb-color="<%= tbColor %>" class="tb-btn-edit"
+                          style="display:block;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--white);padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left"
+                          onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--white)'">
+                    <i class="bi bi-pencil me-2"></i>EDITAR
+                  </button>
+                  <button data-tb-id="<%= t.id %>" class="tb-btn-del"
+                          style="display:block;width:100%;background:none;border:none;color:rgba(255,100,100,0.7);padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left"
+                          onmouseover="this.style.color='#ff6060'" onmouseout="this.style.color='rgba(255,100,100,0.7)'">
+                    <i class="bi bi-trash me-2"></i>ELIMINAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% }) %>
+        <% } else { %>
+        <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--gray)">
+          <div style="font-size:48px;margin-bottom:16px;opacity:0.3">&#128204;</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px">SIN TABLEROS</div>
+          <p style="margin-top:8px">Guarda productos con el boton GUARDAR</p>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div id="vista-pines" style="display:none">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+        <button onclick="volverTableros()" style="background:none;border:1px solid var(--border);color:var(--gray);padding:8px 16px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer">&#8592; VOLVER</button>
+        <div id="pines-titulo" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--white)"></div>
+        <div id="pines-count" style="font-size:12px;color:var(--gray)"></div>
+      </div>
+      <div id="pines-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px" class="pines-pg"></div>
+      <div id="pines-empty" style="display:none;text-align:center;padding:60px;color:var(--gray)">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px">TABLERO VACIO</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: PEDIDOS -->
+  <div id="panel-pedidos_tab" style="display:none;padding:32px 40px">
+    <% if (pedidos && pedidos.length > 0) { %>
+      <% pedidos.forEach(function(p) { %>
+      <%
+        var stMap = {pendiente:'#ffc800',confirmado:'#00c8ff',en_transito:'#60a5fa',entregado:'#00ff64',cancelado:'#ff6060'};
+        var stColor = stMap[p.estado] || '#888888';
+      %>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px">PEDIDO #<%= String(p.id).padStart(5,'0') %></div>
+          <div style="font-size:11px;color:var(--gray);margin-top:2px"><%= new Date(p.creado_en).toLocaleDateString('es-CO') %></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;padding:4px 12px;border:1px solid <%= stColor %>;color:<%= stColor %>"><%= (p.estado||'').toUpperCase() %></div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--pink)">$<%= parseFloat(p.total).toLocaleString('es-CO') %></div>
+          <a href="/pedidos/<%= p.id %>" style="padding:6px 16px;border:1px solid var(--pink);color:var(--pink);text-decoration:none;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px">VER</a>
+        </div>
+      </div>
+      <% }) %>
+    <% } else { %>
+    <div style="text-align:center;padding:80px;color:var(--gray)">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:4px">SIN PEDIDOS</div>
+      <a href="/productos" class="btn-grunge" style="display:inline-flex;margin-top:20px">EXPLORAR</a>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- PANEL: CONFIGURACION -->
+  <div id="panel-configuracion" style="display:none;padding:32px 40px">
+    <div style="max-width:700px;display:grid;grid-template-columns:1fr 1fr;gap:20px" class="cfg-grid">
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:16px">PREFERENCIAS</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div><label class="mantiz-label">Color de acento</label>
+            <input type="color" id="cfg-color" value="<%= cfgColor %>" style="width:100%;height:40px;background:transparent;border:1px solid var(--border);padding:3px;cursor:pointer"></div>
+          <div><label class="mantiz-label">Tema</label>
+            <select id="cfg-tema" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+              <option value="oscuro" <%= cfgTema==='oscuro'?'selected':'' %>>Oscuro</option>
+              <option value="claro" <%= cfgTema==='claro'?'selected':'' %>>Claro</option>
+            </select></div>
+          <div><label class="mantiz-label">Pais</label>
+            <select id="cfg-pais" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+              <% ['Colombia','Mexico','Argentina','Chile','Peru','Venezuela','Ecuador','USA'].forEach(function(pais){ %>
+              <option value="<%= pais %>" <%= cfgPais===pais?'selected':'' %>><%= pais %></option>
+              <% }) %>
+            </select></div>
+          <div><label class="mantiz-label">Idioma</label>
+            <select id="cfg-idioma" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+              <option value="es" <%= cfgIdioma==='es'?'selected':'' %>>Espanol</option>
+              <option value="en" <%= cfgIdioma==='en'?'selected':'' %>>English</option>
+            </select></div>
+          <div><label class="mantiz-label">Metodo de pago preferido</label>
+            <select id="cfg-pago" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+              <% ['tarjeta','nequi','daviplata','transferencia','contraentrega'].forEach(function(mp){ %>
+              <option value="<%= mp %>" <%= cfgPago===mp?'selected':'' %>><%= mp.charAt(0).toUpperCase()+mp.slice(1) %></option>
+              <% }) %>
+            </select></div>
+          <button onclick="guardarConfig()" class="btn-grunge-fill" style="margin-top:4px">GUARDAR</button>
+          <div style="border-top:1px solid var(--border);padding-top:14px">
+            <a href="/auth/logout" style="display:inline-flex;align-items:center;gap:8px;color:#ff6060;text-decoration:none;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;border:1px solid #ff6060;padding:8px 16px">CERRAR SESION</a>
+          </div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">FONDO DEL PERFIL</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label class="mantiz-label">Tipo</label>
+            <select id="cfg-fondo-tipo" onchange="updateFondoPreview()" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+              <option value="color" <%= cfgFondoTipo==='color'?'selected':'' %>>Color solido</option>
+              <option value="gradiente" <%= cfgFondoTipo==='gradiente'?'selected':'' %>>Gradiente</option>
+            </select></div>
+          <div><label class="mantiz-label">Color de fondo</label>
+            <input type="color" id="cfg-fondo-color" value="<%= cfgFondoColor %>" oninput="updateFondoPreview()"
+                   style="width:100%;height:40px;background:transparent;border:1px solid var(--border);padding:3px;cursor:pointer"></div>
+          <div><label class="mantiz-label">Difuminado</label>
+            <input type="range" id="cfg-blur" min="0" max="20" value="<%= cfgBlur %>" oninput="document.getElementById('cfg-blur-val').textContent=this.value+'px';updateFondoPreview()"
+                   style="width:100%;accent-color:var(--pink)">
+            <span id="cfg-blur-val" style="font-size:11px;color:var(--gray)"><%= cfgBlur %>px</span></div>
+          <div><label class="mantiz-label">Vista previa</label>
+            <div id="fondo-preview" style="height:80px;border-radius:6px;border:1px solid var(--border);background:<%= cfgFondoColor %>"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: APARIENCIA -->
+  <div id="panel-avatar" style="display:none;padding:32px 40px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="ap-grid">
+      <!-- Avatar -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">FOTO DE PERFIL</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <% avsList.forEach(function(av) { %>
+          <%
+            var avBorder = (usuario.foto_perfil_preset === av) ? '#e91e8c' : 'rgba(255,255,255,0.2)';
+          %>
+          <form action="/perfil/avatar/preset" method="POST">
+            <input type="hidden" name="preset" value="<%= av %>">
+            <button type="submit" style="width:52px;height:52px;border:3px solid <%= avBorder %>;border-radius:50%;overflow:hidden;padding:0;cursor:pointer;background:none;transition:all 0.2s">
+              <img src="/img/defaults/avatars/<%= av %>" width="52" height="52" style="border-radius:50%;object-fit:cover" onerror="this.style.display='none'">
+            </button>
+          </form>
+          <% }) %>
+        </div>
+        <form action="/perfil/avatar/upload" method="POST" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center">
+          <input type="file" name="foto_perfil" accept="image/*" class="mantiz-input" style="flex:1;font-size:12px">
+          <button type="submit" class="btn-grunge-fill" style="padding:10px 16px;font-size:13px;white-space:nowrap">SUBIR</button>
+        </form>
+      </div>
+
+      <!-- Banner -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">BANNER</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+          <% bansList.forEach(function(bn) { %>
+          <%
+            var bnBorder = (usuario.banner_preset === bn) ? '#e91e8c' : 'rgba(255,255,255,0.2)';
+          %>
+          <form action="/perfil/banner/preset" method="POST">
+            <input type="hidden" name="preset" value="<%= bn %>">
+            <button type="submit" style="width:100%;height:48px;border:2px solid <%= bnBorder %>;overflow:hidden;padding:0;cursor:pointer;background:none;display:block">
+              <img src="/img/defaults/banners/<%= bn %>" style="width:100%;height:100%;object-fit:cover;opacity:0.8" onerror="this.style.background='var(--dark)'">
+            </button>
+          </form>
+          <% }) %>
+        </div>
+        <form action="/perfil/banner/upload" method="POST" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center">
+          <input type="file" name="banner" accept="image/*" class="mantiz-input" style="flex:1;font-size:12px">
+          <button type="submit" class="btn-grunge-fill" style="padding:10px 16px;font-size:13px;white-space:nowrap">SUBIR</button>
+        </form>
+      </div>
+
+      <!-- Widgets -->
+      <div style="grid-column:1/-1;background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">WIDGETS (max 3)</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px" id="widgets-list">
+          <% if (widgets && widgets.length > 0) { widgets.forEach(function(w) { %>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;min-width:200px;position:relative">
+            <% if (w.imagen_url) { %><img src="<%= w.imagen_url %>" width="44" height="44" style="object-fit:cover;border-radius:6px" onerror="this.style.display='none'"><% } %>
+            <div>
+              <div style="font-size:11px;color:var(--pink);letter-spacing:1px;font-family:'Bebas Neue',sans-serif"><%= w.tipo.toUpperCase() %></div>
+              <div style="font-size:13px;font-weight:600"><%= w.titulo %></div>
+              <% if (w.subtitulo) { %><div style="font-size:11px;color:var(--gray)"><%= w.subtitulo %></div><% } %>
+            </div>
+            <button onclick="eliminarWidget(<%= w.id %>,this)" style="position:absolute;top:6px;right:6px;background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:12px" onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">&#x2715;</button>
+          </div>
+          <% }) } %>
+        </div>
+        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:end">
+          <div>
+            <label class="mantiz-label">Tipo</label>
+            <select id="wg-tipo" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:13px;outline:none">
+              <option value="juego">Juego</option>
+              <option value="musica">Musica</option>
+              <option value="pelicula">Pelicula</option>
+            </select>
+          </div>
+          <div>
+            <label class="mantiz-label">Buscar</label>
+            <input type="text" id="wg-query" class="mantiz-input" placeholder="Escribe el nombre..." onkeydown="if(event.key==='Enter')buscarWidget()">
+          </div>
+          <div style="align-self:end">
+            <button onclick="buscarWidget()" class="btn-grunge" style="padding:10px 18px;font-size:13px">BUSCAR</button>
+          </div>
+        </div>
+        <div id="wg-results" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: SEGURIDAD -->
+  <div id="panel-seguridad" style="display:none;padding:32px 40px">
+    <div style="max-width:440px;background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:28px;position:relative">
+      <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+      <form action="/perfil/cambiar-password" method="POST">
+        <div style="margin-bottom:16px"><label class="mantiz-label">Contrasena actual</label><input type="password" name="password_actual" class="mantiz-input" required></div>
+        <div style="margin-bottom:16px"><label class="mantiz-label">Nueva contrasena</label><input type="password" name="password_nuevo" class="mantiz-input" required minlength="6"></div>
+        <div style="margin-bottom:24px"><label class="mantiz-label">Confirmar</label><input type="password" name="password_confirm" class="mantiz-input" required></div>
+        <button type="submit" class="btn-grunge-fill">CAMBIAR CONTRASENA</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── PANEL: CONEXIONES ───────────────────────────────────────── -->
+  <div id="panel-conexiones" style="display:none;padding:32px 40px;max-width:600px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;margin-bottom:4px">MIS CONEXIONES</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:24px;letter-spacing:1px">Muestra tus cuentas de otras plataformas en tu perfil público</div>
+    <div id="conexiones-lista" style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px">
+      <div style="color:var(--muted);font-size:13px">Cargando...</div>
+    </div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:var(--pink);margin-bottom:14px">AGREGAR CUENTA</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label class="mantiz-label">Plataforma</label>
+        <select id="con-plataforma" class="mantiz-select">
+          <option value="playstation">🎮 PlayStation</option>
+          <option value="xbox">🎯 Xbox</option>
+          <option value="steam">🎲 Steam</option>
+          <option value="github">💻 GitHub</option>
+          <option value="tiktok">🎵 TikTok</option>
+          <option value="spotify">🎧 Spotify</option>
+          <option value="twitch">📺 Twitch</option>
+          <option value="discord">💬 Discord</option>
+        </select>
+      </div>
+      <div>
+        <label class="mantiz-label">Tu username</label>
+        <input type="text" id="con-username" class="mantiz-input" placeholder="tu_usuario">
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--white)">
+        <input type="checkbox" id="con-publico" checked style="accent-color:var(--pink)">
+        Mostrar públicamente en mi perfil
+      </label>
+    </div>
+    <button class="btn-grunge" onclick="guardarConexion()" style="padding:10px 28px;font-size:12px">GUARDAR CONEXIÓN</button>
+  </div>
+
+  <!-- ── PANEL: LOGROS ───────────────────────────────────────────── -->
+  <div id="panel-logros" style="display:none;padding:32px 40px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px">MIS LOGROS</div>
+      <div id="tiempo-display" style="font-size:12px;color:var(--muted);font-family:'Bebas Neue',sans-serif;letter-spacing:2px">
+        <i class="bi bi-clock me-1"></i>Cargando tiempo...
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;letter-spacing:1px">Desbloquea medallas interactuando con la plataforma</div>
+    <div id="logros-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+      <div style="color:var(--muted);font-size:13px">Cargando logros...</div>
+    </div>
+  </div>
+
+  <!-- ── PANEL: AMIGOS ───────────────────────────────────────────── -->
+  <div id="panel-amigos" style="display:none;padding:32px 40px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;margin-bottom:24px">MIS AMIGOS</div>
+    <!-- Solicitudes pendientes -->
+    <div id="pendientes-section" style="margin-bottom:28px;display:none">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:var(--pink);margin-bottom:12px">SOLICITUDES PENDIENTES</div>
+      <div id="pendientes-lista" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <!-- Amigos -->
+    <div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:var(--gray);margin-bottom:12px">AMIGOS</div>
+      <div id="amigos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+        <div style="color:var(--muted);font-size:13px">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end max-width container -->
+
+<!-- MODAL: Crear/Editar tablero (OUTSIDE all panels) -->
+<div id="modal-tablero" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:3000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
+  <div style="background:var(--card-bg);max-width:440px;width:90%;padding:32px;position:relative">
+    <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
+    <button onclick="cerrarModalTablero()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;z-index:20">&#x2715;</button>
+    <div id="mt-titulo" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--pink);margin-bottom:20px">NUEVO TABLERO</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div><label class="mantiz-label">Nombre</label><input type="text" id="mt-nombre" class="mantiz-input" placeholder="Mi tablero de moda..."></div>
+      <div><label class="mantiz-label">Privacidad</label>
+        <select id="mt-privacidad" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+          <option value="privado">Privado</option>
+          <option value="publico">Publico</option>
+          <option value="grupal">Grupal</option>
+        </select></div>
+      <div><label class="mantiz-label">Color</label>
+        <input type="color" id="mt-color" value="#e91e8c" style="width:100%;height:43px;background:transparent;border:1px solid var(--border);padding:4px;cursor:pointer"></div>
+    </div>
+    <input type="hidden" id="mt-edit-id" value="">
+    <button onclick="guardarTablero()" class="btn-grunge-fill" style="width:100%;margin-top:20px">GUARDAR TABLERO</button>
+  </div>
+</div>
+
+<style>
+.ptab{padding:10px 18px;border:none;background:none;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap}
+.ptab:hover{color:var(--white)}
+.ptab-active{color:var(--pink)!important;border-bottom:2px solid var(--pink)!important}
+@media(max-width:768px){.fav-grid,.tb-grid{grid-template-columns:repeat(2,1fr)!important}.ap-grid,.cfg-grid{grid-template-columns:1fr!important}div[style*="padding:32px 40px"]{padding:20px!important}}
+@media(max-width:480px){.fav-grid{grid-template-columns:1fr!important}.pines-pg{grid-template-columns:repeat(2,1fr)!important}}
+</style>
+
+<script>
+// ── TAB SWITCHING ────────────────────────────────────────
+var ALL_PANELS = ['info','favoritos','tableros','pedidos_tab','configuracion','avatar','seguridad','conexiones','logros','amigos'];
+
+function showTab(t) {
+  ALL_PANELS.forEach(function(k) {
+    var p = document.getElementById('panel-' + k);
+    if (p) p.style.display = (k === t) ? 'block' : 'none';
+    var b = document.getElementById('tab-' + k);
+    if (b) b.classList.toggle('ptab-active', k === t);
+  });
+  try { history.replaceState(null,'',location.pathname+'#'+t); } catch(e){}
+}
+
+window.addEventListener('load', function() {
+  var h = location.hash.replace('#','');
+  showTab(ALL_PANELS.indexOf(h) > -1 ? h : 'info');
+  // Attach tablero button events via data attributes (avoids inline onclick quote issues)
+  document.querySelectorAll('.tb-btn-ver').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      abrirTablero(this.dataset.tbId, this.dataset.tbNombre);
+    });
+  });
+  document.querySelectorAll('.tb-btn-edit').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      editarTablero(this.dataset.tbId, this.dataset.tbNombre, this.dataset.tbPriv, this.dataset.tbColor);
+    });
+  });
+  document.querySelectorAll('.tb-btn-del').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      eliminarTablero(this.dataset.tbId, this);
+    });
+  });
+  updateFondoPreview();
+});
+
+// ── FAVORITOS ────────────────────────────────────────────
+async function quitarFav(id, btn) {
+  var card = btn.closest('.product-card');
+  try {
+    var r = await fetch('/perfil/favorito/quitar/'+id, {method:'POST',headers:{'Content-Type':'application/json'}});
+    var d = await r.json();
+    if (d.success && card) { card.style.transition='all 0.4s'; card.style.opacity='0'; setTimeout(function(){card.remove();},400); }
+  } catch(e) {}
+}
+
+    var d = await r.json();
+    if (d.success && card) { card.style.transition='all 0.4s'; card.style.opacity='0'; setTimeout(function(){card.remove();},400); }
+  } catch(e) {}
+}
+
+// ── MENÚ 3 PUNTOS TABLERO ─────────────────────────────────
+function toggleTbMenu(id, e) {
+  e.stopPropagation();
+  var menu = document.getElementById('tb-menu-' + id);
+  if (!menu) return;
+  var visible = menu.style.display === 'block';
+  // cerrar todos
+  document.querySelectorAll('[id^="tb-menu-"]').forEach(function(m){ m.style.display='none'; });
+  if (!visible) menu.style.display = 'block';
+}
+document.addEventListener('click', function() {
+  document.querySelectorAll('[id^="tb-menu-"]').forEach(function(m){ m.style.display='none'; });
+});
+// Click en portada del tablero también abre pines
+document.querySelectorAll('.tb-cover[data-tb-id]').forEach(function(el) {
+  el.addEventListener('click', function() {
+    var id = this.getAttribute('data-tb-id');
+    var nombre = this.getAttribute('data-tb-nombre');
+    if(typeof verPinesTablero === 'function') verPinesTablero(id, nombre);
+  });
+});
+
+// ── CONEXIONES DE PERFIL ──────────────────────────────────
+const PLAT_CFG = {
+  playstation:{icon:'bi-controller',color:'#003791',label:'PlayStation',base:'https://www.playstation.com/en-us/profiles/'},
+  xbox:       {icon:'bi-xbox',      color:'#107c10',label:'Xbox',       base:'https://www.xbox.com/en-US/play/user/'},
+  steam:      {icon:'bi-steam',     color:'#1b2838',label:'Steam',      base:'https://steamcommunity.com/id/'},
+  github:     {icon:'bi-github',    color:'#24292f',label:'GitHub',     base:'https://github.com/'},
+  tiktok:     {icon:'bi-tiktok',    color:'#010101',label:'TikTok',     base:'https://www.tiktok.com/@'},
+  spotify:    {icon:'bi-spotify',   color:'#1db954',label:'Spotify',    base:'https://open.spotify.com/user/'},
+  twitch:     {icon:'bi-twitch',    color:'#9146ff',label:'Twitch',     base:'https://www.twitch.tv/'},
+  discord:    {icon:'bi-discord',   color:'#5865f2',label:'Discord',    base:null}
+};
+
+async function cargarConexionesPerfil() {
+  var lista = document.getElementById('conexiones-lista');
+  if (!lista) return;
+  try {
+    var r = await fetch('/gamificacion/conexiones');
+    var d = await r.json();
+    if (!d.conexiones || !d.conexiones.length) {
+      lista.innerHTML = '<div style="color:var(--muted);font-size:13px;letter-spacing:1px">Sin conexiones aún. Agrega una abajo.</div>';
+      return;
+    }
+    lista.innerHTML = d.conexiones.map(function(c) {
+      var cfg = PLAT_CFG[c.plataforma] || {icon:'bi-link',color:'#888',label:c.plataforma,base:null};
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--border)">'
+        + '<i class="' + cfg.icon + '" style="font-size:20px;color:' + cfg.color + ';width:24px;text-align:center"></i>'
+        + '<div style="flex:1"><div style="font-size:10px;color:var(--muted);letter-spacing:2px">' + cfg.label.toUpperCase() + '</div>'
+        + '<div style="font-size:13px;font-weight:700">@' + c.username + '</div></div>'
+        + '<span style="font-size:10px;color:' + (c.publico?'#00c853':'#ff6060') + ';letter-spacing:1px">' + (c.publico?'PÚBLICO':'PRIVADO') + '</span>'
+        + '<button onclick="eliminarConexion(\'' + c.plataforma + '\')" title="Eliminar"'
+        + ' style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;line-height:1;transition:color 0.2s"'
+        + ' onmouseover="this.style.color=\'#ff6060\'" onmouseout="this.style.color=\'var(--muted)\'">×</button>'
+        + '</div>';
+    }).join('');
+  } catch(e) { lista.innerHTML = '<div style="color:#ff6060;font-size:12px">Error al cargar conexiones</div>'; }
+}
+
+async function guardarConexion() {
+  var plataforma = document.getElementById('con-plataforma').value;
+  var username = document.getElementById('con-username').value.trim();
+  if (!username) { showToast('INGRESA UN USERNAME'); return; }
+  try {
+    var r = await fetch('/gamificacion/conexiones', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ plataforma, username, publico: document.getElementById('con-publico').checked ? 1 : 0 })
+    });
+    var d = await r.json();
+    if (d.success) {
+      showToast('¡CONEXIÓN GUARDADA!');
+      document.getElementById('con-username').value = '';
+      cargarConexionesPerfil();
+    } else { showToast('ERROR: ' + (d.error || 'Desconocido')); }
+  } catch(e) { showToast('ERROR DE RED'); }
+}
+
+async function eliminarConexion(plataforma) {
+  if (!confirm('¿Eliminar esta conexión?')) return;
+  await fetch('/gamificacion/conexiones/' + plataforma, {method:'DELETE'});
+  showToast('CONEXIÓN ELIMINADA');
+  cargarConexionesPerfil();
+}
+
+// ── LOGROS Y TIEMPO EN WEB ────────────────────────────────
+async function cargarLogrosPerfil() {
+  var grid = document.getElementById('logros-grid');
+  var tiempoEl = document.getElementById('tiempo-display');
+  if (!grid) return;
+  try {
+    var [rLogros, rTiempo] = await Promise.all([
+      fetch('/gamificacion/logros'),
+      fetch('/gamificacion/tiempo')
+    ]);
+    var dL = await rLogros.json();
+    var dT = await rTiempo.json();
+
+    if (tiempoEl) tiempoEl.innerHTML = '<i class="bi bi-clock me-1"></i>' + (dT.formato || '0h 0m') + ' en MANTIZ';
+
+    if (!dL.logros || !dL.logros.length) {
+      grid.innerHTML = '<div style="color:var(--muted);font-size:13px">Sin logros registrados</div>';
+      return;
+    }
+    grid.innerHTML = dL.logros.map(function(l) {
+      var desbloqueado = !!l.desbloqueado;
+      var pct = l.umbral > 0 ? Math.min(100, Math.round(((l.progreso||0)/l.umbral)*100)) : 0;
+      return '<div style="padding:16px;background:rgba(255,255,255,0.03);border:1px solid '
+        + (desbloqueado ? 'rgba(255,215,0,0.3)' : 'var(--border)') + ';opacity:' + (desbloqueado?'1':'0.55') + '">'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+        + '<span style="font-size:24px">' + (l.icono||'🏆') + '</span>'
+        + '<div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:14px;letter-spacing:2px;color:' + (desbloqueado?'#ffd700':'var(--white)') + '">' + l.nombre + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">' + (l.descripcion||'') + '</div></div>'
+        + (desbloqueado ? '<i class="bi bi-check-circle-fill ms-auto" style="color:#ffd700;font-size:16px"></i>' : '')
+        + '</div>'
+        + '<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">'
+        + '<div style="height:100%;width:' + pct + '%;background:' + (desbloqueado?'#ffd700':'var(--pink)') + ';transition:width 1s ease"></div>'
+        + '</div>'
+        + '<div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:right">' + (l.progreso||0) + ' / ' + l.umbral + '</div>'
+        + '</div>';
+    }).join('');
+  } catch(e) { grid.innerHTML = '<div style="color:#ff6060;font-size:12px">Error al cargar logros</div>'; }
+}
+
+// ── AMIGOS ────────────────────────────────────────────────
+async function cargarAmigos() {
+  var grid = document.getElementById('amigos-grid');
+  var pendSect = document.getElementById('pendientes-section');
+  var pendLista = document.getElementById('pendientes-lista');
+  try {
+    var [rAmigos, rPend] = await Promise.all([
+      fetch('/amigos/lista'),
+      fetch('/amigos/pendientes')
+    ]);
+    var dA = await rAmigos.json();
+    var dP = await rPend.json();
+
+    // Solicitudes pendientes
+    if (dP.pendientes && dP.pendientes.length > 0) {
+      pendSect.style.display = 'block';
+      pendLista.innerHTML = dP.pendientes.map(function(p) {
+        var av = p.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+p.foto_perfil : '/img/defaults/avatars/'+(p.foto_perfil_preset||'avatar1.png');
+        return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(233,30,140,0.2)">'
+          + '<img src="' + av + '" width="40" height="40" style="border-radius:50%;object-fit:cover;border:2px solid var(--pink)" onerror="this.src=\'/img/defaults/avatars/avatar1.png\'">'
+          + '<div style="flex:1"><div style="font-weight:700;font-size:13px">' + p.nombre_visible + '</div>'
+          + '<div style="font-size:11px;color:var(--muted)">@' + p.username + '</div></div>'
+          + '<button onclick="responderSolicitud(' + p.id + ',\'aceptar\',this.closest(\'div[style]\'))" class="btn-grunge" style="padding:6px 14px;font-size:11px;margin-right:6px">✓ ACEPTAR</button>'
+          + '<button onclick="responderSolicitud(' + p.id + ',\'rechazar\',this.closest(\'div[style]\'))" style="background:none;border:1px solid var(--border);color:var(--muted);padding:6px 14px;font-family:\'Bebas Neue\',sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer">✕</button>'
+          + '</div>';
+      }).join('');
+    } else {
+      pendSect.style.display = 'none';
+    }
+
+    // Lista de amigos
+    if (!dA.amigos || !dA.amigos.length) {
+      grid.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1">Aún no tienes amigos. Busca usuarios y envía solicitudes.</div>';
+      return;
+    }
+    grid.innerHTML = dA.amigos.map(function(a) {
+      var av = a.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+a.foto_perfil : '/img/defaults/avatars/'+(a.foto_perfil_preset||'avatar1.png');
+      return '<a href="/u/' + a.username + '" style="text-decoration:none;color:var(--white);display:block;padding:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;transition:all 0.3s" onmouseover="this.style.borderColor=\'var(--pink)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'
+        + '<img src="' + av + '" width="56" height="56" style="border-radius:50%;object-fit:cover;border:3px solid var(--border);margin-bottom:8px" onerror="this.src=\'/img/defaults/avatars/avatar1.png\'">'
+        + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:13px;letter-spacing:1px">' + a.nombre_visible + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">@' + a.username + '</div>'
+        + '</a>';
+    }).join('');
+  } catch(e) { grid.innerHTML = '<div style="color:#ff6060;font-size:12px">Error al cargar amigos</div>'; }
+}
+
+async function responderSolicitud(uid, accion, card) {
+  try {
+    var r = await fetch('/amigos/responder/' + uid, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ accion })
+    });
+    var d = await r.json();
+    if (d.success) {
+      if (card) { card.style.opacity='0'; setTimeout(function(){ card.remove(); },300); }
+      showToast(accion === 'aceptar' ? '¡AHORA SON AMIGOS!' : 'SOLICITUD RECHAZADA');
+      if (accion === 'aceptar') setTimeout(cargarAmigos, 400);
+    }
+  } catch(e) { showToast('ERROR'); }
+}
+
+// ── TABLEROS ─────────────────────────────────────────────
+function abrirCrearTablero() {
+  document.getElementById('mt-titulo').textContent = 'NUEVO TABLERO';
+  document.getElementById('mt-nombre').value = '';
+  document.getElementById('mt-privacidad').value = 'privado';
+  document.getElementById('mt-color').value = '#e91e8c';
+  document.getElementById('mt-edit-id').value = '';
+  var m = document.getElementById('modal-tablero');
+  m.style.opacity = '1'; m.style.pointerEvents = 'all';
+}
+
+function editarTablero(id, nombre, privacidad, color) {
+  document.getElementById('mt-titulo').textContent = 'EDITAR TABLERO';
+  document.getElementById('mt-nombre').value = nombre || '';
+  document.getElementById('mt-privacidad').value = privacidad || 'privado';
+  document.getElementById('mt-color').value = color || '#e91e8c';
+  document.getElementById('mt-edit-id').value = id;
+  var m = document.getElementById('modal-tablero');
+  m.style.opacity = '1'; m.style.pointerEvents = 'all';
+}
+
+function cerrarModalTablero() {
+  var m = document.getElementById('modal-tablero');
+  m.style.opacity = '0'; m.style.pointerEvents = 'none';
+}
+document.getElementById('modal-tablero').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModalTablero();
+});
+
+async function guardarTablero() {
+  var nombre = document.getElementById('mt-nombre').value.trim();
+  var editId = document.getElementById('mt-edit-id').value;
+  if (!nombre) { document.getElementById('mt-nombre').style.outline='1px solid var(--pink)'; return; }
+  try {
+    var r = await fetch(editId ? '/tableros/'+editId : '/tableros', {
+      method: editId ? 'PUT' : 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        nombre: nombre,
+        privacidad: document.getElementById('mt-privacidad').value,
+        color_portada: document.getElementById('mt-color').value
+      })
+    });
+    var d = await r.json();
+    if (d.success) { cerrarModalTablero(); location.reload(); }
+  } catch(e) { showToast('Error al guardar tablero'); }
+}
+
+async function eliminarTablero(id, btn) {
+  if (!confirm('Eliminar este tablero y todos sus pines?')) return;
+  try {
+    await fetch('/tableros/'+id, {method:'DELETE'});
+    var card = document.querySelector('.tablero-card[data-id="'+id+'"]') || btn.closest('.tablero-card');
+    if (card) { card.style.opacity='0'; card.style.transition='all 0.3s'; setTimeout(function(){card.remove();},300); }
+  } catch(e) {}
+}
+
+async function abrirTablero(id, nombre) {
+  document.getElementById('vista-tableros').style.display = 'none';
+  document.getElementById('vista-pines').style.display = 'block';
+  document.getElementById('pines-titulo').textContent = nombre;
+  document.getElementById('pines-count').textContent = '';
+  document.getElementById('pines-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray)"><div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:3px">CARGANDO...</div></div>';
+  document.getElementById('pines-empty').style.display = 'none';
+  try {
+    var r = await fetch('/tableros/'+id+'/pines');
+    var d = await r.json();
+    var pines = d.pines || [];
+    document.getElementById('pines-count').textContent = pines.length + ' pines';
+    if (pines.length === 0) {
+      document.getElementById('pines-grid').innerHTML = '';
+      document.getElementById('pines-empty').style.display = 'block';
+      return;
+    }
+    document.getElementById('pines-grid').innerHTML = pines.map(function(p) {
+      var img = p.imagen_url || (p.imagen_principal ? '/uploads/products/'+p.imagen_principal : 'https://via.placeholder.com/400x400/111/888?text=PIN');
+      var titulo = p.titulo || p.prod_titulo || 'Sin titulo';
+      var precio = p.precio_descuento || p.precio;
+      return '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);overflow:hidden">'
+        + (p.producto_id ? '<a href="/productos/'+p.producto_id+'" style="display:block;text-decoration:none">' : '<div>')
+        + '<div style="aspect-ratio:1;overflow:hidden;background:#111"><img src="'+img+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'https://via.placeholder.com/400x400/111/888?text=PIN\'"></div>'
+        + (p.producto_id ? '</a>' : '</div>')
+        + '<div style="padding:10px 12px"><div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f0f0f0">'+titulo+'</div>'
+        + (precio ? '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:var(--pink);margin-top:2px">$'+parseFloat(precio).toLocaleString('es-CO')+'</div>' : '')
+        + '<button data-tb="'+id+'" data-pin="'+p.id+'" class="pin-del-btn" style="width:100%;margin-top:8px;background:none;border:1px solid rgba(255,60,60,0.3);color:rgba(255,100,100,0.7);padding:5px;font-family:Bebas Neue,sans-serif;font-size:10px;letter-spacing:1.5px;cursor:pointer">QUITAR PIN</button>'
+        + '</div></div>';
+    }).join('');
+    document.querySelectorAll('.pin-del-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { eliminarPin(this.dataset.tb, this.dataset.pin, this); });
+    });
+  } catch(e) {
+    document.getElementById('pines-grid').innerHTML = '<div style="grid-column:1/-1;color:var(--gray);text-align:center;padding:40px">Error al cargar pines</div>';
+  }
+}
+
+function volverTableros() {
+  document.getElementById('vista-pines').style.display = 'none';
+  document.getElementById('vista-tableros').style.display = 'block';
+}
+
+async function eliminarPin(tableroId, pinId, btn) {
+  if (!confirm('Quitar este pin?')) return;
+  try {
+    await fetch('/tableros/'+tableroId+'/pines/'+pinId, {method:'DELETE'});
+    var card = btn.closest('div[style*="background:rgba"]');
+    if (card) { card.style.opacity='0'; card.style.transition='all 0.3s'; setTimeout(function(){card.remove();},300); }
+  } catch(e) {}
+}
+
+// ── CONFIGURACION ─────────────────────────────────────────
+function updateFondoPreview() {
+  var tipo = document.getElementById('cfg-fondo-tipo');
+  var col  = document.getElementById('cfg-fondo-color');
+  var blur = document.getElementById('cfg-blur');
+  var prev = document.getElementById('fondo-preview');
+  if (!prev || !tipo || !col) return;
+  prev.style.background = tipo.value==='gradiente'
+    ? 'linear-gradient(135deg,'+col.value+',#1a0a16)'
+    : col.value;
+  prev.style.filter = blur && blur.value > 0 ? 'blur('+blur.value+'px)' : 'none';
+}
+
+async function guardarConfig() {
+  var data = {
+    color_primario: document.getElementById('cfg-color').value,
+    tema:           document.getElementById('cfg-tema').value,
+    pais:           document.getElementById('cfg-pais').value,
+    idioma:         document.getElementById('cfg-idioma').value,
+    metodo_pago_pref: document.getElementById('cfg-pago').value,
+    fondo_tipo:  document.getElementById('cfg-fondo-tipo').value,
+    fondo_valor: document.getElementById('cfg-fondo-color').value,
+    fondo_blur:  parseInt(document.getElementById('cfg-blur').value) || 0
+  };
+  try {
+    var r = await fetch('/perfil/config', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    var d = await r.json();
+    if (d.success) showToast('CONFIGURACION GUARDADA');
+  } catch(e) { showToast('Error al guardar'); }
+}
+
+// ── WIDGETS ───────────────────────────────────────────────
+async function buscarWidget() {
+  var q = document.getElementById('wg-query').value.trim();
+  var tipo = document.getElementById('wg-tipo').value;
+  if (!q) return;
+  document.getElementById('wg-results').innerHTML = '<div style="color:var(--gray);font-size:13px">Buscando...</div>';
+  try {
+    var r = await fetch('/perfil/config/widgets/buscar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,tipo:tipo})});
+    var d = await r.json();
+    if (d.results && d.results.length > 0) {
+      document.getElementById('wg-results').innerHTML = d.results.map(function(item) {
+        var enc = encodeURIComponent(JSON.stringify(item));
+        return '<div onclick="agregarWidget(\''+enc+'\',\''+tipo+'\')" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;max-width:220px">'
+          + (item.imagen_url ? '<img src="'+item.imagen_url+'" width="36" height="36" style="object-fit:cover;border-radius:4px" onerror="this.style.display=\'none\'">' : '')
+          + '<div><div style="font-size:13px;font-weight:600">'+item.titulo+'</div><div style="font-size:11px;color:var(--gray)">'+item.subtitulo+'</div></div></div>';
+      }).join('');
+    } else {
+      document.getElementById('wg-results').innerHTML = '<div style="color:var(--gray);font-size:13px">Sin resultados</div>';
+    }
+  } catch(e) {
+    document.getElementById('wg-results').innerHTML = '<div style="color:#ff6060;font-size:13px">Error</div>';
+  }
+}
+
+async function agregarWidget(itemEnc, tipo) {
+  var item = JSON.parse(decodeURIComponent(itemEnc));
+  var el = document.getElementById('widgets-list');
+  if (el && el.querySelectorAll('div[style]').length >= 3) { showToast('Maximo 3 widgets'); return; }
+  try {
+    var r = await fetch('/perfil/config/widgets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:tipo,titulo:item.titulo,subtitulo:item.subtitulo||'',imagen_url:item.imagen_url||''})});
+    var d = await r.json();
+    if (d.success) { showToast('WIDGET AGREGADO'); location.reload(); }
+  } catch(e) {}
+}
+
+async function eliminarWidget(id, btn) {
+  try {
+    await fetch('/perfil/config/widgets/'+id,{method:'DELETE'});
+    var card = btn.closest('div[style]'); if (card) card.remove();
+  } catch(e) {}
+}
+</script>
+
+<%- include('../partials/footer') %>

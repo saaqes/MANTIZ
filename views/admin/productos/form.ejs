@@ -1,0 +1,256 @@
+<%- include('../../partials/header', {isAdmin: true}) %>
+
+<style>
+.form-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;position:relative}
+.form-section-title{font-family:var(--fd);font-size:.68rem;font-weight:700;color:var(--cp);letter-spacing:3px;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.form-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.img-preview-box{width:100%;aspect-ratio:1;background:var(--dark2);border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;overflow:hidden;position:relative}
+.img-preview-box:hover{border-color:var(--cp);background:rgba(233,30,140,.05)}
+.img-preview-box img{width:100%;height:100%;object-fit:cover}
+.img-preview-box .upload-icon{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.6);opacity:0;transition:opacity .3s}
+.img-preview-box:hover .upload-icon{opacity:1}
+.talla-chip{display:inline-flex;align-items:center;gap:6px;background:var(--dark2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-family:var(--fm);font-size:.72rem}
+.talla-chip:has(input:focus){border-color:var(--cp)}
+.extra-img-thumb{width:70px;height:70px;border-radius:8px;object-fit:cover;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+.extra-img-thumb:hover{border-color:var(--cp);transform:scale(1.05)}
+.cat-chip{display:inline-flex;padding:4px 12px;border:1px solid var(--border);border-radius:20px;font-family:var(--fb);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted)}
+.cat-chip:hover,.cat-chip.selected{border-color:var(--cp);color:var(--cp);background:rgba(233,30,140,.08)}
+</style>
+
+<div style="max-width:900px">
+  <!-- Header -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="/admin/productos" class="btn btn-sm btn-om" style="padding:6px 12px">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <div style="font-family:var(--fd);font-size:.65rem;color:var(--muted);letter-spacing:3px;text-transform:uppercase">PRODUCTOS</div>
+      <div style="font-family:var(--fd);font-size:1.1rem;font-weight:800;color:var(--text)">
+        <%= producto ? 'EDITAR PRODUCTO' : 'NUEVO PRODUCTO' %>
+      </div>
+    </div>
+    <% if (producto) { %>
+      <a href="/productos/<%= producto.id %>" class="btn btn-sm ms-auto" style="border:1px solid rgba(0,200,255,.3);color:#00c8ff;background:transparent;border-radius:6px;font-size:.72rem">
+        <i class="bi bi-eye me-1"></i>Ver en tienda
+      </a>
+    <% } %>
+  </div>
+
+  <form action="/admin/productos/<%= producto ? producto.id + '/editar' : 'nuevo' %>" method="POST" enctype="multipart/form-data">
+    <div class="row g-4">
+      <!-- LEFT COL: images -->
+      <div class="col-12 col-lg-4">
+        <div class="form-section">
+          <div class="form-section-title"><i class="bi bi-image"></i>Imágenes</div>
+          
+          <!-- Main image -->
+          <div class="mb-3">
+            <label class="form-label">Imagen principal *</label>
+            <div class="img-preview-box" id="mainImgBox" onclick="document.getElementById('mainImgInput').click()" style="aspect-ratio:3/4;max-height:280px">
+              <% if (producto?.imagen_principal) { %>
+                <img id="mainImgPreview" src="/uploads/products/<%= producto.imagen_principal %>" alt="">
+              <% } else { %>
+                <img id="mainImgPreview" style="display:none">
+              <% } %>
+              <div class="upload-icon">
+                <i class="bi bi-camera-fill" style="font-size:1.5rem;color:var(--cp)"></i>
+                <span style="font-family:var(--fm);font-size:.65rem;color:var(--text);margin-top:4px">CAMBIAR FOTO</span>
+              </div>
+              <% if (!producto?.imagen_principal) { %>
+              <div id="mainPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:8px">
+                <i class="bi bi-bag-fill" style="font-size:2.5rem;color:var(--muted)"></i>
+                <span style="font-family:var(--fm);font-size:.62rem;color:var(--muted)">CLIC PARA SUBIR</span>
+              </div>
+              <% } %>
+            </div>
+            <input type="file" id="mainImgInput" name="imagen_principal" accept="image/*" style="display:none" onchange="previewMainImg(this)">
+          </div>
+
+          <!-- Extra images -->
+          <div>
+            <label class="form-label">Imágenes extra (hasta 8)</label>
+            <div class="d-flex flex-wrap gap-2 mb-2" id="extraPreviews">
+              <!-- existing extras would load here dynamically -->
+            </div>
+            <label class="img-preview-box d-flex align-items-center justify-content-center gap-2" style="aspect-ratio:auto;height:50px;cursor:pointer" for="extraImgInput">
+              <i class="bi bi-plus-lg" style="color:var(--cp)"></i>
+              <span style="font-family:var(--fm);font-size:.65rem;color:var(--muted)">AGREGAR FOTOS</span>
+            </label>
+            <input type="file" id="extraImgInput" name="imagenes_extra" accept="image/*" multiple style="display:none" onchange="previewExtras(this)">
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COL: info -->
+      <div class="col-12 col-lg-8">
+        <!-- Basic info -->
+        <div class="form-section">
+          <div class="form-section-title"><i class="bi bi-info-circle"></i>Información básica</div>
+          <div class="mb-3">
+            <label class="form-label">Título del producto *</label>
+            <input type="text" name="titulo" class="form-control" value="<%= producto?.titulo||'' %>" required placeholder="Ej: Camiseta Oversize Grunge">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea name="descripcion" class="form-control" rows="4" placeholder="Describe el producto, materiales, instrucciones de cuidado..."><%= producto?.descripcion||'' %></textarea>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Precio *</label>
+              <div style="position:relative">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--cp);font-family:var(--fm)">$</span>
+                <input type="number" step="0.01" name="precio" class="form-control" style="padding-left:28px" value="<%= producto?.precio||'' %>" required placeholder="0.00">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Precio con descuento</label>
+              <div style="position:relative">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#ffd700;font-family:var(--fm)">$</span>
+                <input type="number" step="0.01" name="precio_descuento" class="form-control" style="padding-left:28px" value="<%= producto?.precio_descuento||'' %>" placeholder="0.00" id="precioDesc">
+              </div>
+              <div id="descPct" style="font-family:var(--fm);font-size:.62rem;color:#00ff64;margin-top:4px;display:none"></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Tags</label>
+              <input type="text" name="tags" class="form-control" value="<%= producto?.tags||'' %>" placeholder="tag1,tag2,tag3">
+            </div>
+          </div>
+
+          <!-- Category chips -->
+          <div class="mb-3">
+            <label class="form-label">Categoría *</label>
+            <input type="text" name="categoria" id="catInput" class="form-control mb-2" value="<%= producto?.categoria||'' %>" placeholder="Escribe o selecciona...">
+            <div class="d-flex flex-wrap gap-2">
+              <% ['Camisetas','Pantalones','Vestidos','Chaquetas','Faldas','Ropa Interior','Accesorios','Zapatos','Bolsos','Conjunto','Otro'].forEach(c=>{ %>
+              <span class="cat-chip <%= producto?.categoria===c?'selected':'' %>" onclick="selectCat('<%= c %>')"><%= c %></span>
+              <% }) %>
+            </div>
+          </div>
+
+          <div class="d-flex gap-4">
+            <div class="form-check">
+              <input type="checkbox" name="en_inicio" class="form-check-input" id="enInicio" style="accent-color:var(--cp)" <%= producto?.en_inicio?'checked':'' %>>
+              <label class="form-check-label" for="enInicio" style="font-family:var(--fb);font-size:.85rem">Mostrar en inicio</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" name="activo" class="form-check-input" id="activo" style="accent-color:var(--cp)" <%= !producto||producto?.activo?'checked':'' %>>
+              <label class="form-check-label" for="activo" style="font-family:var(--fb);font-size:.85rem">Producto activo</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tallas y stock -->
+        <div class="form-section">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="form-section-title mb-0" style="flex:1"><i class="bi bi-rulers"></i>Tallas & Stock</div>
+            <button type="button" class="btn btn-sm btn-om ms-2" onclick="agregarTalla()">
+              <i class="bi bi-plus me-1"></i>Talla
+            </button>
+          </div>
+
+          <!-- Quick add common sizes -->
+          <div class="d-flex flex-wrap gap-2 mb-3" id="quickSizes">
+            <% ['XS','S','M','L','XL','XXL','XXXL','36','37','38','39','40','41','42','Único'].forEach(sz=>{ %>
+            <button type="button" class="cat-chip" onclick="quickAddTalla('<%= sz %>')" style="font-size:.7rem"><%= sz %></button>
+            <% }) %>
+          </div>
+
+          <div id="tallasContainer">
+            <% if (tallas && tallas.length > 0) { %>
+              <% tallas.forEach((t,i) => { %>
+              <div class="d-flex gap-2 mb-2 talla-row align-items-center">
+                <div class="talla-chip flex-1">
+                  <i class="bi bi-rulers" style="color:var(--cp);font-size:.8rem"></i>
+                  <input type="text" name="tallas[]" class="form-control form-control-sm" value="<%= t.talla %>" placeholder="Talla" style="max-width:90px;background:transparent;border:none;padding:0;font-family:var(--fm);font-size:.78rem">
+                </div>
+                <div class="talla-chip" style="max-width:120px">
+                  <i class="bi bi-box2" style="color:#00c8ff;font-size:.8rem"></i>
+                  <input type="number" name="stocks[]" class="form-control form-control-sm" value="<%= t.stock %>" placeholder="Stock" style="width:70px;background:transparent;border:none;padding:0;font-family:var(--fm);font-size:.78rem">
+                </div>
+                <button type="button" class="btn btn-sm" style="border:1px solid rgba(255,60,60,.3);color:#ff6060;background:transparent;border-radius:6px;padding:5px 9px" onclick="this.closest('.talla-row').remove()">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+              <% }) %>
+            <% } %>
+          </div>
+          <div style="font-family:var(--fm);font-size:.62rem;color:var(--muted);margin-top:8px">
+            <i class="bi bi-info-circle me-1"></i>Haz clic en los chips de arriba para añadir tallas rápidamente
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="d-flex gap-3">
+          <button type="submit" class="btn btn-pm flex-1" style="padding:12px">
+            <i class="bi bi-check-lg me-2"></i><%= producto ? 'GUARDAR CAMBIOS' : 'CREAR PRODUCTO' %>
+          </button>
+          <a href="/admin/productos" class="btn btn-om" style="padding:12px 20px">CANCELAR</a>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+function previewMainImg(input){
+  if(input.files&&input.files[0]){
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=document.getElementById('mainImgPreview');
+      img.src=e.target.result;img.style.display='block';
+      const ph=document.getElementById('mainPlaceholder');
+      if(ph)ph.style.display='none';
+    };
+    r.readAsDataURL(input.files[0]);
+  }
+}
+function previewExtras(input){
+  const container=document.getElementById('extraPreviews');
+  Array.from(input.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=document.createElement('img');
+      img.src=e.target.result;img.className='extra-img-thumb';
+      container.appendChild(img);
+    };
+    r.readAsDataURL(f);
+  });
+}
+function selectCat(cat){
+  document.getElementById('catInput').value=cat;
+  document.querySelectorAll('.cat-chip').forEach(c=>{
+    c.classList.toggle('selected',c.textContent.trim()===cat);
+  });
+}
+function agregarTalla(){
+  const d=document.createElement('div');
+  d.className='d-flex gap-2 mb-2 talla-row align-items-center';
+  d.innerHTML=`<div class="talla-chip flex-1"><i class="bi bi-rulers" style="color:var(--cp);font-size:.8rem"></i><input type="text" name="tallas[]" class="form-control form-control-sm" placeholder="Talla" style="max-width:90px;background:transparent;border:none;padding:0;font-family:var(--fm);font-size:.78rem"></div><div class="talla-chip" style="max-width:120px"><i class="bi bi-box2" style="color:#00c8ff;font-size:.8rem"></i><input type="number" name="stocks[]" class="form-control form-control-sm" value="0" placeholder="Stock" style="width:70px;background:transparent;border:none;padding:0;font-family:var(--fm);font-size:.78rem"></div><button type="button" class="btn btn-sm" style="border:1px solid rgba(255,60,60,.3);color:#ff6060;background:transparent;border-radius:6px;padding:5px 9px" onclick="this.closest('.talla-row').remove()"><i class="bi bi-x"></i></button>`;
+  document.getElementById('tallasContainer').appendChild(d);
+  d.querySelector('input').focus();
+}
+function quickAddTalla(sz){
+  // Check if already exists
+  const existing=Array.from(document.querySelectorAll('#tallasContainer input[name="tallas[]"]')).find(i=>i.value===sz);
+  if(existing){existing.closest('.talla-row').querySelector('input[name="stocks[]"]').focus();return;}
+  const d=document.createElement('div');
+  d.className='d-flex gap-2 mb-2 talla-row align-items-center';
+  d.innerHTML=`<div class="talla-chip flex-1"><i class="bi bi-rulers" style="color:var(--cp);font-size:.8rem"></i><input type="text" name="tallas[]" class="form-control form-control-sm" value="${sz}" style="max-width:90px;background:transparent;border:none;padding:0;font-family:var(--fm);font-size:.78rem"></div><div class="talla-chip" style="max-width:120px"><i class="bi bi-box2" style="color:#00c8ff;font-size:.8rem"></i><input type="number" name="stocks[]" class="form-control form-control-sm" value="0" style="width:70px;background:transparent;border:none;padding:0;font-family:var(--fm);font-size:.78rem"></div><button type="button" class="btn btn-sm" style="border:1px solid rgba(255,60,60,.3);color:#ff6060;background:transparent;border-radius:6px;padding:5px 9px" onclick="this.closest('.talla-row').remove()"><i class="bi bi-x"></i></button>`;
+  document.getElementById('tallasContainer').appendChild(d);
+  d.querySelector('input[name="stocks[]"]').focus();
+}
+// Discount % display
+const pInput=document.querySelector('input[name="precio"]');
+const dInput=document.getElementById('precioDesc');
+const pct=document.getElementById('descPct');
+if(pInput&&dInput&&pct){
+  const calc=()=>{
+    const p=parseFloat(pInput.value),d=parseFloat(dInput.value);
+    if(p>0&&d>0&&d<p){pct.textContent=`-${Math.round((1-d/p)*100)}% descuento`;pct.style.display='block';}
+    else pct.style.display='none';
+  };
+  pInput.addEventListener('input',calc);dInput.addEventListener('input',calc);
+}
+</script>
+
+<%- include('../../partials/footer', {isAdmin: true}) %>
