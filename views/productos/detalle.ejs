@@ -1,0 +1,381 @@
+<%- include('../partials/header') %>
+
+<div style="padding:20px 40px 0;font-size:12px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">
+  <a href="/" style="color:var(--gray);text-decoration:none" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'">INICIO</a>
+  <span style="margin:0 8px">&#8250;</span>
+  <a href="/productos" style="color:var(--gray);text-decoration:none">TIENDA</a>
+  <span style="margin:0 8px">&#8250;</span>
+  <span style="color:var(--white)"><%= producto.titulo.toUpperCase() %></span>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;padding:24px 40px 60px;max-width:1200px;margin:0 auto" class="det-grid">
+
+  <!-- GALLERY -->
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div id="galleryMain" style="position:relative;overflow:hidden;background:#111;aspect-ratio:4/5">
+      <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.4);filter:url(#gb);pointer-events:none;z-index:5"></div>
+      <img id="mainImg" src="/uploads/products/<%= producto.imagen_principal %>" alt="<%= producto.titulo %>"
+           style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:opacity 0.4s"
+           onerror="this.src='https://via.placeholder.com/600x750/111/888?text=MANTIZ'">
+      <% if (producto.precio_descuento) { %>
+      <div style="position:absolute;top:16px;left:16px;background:rgba(233,30,140,0.9);padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;z-index:6">
+        -<%= Math.round((1 - producto.precio_descuento / producto.precio) * 100) %>%
+      </div>
+      <% } %>
+      <button onclick="prevGallery()" style="position:absolute;top:50%;left:12px;transform:translateY(-50%);background:rgba(10,10,10,0.7);border:1px solid rgba(255,255,255,0.2);color:white;width:38px;height:38px;font-size:18px;cursor:pointer;z-index:6">&#8249;</button>
+      <button onclick="nextGallery()" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);background:rgba(10,10,10,0.7);border:1px solid rgba(255,255,255,0.2);color:white;width:38px;height:38px;font-size:18px;cursor:pointer;z-index:6">&#8250;</button>
+    </div>
+    <div id="gallDots" style="display:flex;gap:6px;justify-content:center"></div>
+    <div id="gallThumbs" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px"></div>
+  </div>
+
+  <!-- INFO -->
+  <div style="display:flex;flex-direction:column;gap:20px;padding-top:8px">
+    <div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;color:var(--pink);margin-bottom:4px"><%= producto.categoria.toUpperCase() %></div>
+      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,48px);letter-spacing:4px;line-height:1;color:var(--white)"><%= producto.titulo %></h1>
+      <% if (producto.descripcion) { %>
+      <p style="font-size:14px;color:rgba(240,240,240,0.7);line-height:1.7;margin-top:8px"><%= producto.descripcion %></p>
+      <% } %>
+    </div>
+
+    <!-- Price -->
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--white);letter-spacing:2px">
+      <% if (producto.precio_descuento) { %>
+        <span style="color:var(--pink)">$<%= parseFloat(producto.precio_descuento).toLocaleString('es-CO') %></span>
+        <span style="font-size:18px;color:var(--gray);text-decoration:line-through;margin-left:8px">$<%= parseFloat(producto.precio).toLocaleString('es-CO') %></span>
+      <% } else { %>
+        $<%= parseFloat(producto.precio).toLocaleString('es-CO') %>
+      <% } %>
+    </div>
+
+    <!-- Avg rating -->
+    <%
+      var avgRating = 0;
+      var ratedCount = 0;
+      if (comentarios && comentarios.length > 0) {
+        comentarios.forEach(function(cm) { if (cm.calificacion) { avgRating += cm.calificacion; ratedCount++; } });
+        if (ratedCount > 0) avgRating = Math.round(avgRating / ratedCount);
+      }
+    %>
+    <% if (ratedCount > 0) { %>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;gap:2px">
+        <% for (var si = 1; si <= 5; si++) { %>
+        <% var starColor = (si <= avgRating) ? '#e91e8c' : 'rgba(255,255,255,0.2)'; %>
+        <span style="font-size:16px;color:<%= starColor %>">&#9733;</span>
+        <% } %>
+      </div>
+      <span style="font-size:13px;color:var(--gray)">(<%= ratedCount %> reseñas)</span>
+    </div>
+    <% } %>
+
+    <!-- Tallas -->
+    <% if (tallas && tallas.length > 0) { %>
+    <div>
+      <div style="font-size:11px;letter-spacing:3px;color:var(--gray);margin-bottom:10px">TALLA — <span id="selTallaLabel" style="color:var(--pink)">Seleccionar</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <% tallas.forEach(function(t) { %>
+        <%
+          var tcursor = (t.stock === 0) ? 'not-allowed' : 'pointer';
+          var tcolor  = (t.stock === 0) ? '#888888' : '#f0f0f0';
+          var textra  = (t.stock === 0) ? 'text-decoration:line-through;opacity:0.4;' : '';
+        %>
+        <button onclick="selectTalla('<%= t.talla %>', this)"
+                class="talla-chip"
+                data-talla="<%= t.talla %>"
+                data-stock="<%= t.stock %>"
+                style="padding:8px 16px;border:2px solid rgba(255,255,255,0.2);background:none;color:<%= tcolor %>;font-family:Rajdhani,sans-serif;font-weight:600;font-size:13px;cursor:<%= tcursor %>;<%= textra %>transition:all 0.2s">
+          <%= t.talla %>
+        </button>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Actions -->
+    <input type="hidden" id="selectedTalla" value="">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="addToCart()" class="btn-grunge-fill" style="width:100%;font-size:18px;padding:16px" id="addCartBtn">AGREGAR AL CARRITO</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <%
+          var likedBorder  = userLiked ? 'var(--pink)' : 'rgba(255,255,255,0.2)';
+          var likedColor   = userLiked ? 'var(--pink)' : '#f0f0f0';
+          var likedBg      = userLiked ? 'rgba(233,30,140,0.15)' : 'transparent';
+          var likedHeart   = userLiked ? '&#10084;' : '&#9825;';
+        %>
+        <button id="likeBtn" onclick="toggleLike()"
+                style="background:<%= likedBg %>;border:2px solid <%= likedBorder %>;color:<%= likedColor %>;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;transition:all 0.3s;filter:url(#gb);display:flex;align-items:center;justify-content:center;gap:8px">
+          <span id="likeHeart" style="font-size:18px"><%- likedHeart %></span>
+          <span id="likeCount"><%= producto.total_likes || 0 %></span>
+        </button>
+        <button onclick="destacarProducto()"
+                style="background:transparent;border:2px solid rgba(255,255,255,0.2);color:#f0f0f0;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;transition:all 0.3s;filter:url(#gb);display:flex;align-items:center;justify-content:center;gap:8px"
+                onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'"
+                onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='#f0f0f0'">
+          <span style="font-size:16px">&#128204;</span> GUARDAR
+        </button>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:16px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:12px;color:var(--gray);letter-spacing:1px">Envio $8.99 · 3-7 dias habiles</div>
+      <div style="font-size:12px;color:var(--gray);letter-spacing:1px">7 dias de devolucion</div>
+    </div>
+  </div>
+</div>
+
+<div style="height:1px;background:rgba(255,255,255,0.07);margin:0 40px"></div>
+
+<!-- COMENTARIOS -->
+<div style="padding:48px 40px;max-width:1200px;margin:0 auto">
+  <h2 class="section-title" style="font-size:36px">Comentarios</h2>
+  <div style="text-align:center;height:20px;margin:8px 0 24px;background-image:url(\"data:image/svg+xml,%3Csvg width='200' height='20' viewBox='0 0 200 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='10' x2='80' y2='10' stroke='rgba(233,30,140,0.4)' stroke-width='1'/%3E%3Ccircle cx='100' cy='10' r='5' fill='%23e91e8c'/%3E%3Cline x1='120' y1='10' x2='200' y2='10' stroke='rgba(233,30,140,0.4)' stroke-width='1'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center"></div>
+
+  <% if (user) { %>
+  <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:20px;margin-bottom:24px;position:relative">
+    <div style="position:absolute;inset:0;border:1px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+    <form action="/productos/<%= producto.id %>/comentar" method="POST">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <%
+          var userAvSrc = (user.foto_perfil_tipo === 'upload' && user.foto_perfil)
+            ? '/uploads/profiles/' + user.foto_perfil
+            : '/img/defaults/avatars/' + (user.foto_perfil_preset || 'avatar1.png');
+        %>
+        <img src="<%= userAvSrc %>" width="36" height="36"
+             style="border-radius:50%;object-fit:cover;border:2px solid var(--pink);flex-shrink:0;margin-top:4px"
+             onerror="this.src='/img/defaults/avatars/avatar1.png'">
+        <div style="flex:1">
+          <div style="display:flex;gap:4px;margin-bottom:8px">
+            <% for (var rr = 1; rr <= 5; rr++) { %>
+            <span data-val="<%= rr %>" onclick="setRating(<%= rr %>)"
+                  style="font-size:22px;cursor:pointer;color:rgba(255,255,255,0.2);transition:color 0.15s"
+                  onmouseover="hoverRating(<%= rr %>)" onmouseout="resetHover()">&#9733;</span>
+            <% } %>
+          </div>
+          <input type="hidden" name="calificacion" id="ratingInput" value="">
+          <div style="display:flex;gap:10px">
+            <input type="text" name="contenido" class="mantiz-input" placeholder="Escribe tu comentario..." required style="flex:1">
+            <button type="submit" style="background:var(--pink);color:white;border:none;padding:0 20px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;white-space:nowrap">ENVIAR</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <% } else { %>
+  <div style="text-align:center;padding:16px;margin-bottom:20px;border:1px solid var(--border)">
+    <span style="color:var(--gray);font-size:13px"><a href="/auth/login" style="color:var(--pink)">Inicia sesion</a> para comentar</span>
+  </div>
+  <% } %>
+
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <% if (comentarios && comentarios.length > 0) { %>
+    <% comentarios.forEach(function(com) { %>
+    <%
+      var comAvSrc = (com.foto_perfil_tipo === 'upload' && com.foto_perfil)
+        ? '/uploads/profiles/' + com.foto_perfil
+        : '/img/defaults/avatars/' + (com.foto_perfil_preset || 'avatar1.png');
+    %>
+    <div style="display:flex;align-items:flex-start;gap:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);padding:14px 16px">
+      <img src="<%= comAvSrc %>" width="36" height="36"
+           style="border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0"
+           onerror="this.src='/img/defaults/avatars/avatar1.png'">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-weight:700;font-size:13px;color:var(--white)"><%= com.nombre_visible %></span>
+          <% if (com.calificacion) { %>
+          <div style="display:flex;gap:2px">
+            <% for (var cs = 1; cs <= 5; cs++) { %>
+            <% var csc = (cs <= com.calificacion) ? '#e91e8c' : 'rgba(255,255,255,0.15)'; %>
+            <span style="font-size:12px;color:<%= csc %>">&#9733;</span>
+            <% } %>
+          </div>
+          <% } %>
+        </div>
+        <div style="font-size:13px;color:rgba(240,240,240,0.75);line-height:1.5"><%= com.contenido %></div>
+        <div style="display:flex;gap:12px;margin-top:8px;align-items:center">
+          <button onclick="likeComentario(<%= com.id %>, this)"
+            id="like-com-<%= com.id %>"
+            style="background:none;border:1px solid rgba(255,255,255,0.15);padding:3px 12px;font-size:11px;cursor:pointer;color:var(--gray);transition:all 0.2s"
+            onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'"
+            onmouseout="if(!this.classList.contains('liked')){this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='var(--gray)'}">
+            👍 <span class="like-count-<%= com.id %>"><%= com.likes || 0 %></span>
+          </button>
+          <span style="font-size:11px;color:var(--gray)"><%= new Date(com.creado_en).toLocaleDateString('es-CO') %></span>
+          <% if (user && (user.id === com.usuario_id || user.rol === 'admin')) { %>
+          <form action="/productos/<%= producto.id %>/comentar/<%= com.id %>/eliminar" method="POST" style="display:inline">
+            <button type="submit" style="background:none;border:none;color:rgba(255,255,255,0.2);cursor:pointer;font-size:14px">&#128465;</button>
+          </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+    <% } else { %>
+    <div style="text-align:center;padding:40px;color:var(--gray)">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px">SE EL PRIMERO EN COMENTAR</div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- RELACIONADOS -->
+<% if (relacionados && relacionados.length > 0) { %>
+<div style="padding:48px 40px;max-width:1200px;margin:0 auto">
+  <h2 class="section-title" style="font-size:36px">RELACIONADOS</h2>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px" class="rel-grid">
+    <% relacionados.forEach(function(p) { %>
+    <div class="product-card" onclick="window.location='/productos/<%= p.id %>'">
+      <div class="pc-label"><span class="pc-label-text"><%= p.titulo.substring(0,18) %></span></div>
+      <div class="pc-img-wrap"><div class="pc-img-clip"><img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'"></div></div>
+      <div class="pc-info"><span class="pc-name"><%= p.titulo.substring(0,20) %></span><span class="pc-price">$<%= parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO') %></span></div>
+    </div>
+    <% }) %>
+  </div>
+</div>
+<% } %>
+
+<!-- DESTACAR MODAL -->
+<div id="destacar-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
+  <div style="background:var(--card-bg);max-width:420px;width:90%;padding:32px;position:relative">
+    <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
+    <button onclick="cerrarDestacar()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;z-index:20">&#x2715;</button>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--pink);margin-bottom:16px">GUARDAR EN TABLERO</div>
+    <div id="tableros-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:200px;overflow-y:auto"></div>
+    <div style="border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:11px;letter-spacing:2px;color:var(--gray);margin-bottom:10px">CREAR NUEVO TABLERO</div>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="nuevoTableroNombre" class="mantiz-input" placeholder="Nombre del tablero..." style="flex:1">
+        <button onclick="crearYGuardar()" style="background:var(--pink);border:none;color:white;padding:0 18px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer">CREAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.talla-chip.active{background:var(--pink)!important;border-color:var(--pink)!important;color:white!important}
+@media(max-width:768px){.det-grid{grid-template-columns:1fr!important}div[style*="padding:24px 40px"]{padding:16px!important}.rel-grid{grid-template-columns:repeat(2,1fr)!important}}
+</style>
+
+<script>
+var productoId=<%=producto.id%>;
+var galleryImgs=['/uploads/products/<%=producto.imagen_principal%>'];
+<% if(imagenes){imagenes.forEach(function(img){%>galleryImgs.push('/uploads/products/<%=img.imagen%>');<%});}%>
+var galIdx=0;
+function buildGallery(){
+  var dh='',th='';
+  galleryImgs.forEach(function(s,i){
+    dh+='<div onclick="goGal('+i+')" style="width:7px;height:7px;border-radius:50%;background:'+(i===0?'var(--pink)':'rgba(255,255,255,0.2)')+';cursor:pointer;transition:background 0.2s"></div>';
+    th+='<div onclick="goGal('+i+')" style="width:64px;height:64px;overflow:hidden;border:2px solid '+(i===0?'var(--pink)':'rgba(255,255,255,0.15)')+';cursor:pointer;flex-shrink:0"><img src="'+s+'" style="width:100%;height:100%;object-fit:cover"></div>';
+  });
+  document.getElementById('gallDots').innerHTML=dh;
+  document.getElementById('gallThumbs').innerHTML=th;
+}
+function goGal(idx){
+  galIdx=((idx%galleryImgs.length)+galleryImgs.length)%galleryImgs.length;
+  document.getElementById('mainImg').src=galleryImgs[galIdx];
+  document.querySelectorAll('#gallDots div').forEach(function(d,i){d.style.background=i===galIdx?'var(--pink)':'rgba(255,255,255,0.2)';});
+  document.querySelectorAll('#gallThumbs div').forEach(function(t,i){t.style.borderColor=i===galIdx?'var(--pink)':'rgba(255,255,255,0.15)';});
+}
+function prevGallery(){goGal(galIdx-1);}
+function nextGallery(){goGal(galIdx+1);}
+buildGallery();
+
+function selectTalla(t,btn){
+  if(btn.dataset.stock==='0')return;
+  document.querySelectorAll('.talla-chip').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('selectedTalla').value=t;
+  document.getElementById('selTallaLabel').textContent=t;
+}
+async function addToCart(){
+  var talla=document.getElementById('selectedTalla').value;
+  var hasTallas=document.querySelectorAll('.talla-chip').length>0;
+  if(hasTallas&&!talla){var c=document.querySelector('.talla-chip');if(c){c.closest('div').style.outline='1px solid var(--pink)';setTimeout(function(){c.closest('div').style.removeProperty('outline');},600);}return;}
+  var btn=document.getElementById('addCartBtn');btn.textContent='AGREGANDO...';
+  try{
+    var r=await fetch('/carrito/agregar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto_id:productoId,talla:talla||null,cantidad:1})});
+    var d=await r.json();
+    if(d.success){btn.textContent='AGREGADO';showToast('PRODUCTO ANADIDO');var cc=document.getElementById('cart-count');if(cc){cc.textContent=(parseInt(cc.textContent)||0)+1;cc.classList.add('show');}var cp=document.getElementById('cart-panel');if(cp){cp.classList.add('open');loadCartPanel();}setTimeout(function(){btn.textContent='AGREGAR AL CARRITO';},2000);}
+    else if(d.redirect){window.location=d.redirect;}
+    else{btn.textContent='AGREGAR AL CARRITO';}
+  }catch(e){btn.textContent='AGREGAR AL CARRITO';}
+}
+var liked=<%=userLiked?'true':'false'%>;
+async function likeComentario(cid, btn) {
+  <% if (!user) { %>
+  window.location = '/auth/login'; return;
+  <% } %>
+  try {
+    var r = await fetch('/productos/comentario/' + cid + '/like', {
+      method: 'POST', headers: {'Content-Type': 'application/json'}
+    });
+    var d = await r.json();
+    if (d.liked !== undefined) {
+      var countEl = document.querySelector('.like-count-' + cid);
+      if (countEl) countEl.textContent = d.likes;
+      if (d.liked) {
+        btn.classList.add('liked');
+        btn.style.borderColor = 'var(--pink)';
+        btn.style.color = 'var(--pink)';
+        btn.style.background = 'rgba(233,30,140,0.1)';
+      } else {
+        btn.classList.remove('liked');
+        btn.style.borderColor = 'rgba(255,255,255,0.15)';
+        btn.style.color = 'var(--gray)';
+        btn.style.background = 'none';
+      }
+    }
+  } catch(e) { showToast && showToast('ERROR'); }
+}
+
+async function toggleLike(){
+  try{
+    var r=await fetch('/productos/'+productoId+'/like',{method:'POST',headers:{'Content-Type':'application/json'}});
+    var d=await r.json();
+    if(d.redirect){window.location=d.redirect;return;}
+    liked=d.liked;
+    var btn=document.getElementById('likeBtn');
+    document.getElementById('likeHeart').innerHTML=liked?'&#10084;':'&#9825;';
+    btn.style.borderColor=liked?'var(--pink)':'rgba(255,255,255,0.2)';
+    btn.style.color=liked?'var(--pink)':'#f0f0f0';
+    btn.style.background=liked?'rgba(233,30,140,0.15)':'transparent';
+    if(d.total_likes!==undefined)document.getElementById('likeCount').textContent=d.total_likes;
+    showToast(liked?'GUARDADO EN FAVORITOS':'ELIMINADO DE FAVORITOS');
+  }catch(e){}
+}
+async function destacarProducto(){
+  <%if(!user){%>window.location='/auth/login';return;<%}%>
+  try{
+    var r=await fetch('/productos/'+productoId+'/destacar',{method:'POST',headers:{'Content-Type':'application/json'}});
+    var d=await r.json();
+    if(d.needsBoard){
+      var lista=document.getElementById('tableros-lista');
+      lista.innerHTML=(d.tableros&&d.tableros.length>0)
+        ?d.tableros.map(function(t){return '<button onclick="guardarEnTablero('+t.id+')" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:12px 16px;cursor:pointer;text-align:left;color:#f0f0f0;font-family:Rajdhani,sans-serif;font-size:14px;width:100%;transition:border-color 0.2s" onmouseover="this.style.borderColor=\'var(--pink)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+t.nombre+'</button>';}).join('')
+        :'<div style="color:var(--gray);font-size:13px;text-align:center;padding:12px">Sin tableros. Crea uno abajo.</div>';
+      var m=document.getElementById('destacar-modal');m.style.opacity='1';m.style.pointerEvents='all';
+    }else if(d.success){showToast('GUARDADO EN PINES');}
+  }catch(e){}
+}
+function cerrarDestacar(){var m=document.getElementById('destacar-modal');m.style.opacity='0';m.style.pointerEvents='none';}
+document.getElementById('destacar-modal').addEventListener('click',function(e){if(e.target===this)cerrarDestacar();});
+async function guardarEnTablero(tableroId){
+  var r=await fetch('/productos/'+productoId+'/destacar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tablero_id:tableroId})});
+  var d=await r.json();cerrarDestacar();
+  if(d.success)showToast('GUARDADO');
+}
+async function crearYGuardar(){
+  var nombre=document.getElementById('nuevoTableroNombre').value.trim();
+  if(!nombre){document.getElementById('nuevoTableroNombre').style.outline='1px solid var(--pink)';return;}
+  var r=await fetch('/productos/'+productoId+'/destacar/nuevo-tablero',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:nombre,privacidad:'privado'})});
+  var d=await r.json();cerrarDestacar();
+  if(d.success)showToast('TABLERO CREADO Y GUARDADO');
+}
+var currentRating=0;
+function setRating(val){currentRating=val;document.getElementById('ratingInput').value=val;document.querySelectorAll('span[data-val]').forEach(function(s){s.style.color=parseInt(s.dataset.val)<=val?'var(--pink)':'rgba(255,255,255,0.2)';});}
+function hoverRating(val){document.querySelectorAll('span[data-val]').forEach(function(s){s.style.color=parseInt(s.dataset.val)<=val?'var(--pink)':'rgba(255,255,255,0.2)';});}
+function resetHover(){document.querySelectorAll('span[data-val]').forEach(function(s){s.style.color=parseInt(s.dataset.val)<=currentRating?'var(--pink)':'rgba(255,255,255,0.2)';});}
+</script>
+
+<%- include('../partials/footer') %>

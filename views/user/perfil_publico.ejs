@@ -1,0 +1,201 @@
+<%- include('../partials/header') %>
+<%
+var bannerSrc = (perfil.banner_tipo==='upload' && perfil.banner)
+  ? '/uploads/banners/'+perfil.banner
+  : '/img/defaults/banners/'+(perfil.banner_preset||'banner1.jpg');
+var avatarSrc = (perfil.foto_perfil_tipo==='upload' && perfil.foto_perfil)
+  ? '/uploads/profiles/'+perfil.foto_perfil
+  : '/img/defaults/avatars/'+(perfil.foto_perfil_preset||'avatar1.png');
+var cfgColor = (pcfg && pcfg.color_primario) ? pcfg.color_primario : 'var(--pink)';
+%>
+
+<div style="max-width:1100px;margin:0 auto;padding-bottom:80px">
+  <!-- BANNER -->
+  <div style="position:relative;height:220px;overflow:hidden;background:#111">
+    <img src="<%=bannerSrc%>" style="width:100%;height:100%;object-fit:cover;opacity:0.65" onerror="this.style.display='none'">
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(10,10,10,0.85))"></div>
+  </div>
+
+  <!-- AVATAR + INFO -->
+  <div style="display:flex;align-items:flex-end;gap:24px;padding:0 40px;margin-top:-52px;position:relative;z-index:5;flex-wrap:wrap">
+    <img src="<%=avatarSrc%>" width="104" height="104"
+         style="border-radius:50%;object-fit:cover;border:4px solid #0a0a0a;box-shadow:0 0 0 3px <%=cfgColor%>,0 4px 24px rgba(233,30,140,0.3);flex-shrink:0"
+         onerror="this.src='/img/defaults/avatars/avatar1.png'">
+    <div style="flex:1;padding-bottom:8px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="font-family:'Permanent Marker',cursive;font-size:26px;color:<%=cfgColor%>"><%=perfil.nombre_visible%></div>
+        <% if (user && user.id !== perfil.id) {
+          const rel = typeof estadoAmistad !== 'undefined' ? estadoAmistad : null;
+          const esAmigo = rel && rel.estado === 'aceptada';
+          const pendiente = rel && rel.estado === 'pendiente';
+        %>
+        <button id="friend-btn" data-estado="<%=rel?rel.estado:'ninguno'%>" onclick="accionAmistad()"
+          style="padding:5px 14px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;border:1px solid <%=esAmigo?'#00c853':'var(--pink)'%>;color:<%=esAmigo?'#00c853':'var(--pink)'%>;background:transparent;transition:all 0.2s"
+          onmouseover="if(!this.dataset.estado||this.dataset.estado!=='aceptada')this.style.background='rgba(233,30,140,0.1)'"
+          onmouseout="this.style.background='transparent'">
+          <% if (esAmigo) { %>
+            <i class="bi bi-person-check-fill me-1"></i>AMIGOS
+          <% } else if (pendiente) { %>
+            <i class="bi bi-person-clock me-1"></i>PENDIENTE
+          <% } else { %>
+            <i class="bi bi-person-plus me-1"></i>AGREGAR
+          <% } %>
+        </button>
+        <% } %>
+      </div>
+      <div style="font-size:12px;color:var(--gray);letter-spacing:2px;margin-top:2px">@<%=perfil.username%></div>
+      <%if(perfil.bio){%><div style="font-size:13px;color:rgba(240,240,240,0.7);margin-top:6px;max-width:380px"><%=perfil.bio%></div><%}%>
+    </div>
+    <div style="display:flex;gap:8px;padding-bottom:12px">
+      <div style="text-align:center;padding:8px 14px;border:1px solid <%=cfgColor%>20;min-width:64px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:<%=cfgColor%>"><%=favoritos.length%></div>
+        <div style="font-size:9px;color:var(--gray);letter-spacing:1.5px">FAVORITOS</div>
+      </div>
+      <div style="text-align:center;padding:8px 14px;border:1px solid <%=cfgColor%>20;min-width:64px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:<%=cfgColor%>"><%=tableros.length%></div>
+        <div style="font-size:9px;color:var(--gray);letter-spacing:1.5px">TABLEROS</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGROS DESBLOQUEADOS -->
+  <% if (typeof logros !== 'undefined' && logros && logros.length > 0) { %>
+  <div style="padding:12px 40px;display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid rgba(255,255,255,0.05)">
+    <% logros.slice(0,8).forEach(l => { %>
+    <div title="<%=l.nombre%>: <%=l.descripcion||''%>"
+         style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);cursor:help">
+      <span style="font-size:16px"><%=l.icono||'🏆'%></span>
+      <span style="font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:#ffd700"><%=l.nombre%></span>
+    </div>
+    <% }) %>
+    <% if (logros.length > 8) { %>
+    <div style="display:flex;align-items:center;padding:5px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);font-size:11px;color:var(--muted);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">
+      +<%=logros.length-8%> más
+    </div>
+    <% } %>
+  </div>
+  <% } %>
+
+  <!-- CONEXIONES PÚBLICAS -->
+  <% if (typeof conexiones !== 'undefined' && conexiones && conexiones.length > 0) {
+    const platCfg = {
+      playstation:{icon:'bi-controller',color:'#003791',base:'https://www.playstation.com/en-us/profiles/'},
+      xbox:{icon:'bi-xbox',color:'#107c10',base:'https://www.xbox.com/en-US/play/user/'},
+      steam:{icon:'bi-steam',color:'#1b2838',base:'https://steamcommunity.com/id/'},
+      github:{icon:'bi-github',color:'#24292f',base:'https://github.com/'},
+      tiktok:{icon:'bi-tiktok',color:'#010101',base:'https://www.tiktok.com/@'},
+      spotify:{icon:'bi-spotify',color:'#1db954',base:'https://open.spotify.com/user/'},
+      twitch:{icon:'bi-twitch',color:'#9146ff',base:'https://www.twitch.tv/'},
+      discord:{icon:'bi-discord',color:'#5865f2',base:null}
+    };
+  %>
+  <div style="padding:12px 40px;display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid rgba(255,255,255,0.05)">
+    <% conexiones.forEach(c => {
+      const cfg = platCfg[c.plataforma]||{icon:'bi-link',color:'#888',base:null};
+      const url = c.url||(cfg.base?cfg.base+c.username:null);
+    %>
+    <% if(url){ %>
+    <a href="<%=url%>" target="_blank" rel="noopener"
+       style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);text-decoration:none;color:var(--white);transition:border-color 0.2s"
+       onmouseover="this.style.borderColor='<%=cfg.color%>'" onmouseout="this.style.borderColor='var(--border)'">
+      <i class="<%=cfg.icon%>" style="color:<%=cfg.color%>;font-size:14px"></i>
+      <span style="font-size:11px;font-weight:700"><%=c.username%></span>
+    </a>
+    <% } else { %>
+    <div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border)">
+      <i class="<%=cfg.icon%>" style="color:<%=cfg.color%>;font-size:14px"></i>
+      <span style="font-size:11px;font-weight:700"><%=c.username%></span>
+    </div>
+    <% } %>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <!-- TABS -->
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin:24px 0 0;padding:0 40px;overflow-x:auto">
+    <button onclick="showSec('favoritos')" id="psec-favoritos" class="ptab ptab-active">FAVORITOS</button>
+    <button onclick="showSec('tableros')" id="psec-tableros" class="ptab">TABLEROS</button>
+    <%if(widgets&&widgets.length>0){%><button onclick="showSec('widgets')" id="psec-widgets" class="ptab">WIDGETS</button><%}%>
+  </div>
+
+  <!-- FAVORITOS -->
+  <div id="sec-favoritos" style="padding:28px 40px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px" class="pub-grid">
+      <%if(favoritos.length>0){favoritos.forEach(function(p){%>
+      <div class="product-card" onclick="window.location='/productos/<%=p.id%>'">
+        <div class="pc-label"><span class="pc-label-text"><%=p.titulo.substring(0,16)%></span></div>
+        <div class="pc-img-wrap"><div class="pc-img-clip"><img class="pc-img" src="/uploads/products/<%=p.imagen_principal%>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'"></div></div>
+        <div class="pc-info"><span class="pc-name"><%=p.titulo.substring(0,18)%></span><span class="pc-price">$<%=parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO')%></span></div>
+      </div>
+      <%})}else{%>
+      <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--gray)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px">SIN FAVORITOS PUBLICOS</div></div>
+      <%}%>
+    </div>
+  </div>
+
+  <!-- TABLEROS -->
+  <div id="sec-tableros" style="display:none;padding:28px 40px">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px" class="pub-grid-t">
+      <%if(tableros.length>0){tableros.forEach(function(t){%>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);overflow:hidden;transition:border-color 0.2s" onmouseover="this.style.borderColor='<%=cfgColor%>'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="height:70px;background:<%=t.color_portada||cfgColor%>;opacity:0.7"></div>
+        <div style="padding:14px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px"><%=t.nombre%></div>
+          <div style="font-size:11px;color:var(--gray);margin-top:3px"><%=t.total_pines||0%> pines</div>
+        </div>
+      </div>
+      <%})}else{%>
+      <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--gray)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px">SIN TABLEROS PUBLICOS</div></div>
+      <%}%>
+    </div>
+  </div>
+
+  <!-- WIDGETS -->
+  <%if(widgets&&widgets.length>0){%>
+  <div id="sec-widgets" style="display:none;padding:28px 40px">
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <%widgets.forEach(function(w){%>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid <%=cfgColor%>30;padding:16px;display:flex;align-items:center;gap:14px;min-width:220px;max-width:280px">
+        <%if(w.imagen_url){%><img src="<%=w.imagen_url%>" width="56" height="56" style="object-fit:cover;border-radius:8px;border:2px solid <%=cfgColor%>" onerror="this.style.display='none'"><%}%>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;color:<%=cfgColor%>"><%=w.tipo.toUpperCase()%></div>
+          <div style="font-size:14px;font-weight:700;color:var(--white);margin-top:2px"><%=w.titulo%></div>
+          <%if(w.subtitulo){%><div style="font-size:11px;color:var(--gray)"><%=w.subtitulo%></div><%}%>
+        </div>
+      </div>
+      <%})%>
+    </div>
+  </div>
+  <%}%>
+</div>
+
+<style>
+.ptab{padding:10px 18px;border:none;background:none;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap}
+.ptab:hover{color:var(--white)}
+.ptab-active{color:var(--pink)!important;border-bottom:2px solid var(--pink)!important}
+@media(max-width:768px){.pub-grid{grid-template-columns:repeat(2,1fr)!important}.pub-grid-t{grid-template-columns:1fr 1fr!important}div[style*="padding:28px 40px"]{padding:16px!important}}
+</style>
+<script>
+function showSec(s){['favoritos','tableros','widgets'].forEach(function(k){var p=document.getElementById('sec-'+k);var b=document.getElementById('psec-'+k);if(p)p.style.display=k===s?'block':'none';if(b)b.classList.toggle('ptab-active',k===s);});}
+
+<% if (user && user.id !== perfil.id) { %>
+async function accionAmistad() {
+  var btn = document.getElementById('friend-btn');
+  if (!btn) return;
+  var estado = btn.dataset.estado || 'ninguno';
+  if (estado === 'aceptada') { showToast('YA SON AMIGOS'); return; }
+  if (estado === 'pendiente') { showToast('SOLICITUD YA ENVIADA'); return; }
+  try {
+    var r = await fetch('/amigos/solicitud/<%=perfil.id%>', { method: 'POST' });
+    var d = await r.json();
+    if (d.success || d.estado === 'pendiente') {
+      btn.innerHTML = '<i class="bi bi-person-clock me-1"></i>PENDIENTE';
+      btn.dataset.estado = 'pendiente';
+      btn.style.color = '#ffc800'; btn.style.borderColor = '#ffc800';
+      showToast('¡SOLICITUD ENVIADA!');
+    } else { showToast(d.error || 'ERROR'); }
+  } catch(e) { showToast('ERROR DE RED'); }
+}
+<% } %>
+</script>
+<%- include('../partials/footer') %>
