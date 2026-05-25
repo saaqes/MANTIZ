@@ -1,0 +1,87 @@
+<%- include('../../partials/header', {isAdmin: true}) %>
+<div class="container-fluid py-4 px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold mb-0">Proveedores / Logística</h3>
+    <button class="btn btn-primary-mantiz rounded-3" onclick="document.getElementById('modalNuevo').style.display='flex'">
+      <i class="bi bi-plus me-2"></i>Nuevo proveedor
+    </button>
+  </div>
+  <% if (success && success.length) { %><div class="alert alert-success rounded-3 mb-4"><%= success[0] %></div><% } %>
+  
+  <div class="row g-3">
+    <% const tipoIcons = {almacen:'building',empaquetador:'box',transporte:'truck',aduana:'shield-check',entrega:'person-badge'}; %>
+    <% const tipoColors = {almacen:'#17a2b8',empaquetador:'#6f42c1',transporte:'#fd7e14',aduana:'#dc3545',entrega:'#28a745'}; %>
+    <% proveedores.forEach(p => { %>
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 rounded-4 shadow-sm p-4">
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width:44px;height:44px;background:<%= tipoColors[p.tipo]||'#999' %>22">
+            <i class="bi bi-<%= tipoIcons[p.tipo]||'person' %>" style="color:<%= tipoColors[p.tipo]||'#999' %>;font-size:1.2rem"></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="fw-semibold"><%= p.nombre %></div>
+            <span class="badge rounded-pill small" style="background:<%= tipoColors[p.tipo]||'#999' %>"><%= p.tipo %></span>
+          </div>
+          <span class="badge rounded-pill" style="background:<%= p.activo?'#28a745':'#6c757d' %>"><%= p.activo?'Activo':'Inactivo' %></span>
+        </div>
+        <% if (p.telefono) { %><div class="small mb-1"><i class="bi bi-telephone me-2" style="color:var(--color-primary)"></i><%= p.telefono %></div><% } %>
+        <% if (p.email) { %><div class="small mb-1"><i class="bi bi-envelope me-2" style="color:var(--color-primary)"></i><%= p.email %></div><% } %>
+        <% if (p.ciudad) { %><div class="small mb-3"><i class="bi bi-geo-alt me-2" style="color:var(--color-primary)"></i><%= p.ciudad %></div><% } %>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm rounded-3 flex-grow-1" onclick='editarProveedor(<%- JSON.stringify(p) %>)'>Editar</button>
+          <form action="/admin/proveedores/<%= p.id %>/eliminar" method="POST">
+            <button type="submit" class="btn btn-outline-danger btn-sm rounded-3" onclick="return confirm('¿Eliminar?')"><i class="bi bi-trash"></i></button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</div>
+
+<!-- Modal Nuevo/Editar -->
+<div id="modalNuevo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div class="card border-0 rounded-4 p-4 shadow-lg" style="max-width:500px;width:90%">
+    <div class="d-flex justify-content-between mb-3">
+      <h5 class="fw-bold mb-0" id="modalTitle">Nuevo proveedor</h5>
+      <button class="btn btn-sm btn-outline-secondary rounded-3" onclick="cerrarModal()">✕</button>
+    </div>
+    <form id="provForm" action="/admin/proveedores/nuevo" method="POST">
+      <input type="hidden" id="provId">
+      <div class="mb-3"><input type="text" name="nombre" id="provNombre" class="form-control rounded-3" placeholder="Nombre del proveedor" required></div>
+      <div class="mb-3">
+        <select name="tipo" id="provTipo" class="form-select rounded-3">
+          <option value="almacen">🏢 Almacén</option>
+          <option value="empaquetador">📦 Empaquetador</option>
+          <option value="transporte">🚚 Transporte</option>
+          <option value="aduana">🛂 Aduana</option>
+          <option value="entrega">🏠 Entrega final</option>
+        </select>
+      </div>
+      <div class="mb-3"><input type="tel" name="telefono" id="provTel" class="form-control rounded-3" placeholder="Teléfono"></div>
+      <div class="mb-3"><input type="email" name="email" id="provEmail" class="form-control rounded-3" placeholder="Email"></div>
+      <div class="mb-3"><input type="text" name="ciudad" id="provCiudad" class="form-control rounded-3" placeholder="Ciudad"></div>
+      <div class="mb-4 form-check"><input type="checkbox" name="activo" id="provActivo" class="form-check-input" checked><label class="form-check-label">Activo</label></div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary-mantiz flex-grow-1 rounded-3">Guardar</button>
+        <button type="button" class="btn btn-outline-secondary rounded-3" onclick="cerrarModal()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function cerrarModal() { document.getElementById('modalNuevo').style.display='none'; }
+function editarProveedor(p) {
+  document.getElementById('modalTitle').textContent = 'Editar proveedor';
+  document.getElementById('provForm').action = `/admin/proveedores/${p.id}/editar`;
+  document.getElementById('provNombre').value = p.nombre;
+  document.getElementById('provTipo').value = p.tipo;
+  document.getElementById('provTel').value = p.telefono||'';
+  document.getElementById('provEmail').value = p.email||'';
+  document.getElementById('provCiudad').value = p.ciudad||'';
+  document.getElementById('provActivo').checked = !!p.activo;
+  document.getElementById('modalNuevo').style.display='flex';
+}
+</script>
+<%- include('../../partials/footer', {isAdmin: true}) %>

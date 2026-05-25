@@ -1,0 +1,333 @@
+<%- include('../../partials/header', {isAdmin: true}) %>
+
+<style>
+.mapa-wrapper{display:grid;grid-template-columns:340px 1fr;gap:0;height:calc(100vh - 130px);min-height:500px;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.tiendas-panel{background:var(--dark2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-header-title{font-family:var(--fd);font-size:.72rem;font-weight:800;letter-spacing:2px;color:var(--cp)}
+.tiendas-list{flex:1;overflow-y:auto;padding:8px}
+.tienda-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .2s;margin-bottom:8px;border-left:3px solid transparent}
+.tienda-item:hover{border-color:rgba(233,30,140,.4);background:rgba(233,30,140,.04)}
+.tienda-item.activa{border-left-color:var(--cp)}
+.tienda-item.inactiva{border-left-color:#5a5a7a;opacity:.6}
+.tienda-item.selected{border-color:var(--cp);background:rgba(233,30,140,.08)}
+.tienda-name{font-family:var(--fb);font-weight:700;font-size:.9rem;color:var(--text)}
+.tienda-meta{font-family:var(--fm);font-size:.62rem;color:var(--muted);margin-top:3px}
+.tienda-actions{display:flex;gap:5px;margin-top:8px}
+.t-btn{border:none;border-radius:5px;padding:4px 10px;font-family:var(--fb);font-weight:700;font-size:.7rem;cursor:pointer;transition:all .2s}
+.t-btn-edit{background:rgba(0,200,255,.1);color:#00c8ff;border:1px solid rgba(0,200,255,.2)}
+.t-btn-del{background:rgba(255,60,60,.08);color:#ff6060;border:1px solid rgba(255,60,60,.18)}
+.t-btn-toggle{background:rgba(255,200,0,.1);color:#ffc800;border:1px solid rgba(255,200,0,.2)}
+#mapaAdmin{height:100%;width:100%}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:flex-start;justify-content:flex-end;padding:20px;backdrop-filter:blur(6px)}
+.modal-overlay.show{display:flex}
+.modal-drawer{background:var(--dark2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:420px;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.9)}
+.modal-header-d{padding:20px 24px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--dark2);z-index:2}
+.modal-body-d{padding:20px 24px 24px}
+#pickMapContainer{position:relative;height:260px;border-radius:10px;overflow:hidden;border:2px solid var(--cp);box-shadow:0 0 0 3px rgba(233,30,140,.15);margin-bottom:6px}
+#pickMap{height:100%;width:100%}
+.pick-hint{background:rgba(233,30,140,.08);border:1px solid rgba(233,30,140,.2);border-radius:6px;padding:7px 12px;font-family:var(--fm);font-size:.62rem;color:rgba(233,30,140,.9);margin-bottom:8px}
+.coords-display{background:var(--dark3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-family:var(--fm);font-size:.65rem;color:var(--cp);text-align:center;margin-top:4px;margin-bottom:12px}
+.search-place-wrap{position:relative;margin-bottom:8px}
+.search-place-input{background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px 8px 36px;font-family:var(--fb);font-size:.85rem;width:100%;outline:none}
+.search-place-input:focus{border-color:var(--cp)}
+.search-icon-abs{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search-dd{position:absolute;top:100%;left:0;right:0;background:var(--dark2);border:1px solid var(--border);border-radius:0 0 8px 8px;z-index:10000;max-height:180px;overflow-y:auto;display:none}
+.search-dd-item{padding:10px 14px;cursor:pointer;font-family:var(--fb);font-size:.82rem;color:var(--text);border-bottom:1px solid var(--border);transition:background .15s}
+.search-dd-item:hover{background:rgba(233,30,140,.1)}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <div style="font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:2px">GESTIÓN / TIENDAS</div>
+    <div style="font-family:var(--fd);font-size:1.1rem;font-weight:800;color:var(--text)">Mapa de Sucursales</div>
+  </div>
+  <button class="btn btn-pm btn-sm" onclick="openModal()">
+    <i class="bi bi-plus-lg me-1"></i>Añadir Tienda
+  </button>
+</div>
+
+<div class="mapa-wrapper">
+  <div class="tiendas-panel">
+    <div class="panel-header">
+      <div class="panel-header-title mb-2">◈ SUCURSALES (<%= tiendas.length %>)</div>
+      <input type="text" id="buscarTienda" class="form-control form-control-sm" placeholder="🔍 Buscar tienda...">
+    </div>
+    <div class="tiendas-list" id="listaTiendas">
+      <% if (!tiendas.length) { %>
+        <div style="text-align:center;padding:40px 20px;color:var(--muted)">
+          <i class="bi bi-shop" style="font-size:1.8rem;display:block;margin-bottom:8px"></i>
+          <div style="font-family:var(--fb);font-size:.85rem">No hay tiendas registradas</div>
+        </div>
+      <% } %>
+      <% tiendas.forEach(t => { %>
+      <div class="tienda-item <%= t.activa ? 'activa':'inactiva' %>" id="tc-<%= t.id %>"
+           onclick="focusTienda(<%= t.latitud %>, <%= t.longitud %>, <%= t.id %>)">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="tienda-name"><%= t.nombre %></div>
+          <span style="font-family:var(--fm);font-size:.55rem;padding:2px 7px;border-radius:4px;background:<%= t.activa?'rgba(0,255,100,.1)':'rgba(90,90,122,.15)' %>;color:<%= t.activa?'#00ff64':'var(--muted)' %>">
+            <%= t.activa?'ACTIVA':'CERRADA' %>
+          </span>
+        </div>
+        <div class="tienda-meta">
+          <% if(t.ciudad){%><i class="bi bi-geo-alt me-1"></i><%= t.ciudad %><% } %>
+          <% if(t.telefono){%> · <i class="bi bi-telephone me-1"></i><%= t.telefono %><% } %>
+        </div>
+        <% if(t.horario){%><div class="tienda-meta"><i class="bi bi-clock me-1"></i><%= t.horario %></div><% } %>
+        <div class="tienda-actions">
+          <button class="t-btn t-btn-edit" onclick="event.stopPropagation();openEditModal(<%- JSON.stringify(t) %>)"><i class="bi bi-pencil me-1"></i>Editar</button>
+          <button class="t-btn t-btn-toggle" onclick="event.stopPropagation();toggleTienda(<%= t.id %>)"><i class="bi bi-<%= t.activa?'eye-slash':'eye' %> me-1"></i><%= t.activa?'Cerrar':'Abrir' %></button>
+          <button class="t-btn t-btn-del" onclick="event.stopPropagation();deleteTienda(<%= t.id %>)"><i class="bi bi-trash"></i></button>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <div id="mapaAdmin"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="tiendaModal">
+  <div class="modal-drawer">
+    <div class="modal-header-d">
+      <div class="d-flex justify-content-between align-items-center">
+        <div style="font-family:var(--fd);font-size:.8rem;letter-spacing:2px;color:var(--cp)" id="modalTitle"><i class="bi bi-shop me-2"></i>NUEVA TIENDA</div>
+        <button style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+    <div class="modal-body-d">
+      <label class="form-label">Buscar ubicación</label>
+      <div class="search-place-wrap">
+        <i class="bi bi-search search-icon-abs"></i>
+        <input type="text" id="searchPlaceInput" class="search-place-input"
+               placeholder="Busca una dirección, ciudad, lugar..."
+               oninput="searchPlace(this.value)" autocomplete="off">
+        <div class="search-dd" id="searchDropdown"></div>
+      </div>
+      <div class="pick-hint"><i class="bi bi-crosshair me-1"></i>Haz clic en el mapa o arrastra el pin para ubicar la tienda</div>
+      <div id="pickMapContainer"><div id="pickMap"></div></div>
+      <div class="coords-display" id="coordsDisplay"><i class="bi bi-pin-map me-1"></i>Selecciona la ubicación en el mapa</div>
+
+      <input type="hidden" id="tiendaEditId">
+      <input type="hidden" id="tLat">
+      <input type="hidden" id="tLng">
+
+      <div class="row g-3">
+        <div class="col-12"><label class="form-label">Nombre *</label><input type="text" id="tNombre" class="form-control" placeholder="Ej: Mantiz Centro"></div>
+        <div class="col-12"><label class="form-label">Dirección</label><input type="text" id="tDireccion" class="form-control" placeholder="Calle, número"></div>
+        <div class="col-md-6"><label class="form-label">Ciudad</label><input type="text" id="tCiudad" class="form-control"></div>
+        <div class="col-md-6"><label class="form-label">País</label><input type="text" id="tPais" class="form-control" value="Colombia"></div>
+        <div class="col-md-6"><label class="form-label">Teléfono</label><input type="tel" id="tTel" class="form-control"></div>
+        <div class="col-md-6"><label class="form-label">Email</label><input type="email" id="tEmail" class="form-control"></div>
+        <div class="col-12"><label class="form-label">Horario</label><input type="text" id="tHorario" class="form-control" placeholder="Lun-Sáb 9:00am-8:00pm"></div>
+        <div class="col-12">
+          <label class="d-flex align-items-center gap-2" style="cursor:pointer">
+            <input type="checkbox" id="tActiva" checked style="width:18px;height:18px;accent-color:var(--cp)">
+            <span style="font-family:var(--fb);font-weight:600">Tienda activa / abierta</span>
+          </label>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-pm flex-grow-1" onclick="saveTienda()"><i class="bi bi-check2-circle me-1"></i>Guardar Tienda</button>
+        <button class="btn btn-om" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const tiendasData = <%- JSON.stringify(tiendas) %>;
+let mapaMain, pickMap, markers = {}, pickMarker = null;
+let pickLat = null, pickLng = null, searchTimeout = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  mapaMain = L.map('mapaAdmin').setView([4.6,-74.0],6);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'©OSM ©Carto',maxZoom:19}).addTo(mapaMain);
+  renderMainMarkers();
+  document.getElementById('buscarTienda').addEventListener('input',function(){
+    const q=this.value.toLowerCase();
+    document.querySelectorAll('.tienda-item').forEach(el=>el.style.display=el.textContent.toLowerCase().includes(q)?'':'none');
+  });
+});
+
+function makePinIcon(color){
+  return L.divIcon({html:`<svg width="28" height="36" viewBox="0 0 32 40"><path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24S32 26 32 16C32 7.163 24.837 0 16 0z" fill="${color}"/><circle cx="16" cy="16" r="7" fill="white"/><circle cx="16" cy="16" r="4" fill="${color}"/></svg>`,iconSize:[28,36],iconAnchor:[14,36],className:''});
+}
+
+function renderMainMarkers(){
+  Object.values(markers).forEach(m=>mapaMain.removeLayer(m));
+  markers={};
+  tiendasData.forEach(t=>{
+    if(!t.latitud||!t.longitud)return;
+    const m=L.marker([t.latitud,t.longitud],{icon:makePinIcon(t.activa?'#e91e8c':'#5a5a7a')}).addTo(mapaMain);
+    m.bindPopup(`<div style="font-family:'Rajdhani',sans-serif;min-width:150px"><div style="font-weight:700;color:#e91e8c;margin-bottom:4px">${t.nombre}</div>${t.direccion?`<div style="font-size:.8rem">${t.direccion}</div>`:''}${t.telefono?`<div style="font-size:.8rem">📞 ${t.telefono}</div>`:''}${t.horario?`<div style="font-size:.75rem;color:#888">🕐 ${t.horario}</div>`:''}</div>`);
+    markers[t.id]=m;
+  });
+}
+
+function focusTienda(lat,lng,id){
+  mapaMain.setView([lat,lng],16,{animate:true});
+  if(markers[id])markers[id].openPopup();
+  document.querySelectorAll('.tienda-item').forEach(el=>el.classList.remove('selected'));
+  const c=document.getElementById(`tc-${id}`);
+  if(c){c.classList.add('selected');c.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+
+function openModal(tienda=null){
+  document.getElementById('tiendaEditId').value='';
+  ['tNombre','tDireccion','tCiudad','tTel','tEmail','tHorario','tLat','tLng'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('tPais').value='Colombia';
+  document.getElementById('tActiva').checked=true;
+  document.getElementById('modalTitle').innerHTML='<i class="bi bi-shop me-2"></i>NUEVA TIENDA';
+  document.getElementById('coordsDisplay').innerHTML='<i class="bi bi-pin-map me-1"></i>Selecciona la ubicación en el mapa';
+  pickLat=null;pickLng=null;
+  document.getElementById('tiendaModal').classList.add('show');
+  setTimeout(()=>initPickMap(null),100);
+}
+
+function openEditModal(t){
+  document.getElementById('tiendaEditId').value=t.id;
+  document.getElementById('tNombre').value=t.nombre||'';
+  document.getElementById('tDireccion').value=t.direccion||'';
+  document.getElementById('tCiudad').value=t.ciudad||'';
+  document.getElementById('tPais').value=t.pais||'Colombia';
+  document.getElementById('tTel').value=t.telefono||'';
+  document.getElementById('tEmail').value=t.email||'';
+  document.getElementById('tHorario').value=t.horario||'';
+  document.getElementById('tActiva').checked=!!t.activa;
+  document.getElementById('tLat').value=t.latitud||'';
+  document.getElementById('tLng').value=t.longitud||'';
+  pickLat=parseFloat(t.latitud)||null;
+  pickLng=parseFloat(t.longitud)||null;
+  document.getElementById('modalTitle').innerHTML='<i class="bi bi-pencil-square me-2"></i>EDITAR TIENDA';
+  if(pickLat&&pickLng)document.getElementById('coordsDisplay').innerHTML=`<i class="bi bi-pin-map-fill me-1" style="color:var(--cp)"></i>${pickLat.toFixed(5)}, ${pickLng.toFixed(5)} ✓`;
+  document.getElementById('tiendaModal').classList.add('show');
+  setTimeout(()=>initPickMap(t),100);
+}
+
+function closeModal(){
+  document.getElementById('tiendaModal').classList.remove('show');
+  if(pickMap){pickMap.remove();pickMap=null;pickMarker=null;}
+  document.getElementById('searchDropdown').style.display='none';
+  document.getElementById('searchPlaceInput').value='';
+}
+
+function initPickMap(tienda){
+  if(pickMap){pickMap.remove();pickMap=null;pickMarker=null;}
+  const center=(tienda&&tienda.latitud)?[parseFloat(tienda.latitud),parseFloat(tienda.longitud)]:[4.6,-74.0];
+  const zoom=(tienda&&tienda.latitud)?15:6;
+  pickMap=L.map('pickMap',{zoomControl:true}).setView(center,zoom);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'©OSM ©Carto',maxZoom:19}).addTo(pickMap);
+  if(tienda&&tienda.latitud&&tienda.longitud){
+    pickMarker=L.marker([tienda.latitud,tienda.longitud],{icon:makePinIcon('#e91e8c'),draggable:true}).addTo(pickMap);
+    pickMarker.on('dragend',e=>{const p=e.target.getLatLng();setPickLoc(p.lat,p.lng);revGeo(p.lat,p.lng);});
+  }
+  pickMap.on('click',e=>{
+    const{lat,lng}=e.latlng;
+    if(pickMarker)pickMarker.setLatLng([lat,lng]);
+    else{
+      pickMarker=L.marker([lat,lng],{icon:makePinIcon('#e91e8c'),draggable:true}).addTo(pickMap);
+      pickMarker.on('dragend',ev=>{const p=ev.target.getLatLng();setPickLoc(p.lat,p.lng);revGeo(p.lat,p.lng);});
+    }
+    setPickLoc(lat,lng);revGeo(lat,lng);
+  });
+}
+
+function setPickLoc(lat,lng){
+  pickLat=lat;pickLng=lng;
+  document.getElementById('tLat').value=lat.toFixed(7);
+  document.getElementById('tLng').value=lng.toFixed(7);
+  document.getElementById('coordsDisplay').innerHTML=`<i class="bi bi-pin-map-fill me-1" style="color:var(--cp)"></i><strong>${lat.toFixed(5)}</strong>, <strong>${lng.toFixed(5)}</strong> <span style="color:var(--muted)">— ubicación seleccionada ✓</span>`;
+}
+
+async function revGeo(lat,lng){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+    const d=await r.json();
+    if(d.address){
+      const a=d.address;
+      const street=[a.road,a.house_number].filter(Boolean).join(' ');
+      const city=a.city||a.town||a.village||a.county||'';
+      if(street&&!document.getElementById('tDireccion').value)document.getElementById('tDireccion').value=street;
+      if(city&&!document.getElementById('tCiudad').value)document.getElementById('tCiudad').value=city;
+      if(a.country&&!document.getElementById('tPais').value)document.getElementById('tPais').value=a.country;
+    }
+  }catch(e){}
+}
+
+function searchPlace(q){
+  clearTimeout(searchTimeout);
+  const dd=document.getElementById('searchDropdown');
+  if(!q||q.length<3){dd.style.display='none';return;}
+  searchTimeout=setTimeout(async()=>{
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6`);
+      const res=await r.json();
+      if(!res.length){dd.style.display='none';return;}
+      dd.innerHTML=res.map(x=>`<div class="search-dd-item" onclick="selectPlace(${x.lat},${x.lon})"><i class="bi bi-geo-alt me-1" style="color:var(--cp)"></i>${x.display_name}</div>`).join('');
+      dd.style.display='block';
+    }catch(e){dd.style.display='none';}
+  },400);
+}
+
+function selectPlace(lat,lng){
+  lat=parseFloat(lat);lng=parseFloat(lng);
+  if(pickMap){
+    pickMap.setView([lat,lng],16,{animate:true});
+    if(pickMarker)pickMarker.setLatLng([lat,lng]);
+    else{
+      pickMarker=L.marker([lat,lng],{icon:makePinIcon('#e91e8c'),draggable:true}).addTo(pickMap);
+      pickMarker.on('dragend',e=>{const p=e.target.getLatLng();setPickLoc(p.lat,p.lng);revGeo(p.lat,p.lng);});
+    }
+  }
+  setPickLoc(lat,lng);revGeo(lat,lng);
+  document.getElementById('searchDropdown').style.display='none';
+  document.getElementById('searchPlaceInput').value='';
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.search-place-wrap'))document.getElementById('searchDropdown').style.display='none';
+});
+
+async function saveTienda(){
+  const nombre=document.getElementById('tNombre').value.trim();
+  const lat=document.getElementById('tLat').value;
+  const lng=document.getElementById('tLng').value;
+  if(!nombre){showToast('El nombre es obligatorio','error');return;}
+  if(!lat||!lng){showToast('Selecciona una ubicación en el mapa','error');return;}
+  const id=document.getElementById('tiendaEditId').value;
+  const data={nombre,direccion:document.getElementById('tDireccion').value,ciudad:document.getElementById('tCiudad').value,pais:document.getElementById('tPais').value,latitud:lat,longitud:lng,telefono:document.getElementById('tTel').value,email:document.getElementById('tEmail').value,horario:document.getElementById('tHorario').value,activa:document.getElementById('tActiva').checked?1:0};
+  try{
+    const r=await fetch(id?`/admin/tiendas/${id}/editar`:'/admin/tiendas/nueva',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const d=await r.json();
+    if(d.success){showToast(id?'Tienda actualizada ✓':'Tienda creada ✓','success');closeModal();setTimeout(()=>location.reload(),700);}
+    else showToast('Error: '+(d.error||'desconocido'),'error');
+  }catch(e){showToast('Error de conexión','error');}
+}
+
+async function deleteTienda(id){
+  if(!confirm('¿Eliminar esta tienda?'))return;
+  try{
+    const r=await fetch(`/admin/tiendas/${id}/eliminar`,{method:'POST',headers:{'Content-Type':'application/json'}});
+    const d=await r.json();
+    if(d.success){showToast('Tienda eliminada','success');setTimeout(()=>location.reload(),600);}
+    else showToast('Error al eliminar','error');
+  }catch(e){showToast('Error','error');}
+}
+
+async function toggleTienda(id){
+  try{
+    const r=await fetch(`/admin/tiendas/${id}/toggle`,{method:'POST',headers:{'Content-Type':'application/json'}});
+    const d=await r.json();
+    if(d.success){showToast('Estado actualizado','success');setTimeout(()=>location.reload(),500);}
+  }catch(e){showToast('Error','error');}
+}
+
+function showToast(msg,type){
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;background:${type==='success'?'rgba(0,255,100,.15)':'rgba(255,60,60,.15)'};color:${type==='success'?'#00ff64':'#ff6060'};border:1px solid ${type==='success'?'rgba(0,255,100,.3)':'rgba(255,60,60,.3)'};padding:12px 24px;border-radius:8px;font-family:var(--fb);font-weight:700;font-size:.85rem;backdrop-filter:blur(10px)`;
+  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+</script>
+
+<%- include('../../partials/footer') %>
