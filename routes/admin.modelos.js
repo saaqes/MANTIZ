@@ -87,7 +87,8 @@ router.post('/:id/principal', isAdmin, async (req, res) => {
   await db.query('INSERT INTO homepage_config (clave, valor) VALUES (?,?) ON DUPLICATE KEY UPDATE valor=VALUES(valor)',
     ['viewer3d_modelo_id', req.params.id]);
   req.flash('success', 'Modelo establecido como principal en el inicio');
-  res.redirect('/admin/modelos');
+  const dest = req.body.returnTo === '/admin/homepage' ? '/admin/homepage' : '/admin/modelos';
+  res.redirect(dest);
 });
 
 // DELETE model
