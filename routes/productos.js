@@ -31,6 +31,20 @@ router.get('/', async (req, res) => {
 });
 
 // DETALLE DE PRODUCTO
+// API para recomendaciones IA
+router.get('/api/:id', async (req, res) => {
+  try {
+    const [[p]] = await db.query(
+      'SELECT id, titulo, imagen_principal, precio, precio_descuento, categoria FROM productos WHERE id=? AND activo=1',
+      [req.params.id]
+    );
+    if (!p) return res.status(404).json({ error: 'No encontrado' });
+    res.json(p);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const [[producto]] = await db.query(
