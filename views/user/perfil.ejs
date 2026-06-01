@@ -557,11 +557,6 @@ async function quitarFav(id, btn) {
   } catch(e) {}
 }
 
-    var d = await r.json();
-    if (d.success && card) { card.style.transition='all 0.4s'; card.style.opacity='0'; setTimeout(function(){card.remove();},400); }
-  } catch(e) {}
-}
-
 // ── MENÚ 3 PUNTOS TABLERO ─────────────────────────────────
 function toggleTbMenu(id, e) {
   e.stopPropagation();

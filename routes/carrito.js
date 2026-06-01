@@ -35,36 +35,40 @@ router.post('/agregar', async (req, res) => {
   const { producto_id, talla, cantidad } = req.body;
   const usuarioId = req.session.user.id;
   const cant = parseInt(cantidad) || 1;
-  
+  const tallaVal = (talla && talla.trim() !== '') ? talla.trim() : '';
+
   if (!producto_id) {
     return res.status(400).json({ error: 'Producto inválido' });
   }
-  
+
   try {
-    // Si hay talla, verificar stock
-    if (talla && talla.trim() !== '') {
+    // Verificar stock solo si el producto maneja tallas
+    let stockDisponible = null;
+    if (tallaVal !== '') {
       const [[tallaInfo]] = await db.query(
         'SELECT stock FROM producto_tallas WHERE producto_id = ? AND talla = ?',
-        [producto_id, talla]
+        [producto_id, tallaVal]
       );
       if (!tallaInfo) {
         return res.status(400).json({ error: 'Talla no disponible para este producto' });
       }
-      if (tallaInfo.stock < cant) {
-        return res.status(400).json({ error: `Stock insuficiente. Solo quedan ${tallaInfo.stock} unidades` });
+      stockDisponible = tallaInfo.stock;
+      if (stockDisponible < cant) {
+        return res.status(400).json({ error: `Stock insuficiente. Solo quedan ${stockDisponible} unidades` });
       }
     }
-    
-    // Insertar o actualizar carrito
+
+    // Buscar si ya existe en el carrito
     const [[existing]] = await db.query(
       'SELECT id, cantidad FROM carrito WHERE usuario_id = ? AND producto_id = ? AND talla = ?',
-      [usuarioId, producto_id, talla]
+      [usuarioId, producto_id, tallaVal]
     );
-    
+
     if (existing) {
       const nuevaCant = existing.cantidad + cant;
-      if (nuevaCant > tallaInfo.stock) {
-        return res.status(400).json({ error: `No puedes agregar más. Stock disponible: ${tallaInfo.stock}` });
+      // Solo validar stock si el producto tiene tallas
+      if (stockDisponible !== null && nuevaCant > stockDisponible) {
+        return res.status(400).json({ error: `No puedes agregar más. Stock disponible: ${stockDisponible}` });
       }
       await db.query(
         'UPDATE carrito SET cantidad = ?, actualizado_en = NOW() WHERE id = ?',
@@ -73,16 +77,16 @@ router.post('/agregar', async (req, res) => {
     } else {
       await db.query(
         'INSERT INTO carrito (usuario_id, producto_id, talla, cantidad) VALUES (?,?,?,?)',
-        [usuarioId, producto_id, talla, cant]
+        [usuarioId, producto_id, tallaVal, cant]
       );
     }
-    
+
     // Contar total items
     const [[count]] = await db.query(
       'SELECT SUM(cantidad) as total FROM carrito WHERE usuario_id = ?',
       [usuarioId]
     );
-    
+
     res.json({ success: true, carritoCount: count.total || 0, message: '¡Producto añadido al carrito!' });
   } catch(e) {
     console.error('Error carrito:', e);
@@ -94,23 +98,29 @@ router.post('/agregar', async (req, res) => {
 router.post('/actualizar', isAuthenticated, async (req, res) => {
   const { item_id, cantidad } = req.body;
   const cant = parseInt(cantidad);
-  
+
   if (cant < 1) {
     return res.status(400).json({ error: 'Cantidad inválida' });
   }
-  
+
   try {
+    // Buscar item y verificar stock si tiene talla
     const [[item]] = await db.query(
-      'SELECT c.*, pt.stock FROM carrito c JOIN producto_tallas pt ON pt.producto_id = c.producto_id AND pt.talla = c.talla WHERE c.id = ? AND c.usuario_id = ?',
+      `SELECT c.*,
+              COALESCE(pt.stock, 9999) as stock
+       FROM carrito c
+       LEFT JOIN producto_tallas pt ON pt.producto_id = c.producto_id AND pt.talla = c.talla
+       WHERE c.id = ? AND c.usuario_id = ?`,
       [item_id, req.session.user.id]
     );
-    
+
     if (!item) return res.status(404).json({ error: 'Item no encontrado' });
     if (cant > item.stock) return res.status(400).json({ error: `Stock máximo: ${item.stock}` });
-    
+
     await db.query('UPDATE carrito SET cantidad = ? WHERE id = ?', [cant, item_id]);
     res.json({ success: true });
   } catch(e) {
+    console.error('Error actualizar carrito:', e);
     res.status(500).json({ error: 'Error al actualizar' });
   }
 });
@@ -122,6 +132,9 @@ router.post('/eliminar/:id', isAuthenticated, async (req, res) => {
       'DELETE FROM carrito WHERE id = ? AND usuario_id = ?',
       [req.params.id, req.session.user.id]
     );
+    // Si viene de fetch (JSON), responder JSON; si viene de form, redirigir
+    const isJson = req.headers['content-type']?.includes('application/json') || req.headers.accept?.includes('application/json');
+    if (isJson) return res.json({ success: true });
     req.flash('success', 'Producto eliminado del carrito');
     res.redirect('/carrito');
   } catch(e) {

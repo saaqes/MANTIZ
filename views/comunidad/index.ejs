@@ -66,7 +66,6 @@
   </p>
 </div>
 
-<!-- TABS -->
 <div class="comunidad-tabs">
   <a class="com-tab active" onclick="cambiarTab('tableros',this)">TABLEROS</a>
   <a class="com-tab" onclick="cambiarTab('imagenes',this)">IMÁGENES</a>
@@ -74,9 +73,8 @@
   <a class="com-tab" onclick="cambiarTab('usuarios',this)">USUARIOS</a>
 </div>
 
-<!-- TABLEROS -->
 <div class="com-section active" id="tab-tableros">
-  <% if (!tableros || tableros.length === 0) { %>
+  <% if (!locals.tableros || tableros.length === 0) { %>
     <div style="text-align:center;padding:60px;color:var(--muted)">No hay tableros públicos aún</div>
   <% } else { %>
   <div class="boards-grid">
@@ -105,7 +103,7 @@
         <button class="react-btn" onclick="reaccionar(<%= t.id %>,'fuego',this)" title="Fuego">🔥</button>
         <button class="react-btn" onclick="reaccionar(<%= t.id %>,'love',this)" title="Love">❤️</button>
         <button class="react-btn" onclick="reaccionar(<%= t.id %>,'wow',this)" title="Wow">😮</button>
-        <% if (user) { %>
+        <% if (locals.user) { %>
         <button class="save-btn" id="save-<%= t.id %>" onclick="guardarTablero(<%= t.id %>)">
           <i class="bi bi-bookmark"></i> GUARDAR
         </button>
@@ -117,9 +115,8 @@
   <% } %>
 </div>
 
-<!-- IMÁGENES -->
 <div class="com-section" id="tab-imagenes">
-  <% if (!imagenes || imagenes.length === 0) { %>
+  <% if (!locals.imagenes || imagenes.length === 0) { %>
     <div style="text-align:center;padding:60px;color:var(--muted)">Sin imágenes aún</div>
   <% } else { %>
   <div class="imagenes-masonry">
@@ -132,9 +129,8 @@
   <% } %>
 </div>
 
-<!-- STICKERS -->
 <div class="com-section" id="tab-stickers">
-  <% if (!stickers || stickers.length === 0) { %>
+  <% if (!locals.stickers || stickers.length === 0) { %>
     <div style="text-align:center;padding:60px;color:var(--muted)">No hay stickers disponibles</div>
   <% } else {
     const cats = [...new Set(stickers.map(s => s.categoria))];
@@ -151,7 +147,7 @@
     <% }) %>
   </div>
 
-  <% if (user) { %>
+  <% if (locals.user) { %>
   <div style="margin-top:40px;padding:24px;border:1px solid var(--border);max-width:400px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:16px">SUBIR MI STICKER</div>
     <form id="stickerForm">
@@ -165,12 +161,12 @@
     </form>
   </div>
   <% } %>
+  <% } %>
 </div>
 
-<!-- USUARIOS -->
 <div class="com-section" id="tab-usuarios">
   <div class="users-grid">
-    <% if (!usuarios || usuarios.length === 0) { %>
+    <% if (!locals.usuarios || usuarios.length === 0) { %>
       <div style="text-align:center;padding:60px;color:var(--muted);grid-column:1/-1">Sin usuarios destacados</div>
     <% } else { usuarios.forEach(u => { %>
     <a href="/u/<%= u.username %>" class="user-card">
@@ -203,25 +199,31 @@ function cambiarTab(id, el) {
 }
 
 async function reaccionar(tableroId, tipo, btn) {
-  <% if (!user) { %>
-  window.location='/auth/login'; return;
-  <% } %>
+  const isLoggedIn = <%= locals.user ? 'true' : 'false' %>;
+  if (!isLoggedIn) {
+    window.location = '/auth/login';
+    return;
+  }
+  
   try {
     const r = await fetch(`/comunidad/tablero/${tableroId}/reaccion`, {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
+      method: 'POST', 
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ tipo })
     });
     const d = await r.json();
     btn.classList.toggle('active', !!d.reaccion);
-    // Registrar vista
     fetch(`/comunidad/tablero/${tableroId}/vista`, { method: 'POST' }).catch(()=>{});
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 async function guardarTablero(id) {
-  <% if (!user) { %>
-  window.location='/auth/login'; return;
-  <% } %>
+  const isLoggedIn = <%= locals.user ? 'true' : 'false' %>;
+  if (!isLoggedIn) {
+    window.location = '/auth/login';
+    return;
+  }
+
   try {
     const r = await fetch(`/comunidad/tablero/${id}/guardar`, { method: 'POST' });
     const d = await r.json();
@@ -232,8 +234,8 @@ async function guardarTablero(id) {
         ? '<i class="bi bi-bookmark-check-fill"></i> GUARDADO'
         : '<i class="bi bi-bookmark"></i> GUARDAR';
     }
-    showToast(d.guardado ? '¡TABLERO GUARDADO!' : 'TABLERO REMOVIDO');
-  } catch(e) {}
+    if(typeof showToast === 'function') showToast(d.guardado ? '¡TABLERO GUARDADO!' : 'TABLERO REMOVIDO');
+  } catch(e) { console.error(e); }
 }
 
 // Registrar vistas al ver tableros
@@ -259,9 +261,9 @@ if (stickerForm) {
     try {
       const r = await fetch('/comunidad/stickers/subir', { method: 'POST', body: fd });
       const d = await r.json();
-      showToast(d.success ? 'STICKER ENVIADO PARA REVISIÓN' : 'ERROR AL SUBIR');
+      if(typeof showToast === 'function') showToast(d.success ? 'STICKER ENVIADO PARA REVISIÓN' : 'ERROR AL SUBIR');
       if (d.success) stickerForm.reset();
-    } catch(e) { showToast('ERROR DE RED'); }
+    } catch(e) { if(typeof showToast === 'function') showToast('ERROR DE RED'); }
   });
 }
 </script>

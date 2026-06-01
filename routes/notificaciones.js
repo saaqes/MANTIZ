@@ -44,7 +44,7 @@ router.post('/leer-todas', isAuthenticated, async (req, res) => {
 });
 
 // ─── ADMIN: enviar notificación masiva ───────────────────────────────────────
-router.post('/admin/broadcast', isAdmin, async (req, res) => {
+router.post('/broadcast', isAdmin, async (req, res) => {
   const { titulo, mensaje, tipo, enlace, icono, color } = req.body;
   try {
     const [usuarios] = await db.query('SELECT id FROM usuarios WHERE activo=1');
@@ -101,10 +101,8 @@ router.post('/comentario/:id/like', isAuthenticated, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-module.exports = router;
-
 // ─── ADMIN: página de gestión de notificaciones ──────────────────────────────
-router.get('/admin', isAdmin, async (req, res) => {
+router.get('/', isAdmin, async (req, res) => {
   try {
     const [pendStickers] = await db.query(
       'SELECT s.*, u.nombre_visible FROM stickers s LEFT JOIN usuarios u ON s.subido_por=u.id WHERE s.moderado=0 ORDER BY s.creado_en DESC'
@@ -124,7 +122,7 @@ router.get('/admin', isAdmin, async (req, res) => {
 });
 
 // ─── ADMIN: stickers pendientes API ──────────────────────────────────────────
-router.get('/admin/stickers', isAdmin, async (req, res) => {
+router.get('/stickers', isAdmin, async (req, res) => {
   try {
     const [stickers] = await db.query(
       'SELECT s.*, u.nombre_visible FROM stickers s LEFT JOIN usuarios u ON s.subido_por=u.id WHERE s.moderado=0'
@@ -134,7 +132,9 @@ router.get('/admin/stickers', isAdmin, async (req, res) => {
 });
 
 // ─── ADMIN: rechazar/eliminar sticker ────────────────────────────────────────
-router.post('/admin/stickers/:id/rechazar', isAdmin, async (req, res) => {
+router.post('/stickers/:id/rechazar', isAdmin, async (req, res) => {
   await db.query('DELETE FROM stickers WHERE id=?', [req.params.id]);
   res.json({ success: true });
 });
+
+module.exports = router;

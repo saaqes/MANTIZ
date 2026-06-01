@@ -153,11 +153,29 @@ async function toggleComment(id, btn) {
 
 async function deleteComment(id, btn) {
   if (!confirm('¿Eliminar este comentario definitivamente?')) return;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
   try {
     const res = await fetch(`/admin/comentarios/${id}/eliminar`, {method:'POST', headers:{'Content-Type':'application/json'}});
-    const data = await res.json();
-    if (data.success) document.getElementById(`comment-${id}`).remove();
-  } catch(e) { alert('Error al eliminar'); }
+    let data;
+    const text = await res.text();
+    try { data = JSON.parse(text); } catch { data = {}; }
+    if (res.ok && data.success) {
+      const card = document.getElementById(`comment-${id}`);
+      card.style.transition = 'all 0.3s';
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(20px)';
+      setTimeout(() => card.remove(), 300);
+    } else {
+      alert('Error al eliminar: ' + (data.error || 'HTTP ' + res.status + ' - La ruta no existe en el servidor'));
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-trash"></i>';
+    }
+  } catch(e) {
+    alert('Error de red: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-trash"></i>';
+  }
 }
 
 async function sendReply(id) {

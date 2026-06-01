@@ -290,16 +290,80 @@ router.get('/usuarios', isAdmin, async (req, res) => {
 });
 
 router.post('/usuarios/:id/toggle', isAdmin, async (req, res) => {
-  const [[u]] = await db.query('SELECT activo FROM usuarios WHERE id=?', [req.params.id]);
-  await db.query('UPDATE usuarios SET activo=? WHERE id=?', [u.activo ? 0 : 1, req.params.id]);
-  res.json({ success: true, activo: !u.activo });
+  try {
+    const [[u]] = await db.query('SELECT activo FROM usuarios WHERE id=?', [req.params.id]);
+    if (!u) return res.json({ success: false, error: 'Usuario no encontrado' });
+    await db.query('UPDATE usuarios SET activo=? WHERE id=?', [u.activo ? 0 : 1, req.params.id]);
+    res.json({ success: true, activo: !u.activo });
+  } catch(e) {
+    res.json({ success: false, error: e.message });
+  }
 });
 
 router.post('/usuarios/:id/rol', isAdmin, async (req, res) => {
-  const { rol } = req.body;
-  await db.query('UPDATE usuarios SET rol=? WHERE id=?', [rol, req.params.id]);
-  req.flash('success', 'Rol actualizado');
-  res.redirect('/admin/usuarios');
+  try {
+    const { rol } = req.body;
+    if (!['cliente','admin'].includes(rol)) return res.json({ success: false, error: 'Rol inválido' });
+    await db.query('UPDATE usuarios SET rol=? WHERE id=?', [rol, req.params.id]);
+    res.json({ success: true });
+  } catch(e) {
+    res.json({ success: false, error: e.message });
+  }
+});
+
+router.post('/usuarios/nuevo', isAdmin, async (req, res) => {
+  try {
+    const { nombre_visible, email, password, rol } = req.body;
+    const bcrypt = require('bcrypt');
+    const [[existe]] = await db.query('SELECT id FROM usuarios WHERE email=?', [email]);
+    if (existe) { req.flash('error', 'Ya existe un usuario con ese email'); return res.redirect('/admin/usuarios'); }
+    const hash = await bcrypt.hash(password, 10);
+    await db.query(
+      'INSERT INTO usuarios (nombre_visible, email, password, rol) VALUES (?,?,?,?)',
+      [nombre_visible, email, hash, rol || 'cliente']
+    );
+    req.flash('success', 'Usuario creado correctamente');
+    res.redirect('/admin/usuarios');
+  } catch(e) {
+    console.error('Error crear usuario:', e);
+    req.flash('error', 'Error al crear usuario: ' + e.message);
+    res.redirect('/admin/usuarios');
+  }
+});
+
+router.post('/usuarios/:id/editar', isAdmin, async (req, res) => {
+  try {
+    const { nombre_visible, email, password, rol } = req.body;
+    const bcrypt = require('bcrypt');
+    const updates = { nombre_visible, email, rol: rol || 'cliente' };
+    if (password && password.trim().length >= 6) {
+      updates.password = await bcrypt.hash(password, 10);
+    }
+    const setClause = Object.keys(updates).map(k => `${k}=?`).join(',');
+    await db.query(`UPDATE usuarios SET ${setClause} WHERE id=?`, [...Object.values(updates), req.params.id]);
+    req.flash('success', 'Usuario actualizado');
+    res.redirect('/admin/usuarios');
+  } catch(e) {
+    console.error('Error editar usuario:', e);
+    req.flash('error', 'Error al editar usuario: ' + e.message);
+    res.redirect('/admin/usuarios');
+  }
+});
+
+router.post('/usuarios/:id/eliminar', isAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (parseInt(id) === req.session.user.id) {
+      return res.json({ success: false, error: 'No puedes eliminarte a ti mismo' });
+    }
+    const [[u]] = await db.query('SELECT id FROM usuarios WHERE id=?', [id]);
+    if (!u) return res.json({ success: false, error: 'Usuario no encontrado' });
+    await db.query('DELETE FROM usuarios WHERE id=?', [id]);
+    res.json({ success: true });
+  } catch(e) {
+    console.error('Error eliminar usuario:', e);
+    res.json({ success: false, error: e.message });
+  }
 });
 
 // COMENTARIOS
@@ -315,9 +379,28 @@ router.get('/comentarios', isAdmin, async (req, res) => {
 });
 
 router.post('/comentarios/:id/toggle', isAdmin, async (req, res) => {
-  const [[c]] = await db.query('SELECT activo FROM comentarios WHERE id=?', [req.params.id]);
-  await db.query('UPDATE comentarios SET activo=? WHERE id=?', [c.activo ? 0 : 1, req.params.id]);
-  res.json({ success: true });
+  try {
+    const [[c]] = await db.query('SELECT activo FROM comentarios WHERE id=?', [req.params.id]);
+    if (!c) return res.json({ success: false, error: 'Comentario no encontrado' });
+    const nuevoEstado = c.activo ? 0 : 1;
+    await db.query('UPDATE comentarios SET activo=? WHERE id=?', [nuevoEstado, req.params.id]);
+    res.json({ success: true, activo: nuevoEstado === 1 });
+  } catch(e) {
+    console.error('Error toggle comentario:', e);
+    res.json({ success: false, error: e.message });
+  }
+});
+
+router.post('/comentarios/:id/eliminar', isAdmin, async (req, res) => {
+  try {
+    const [[c]] = await db.query('SELECT id FROM comentarios WHERE id=?', [req.params.id]);
+    if (!c) return res.json({ success: false, error: 'Comentario no encontrado' });
+    await db.query('DELETE FROM comentarios WHERE id=?', [req.params.id]);
+    res.json({ success: true });
+  } catch(e) {
+    console.error('Error eliminar comentario:', e);
+    res.json({ success: false, error: e.message });
+  }
 });
 
 // CONFIGURACION
