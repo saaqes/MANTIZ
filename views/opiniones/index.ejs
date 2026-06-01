@@ -1,0 +1,476 @@
+<%- include('../partials/header') %>
+
+<style>
+/* ── HERO ── */
+.op-hero { text-align:center; padding:64px 24px 40px; position:relative; }
+.op-hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 70% 60% at 50% 0%, rgba(233,30,140,.12), transparent); pointer-events:none; }
+.op-tag { font-family:'Bebas Neue',sans-serif; font-size:10px; letter-spacing:5px; color:var(--pink); margin-bottom:10px; }
+.op-hero p { color:rgba(240,240,240,.45); font-size:13px; letter-spacing:1.5px; max-width:500px; margin:12px auto 0; }
+
+/* ── STATS BAR ── */
+.op-stats { display:flex; justify-content:center; gap:0; max-width:700px; margin:0 auto 48px; border:1px solid rgba(233,30,140,.18); }
+.op-stat { flex:1; padding:18px 24px; text-align:center; border-right:1px solid rgba(233,30,140,.12); }
+.op-stat:last-child { border-right:none; }
+.op-stat-val { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--pink); line-height:1; }
+.op-stat-label { font-size:10px; color:rgba(255,255,255,.35); letter-spacing:2px; margin-top:4px; font-family:'Rajdhani',sans-serif; }
+
+/* ── LAYOUT ── */
+.op-layout { max-width:1100px; margin:0 auto; padding:0 24px 80px; display:grid; grid-template-columns:1fr 340px; gap:28px; }
+
+/* ── ENCUESTA CARD ── */
+.enc-card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); margin-bottom:20px; overflow:hidden; transition:border-color .3s; }
+.enc-card:hover { border-color:rgba(233,30,140,.25); }
+.enc-top { padding:22px 24px 18px; }
+.enc-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(233,30,140,.1); border:1px solid rgba(233,30,140,.25); color:var(--pink); font-family:'Bebas Neue',sans-serif; font-size:10px; letter-spacing:2px; padding:3px 10px; margin-bottom:12px; }
+.enc-titulo { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; color:#f0f0f0; margin-bottom:6px; }
+.enc-desc { font-size:13px; color:rgba(255,255,255,.45); font-family:'Rajdhani',sans-serif; line-height:1.5; }
+.enc-meta { display:flex; gap:16px; margin-top:10px; font-size:11px; color:rgba(255,255,255,.3); font-family:'Rajdhani',sans-serif; }
+.enc-meta i { color:var(--pink); margin-right:4px; }
+
+/* ── OPCIONES ── */
+.enc-opciones { padding:0 24px 8px; display:flex; flex-direction:column; gap:8px; }
+.enc-op { position:relative; cursor:pointer; overflow:hidden; border:1px solid rgba(255,255,255,.07); transition:all .25s; }
+.enc-op:hover { border-color:rgba(233,30,140,.4); transform:translateX(3px); }
+.enc-op.voted { border-color:var(--pink); }
+.enc-op-bar { position:absolute; inset:0; background:rgba(233,30,140,.12); transform-origin:left; transition:transform .6s cubic-bezier(.4,0,.2,1); transform:scaleX(0); }
+.enc-op-bar.voted-bar { background:rgba(233,30,140,.18); }
+.enc-op-content { position:relative; padding:11px 14px; display:flex; justify-content:space-between; align-items:center; }
+.enc-op-text { font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:600; color:#f0f0f0; }
+.enc-op-pct { font-family:'Bebas Neue',sans-serif; font-size:16px; color:var(--pink); display:none; }
+.enc-op-check { color:var(--pink); font-size:14px; display:none; margin-left:8px; }
+
+/* Tipo rating */
+.enc-stars { display:flex; gap:8px; padding:4px 0; }
+.enc-star { font-size:28px; cursor:pointer; transition:all .2s; opacity:.35; color:var(--pink); }
+.enc-star:hover, .enc-star.active { opacity:1; transform:scale(1.15); }
+
+/* ── FOOTER CARD ── */
+.enc-footer { padding:14px 24px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,.05); }
+.enc-votos-total { font-size:11px; color:rgba(255,255,255,.3); font-family:'Rajdhani',sans-serif; }
+.enc-btn { background:var(--pink); border:none; color:white; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; padding:9px 22px; cursor:pointer; transition:all .2s; }
+.enc-btn:hover { background:#c2185b; transform:scale(1.03); }
+.enc-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.enc-btn-outline { background:transparent; border:1px solid rgba(255,255,255,.15); color:rgba(255,255,255,.5); font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:2px; padding:8px 16px; cursor:pointer; transition:all .2s; }
+.enc-btn-outline:hover { border-color:var(--pink); color:var(--pink); }
+
+/* Sugerencia */
+.enc-sug { padding:12px 24px 20px; border-top:1px solid rgba(255,255,255,.05); }
+.enc-sug-inp { width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); color:#f0f0f0; padding:10px 14px; font-family:'Rajdhani',sans-serif; font-size:13px; outline:none; transition:border-color .2s; }
+.enc-sug-inp:focus { border-color:var(--pink); }
+.enc-sug-label { font-size:10px; color:rgba(255,255,255,.3); letter-spacing:2px; font-family:'Bebas Neue',sans-serif; margin-bottom:8px; }
+
+/* ── SIDEBAR ── */
+.op-sidebar { display:flex; flex-direction:column; gap:18px; }
+.op-scard { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); padding:20px; }
+.op-scard-title { font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:3px; color:var(--pink); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+
+/* Admin crear */
+.op-input { width:100%; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09); color:#f0f0f0; padding:10px 13px; font-family:'Rajdhani',sans-serif; font-size:13px; outline:none; margin-bottom:10px; transition:border-color .2s; }
+.op-input:focus { border-color:var(--pink); }
+.op-input::placeholder { color:rgba(255,255,255,.25); }
+.op-opciones-list { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+.op-opcion-row { display:flex; gap:6px; align-items:center; }
+.op-opcion-row input { flex:1; }
+.op-opcion-del { background:none; border:1px solid rgba(255,60,60,.25); color:rgba(255,100,100,.6); width:28px; height:28px; cursor:pointer; font-size:14px; transition:all .2s; flex-shrink:0; }
+.op-opcion-del:hover { background:rgba(255,60,60,.1); color:#ff6060; }
+.op-add-opcion { background:none; border:1px dashed rgba(255,255,255,.15); color:rgba(255,255,255,.4); width:100%; padding:8px; font-family:'Rajdhani',sans-serif; font-size:12px; cursor:pointer; transition:all .2s; margin-bottom:12px; }
+.op-add-opcion:hover { border-color:var(--pink); color:var(--pink); }
+
+/* Sugerencias de usuarios */
+.sug-item { padding:10px 12px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); margin-bottom:7px; }
+.sug-item-text { font-size:13px; color:rgba(240,240,240,.75); font-family:'Rajdhani',sans-serif; line-height:1.4; }
+.sug-item-meta { font-size:10px; color:rgba(255,255,255,.25); margin-top:4px; font-family:'Rajdhani',sans-serif; }
+
+/* Empty state */
+.op-empty { text-align:center; padding:80px 20px; color:rgba(255,255,255,.25); }
+.op-empty i { font-size:3rem; display:block; margin-bottom:16px; color:rgba(233,30,140,.3); }
+.op-empty-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px; margin-bottom:8px; }
+
+/* Toast */
+.op-toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px); background:rgba(12,12,12,.98); border:1px solid var(--pink); color:white; padding:12px 28px; font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; z-index:9999; opacity:0; transition:all .35s; pointer-events:none; }
+.op-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* Login notice */
+.op-login-notice { background:rgba(233,30,140,.07); border:1px solid rgba(233,30,140,.2); padding:12px 16px; text-align:center; font-size:12px; font-family:'Rajdhani',sans-serif; color:rgba(240,240,240,.6); margin-bottom:20px; }
+.op-login-notice a { color:var(--pink); text-decoration:none; font-weight:700; }
+
+@media(max-width:820px) { .op-layout { grid-template-columns:1fr; } }
+@media(max-width:480px) { .op-stats { flex-wrap:wrap; } .op-stat { min-width:50%; border-bottom:1px solid rgba(233,30,140,.1); } }
+</style>
+
+<!-- HERO -->
+<div class="op-hero">
+  <div class="op-tag">COMUNIDAD · VOZ DE LOS CLIENTES</div>
+  <h1 class="section-title">OPINIONES</h1>
+  <div class="tribal-divider">
+    <svg width="200" height="16" viewBox="0 0 200 16"><path d="M0,8 L80,8 L90,2 L100,14 L110,2 L120,8 L200,8" fill="none" stroke="rgba(233,30,140,0.6)" stroke-width="1.5"/></svg>
+  </div>
+  <p>Vota en nuestras encuestas y ayúdanos a mejorar MANTIZ</p>
+</div>
+
+<!-- STATS -->
+<div style="max-width:1100px;margin:0 auto;padding:0 24px">
+  <div class="op-stats">
+    <div class="op-stat">
+      <div class="op-stat-val"><%= encuestas.length %></div>
+      <div class="op-stat-label">ENCUESTAS ACTIVAS</div>
+    </div>
+    <div class="op-stat">
+      <div class="op-stat-val"><%= encuestas.reduce((s,e)=>s+(parseInt(e.total_votos)||0),0) %></div>
+      <div class="op-stat-label">VOTOS TOTALES</div>
+    </div>
+    <div class="op-stat">
+      <div class="op-stat-val"><%= encuestas.filter(e=>e.mi_voto).length %></div>
+      <div class="op-stat-label">TUS VOTOS</div>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="op-layout">
+
+  <!-- ENCUESTAS -->
+  <div id="enc-lista">
+    <% if (!locals.uid) { %>
+    <div class="op-login-notice">
+      <i class="bi bi-lock me-2"></i>
+      <a href="/auth/login">Inicia sesión</a> para votar en las encuestas y hacer tu voz contar.
+    </div>
+    <% } %>
+
+    <% if (!encuestas || encuestas.length === 0) { %>
+    <div class="op-empty">
+      <i class="bi bi-bar-chart"></i>
+      <div class="op-empty-title">SIN ENCUESTAS AÚN</div>
+      <p style="font-size:13px">El equipo de Mantiz publicará encuestas pronto.</p>
+    </div>
+    <% } else { encuestas.forEach(enc => { %>
+
+    <div class="enc-card" id="enc-<%= enc.id %>">
+      <div class="enc-top">
+        <div class="enc-badge">
+          <i class="bi bi-bar-chart-fill"></i>
+          <%= enc.tipo_respuesta === 'estrellas' ? 'CALIFICACIÓN' : enc.tipo_respuesta === 'unica' ? 'OPCIÓN ÚNICA' : 'VOTACIÓN' %>
+        </div>
+        <div class="enc-titulo"><%= enc.titulo %></div>
+        <% if (enc.descripcion) { %><div class="enc-desc"><%= enc.descripcion %></div><% } %>
+        <div class="enc-meta">
+          <span><i class="bi bi-person"></i><%= enc.creador %></span>
+          <span><i class="bi bi-people"></i><%= enc.total_votos %> votos</span>
+          <% if (enc.fecha_cierre) { %><span><i class="bi bi-clock"></i>Cierra <%= new Date(enc.fecha_cierre).toLocaleDateString('es-CO') %></span><% } %>
+        </div>
+      </div>
+
+      <!-- OPCIONES tipo botones/única -->
+      <% if (enc.tipo_respuesta !== 'estrellas') { %>
+      <div class="enc-opciones">
+        <% enc.opciones.forEach(op => {
+          const yaVotada = enc.mi_voto === op.id;
+          const totalV = enc.opciones.reduce((s,o)=>s+(o.votos||0),0);
+          const pct = totalV > 0 ? Math.round((op.votos/totalV)*100) : 0;
+        %>
+        <div class="enc-op <%= yaVotada ? 'voted' : '' %>"
+             id="op-<%= op.id %>"
+             onclick="votar(<%= enc.id %>, <%= op.id %>)"
+             data-enc="<%= enc.id %>"
+             data-op="<%= op.id %>">
+          <div class="enc-op-bar <%= yaVotada ? 'voted-bar' : '' %>"
+               style="transform:scaleX(<%= enc.mi_voto ? pct/100 : 0 %>)"></div>
+          <div class="enc-op-content">
+            <div style="display:flex;align-items:center;gap:10px">
+              <% if (yaVotada) { %><i class="bi bi-check-circle-fill" style="color:var(--pink);font-size:14px"></i><% } %>
+              <span class="enc-op-text"><%= op.texto %></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="enc-op-pct" id="pct-<%= op.id %>" style="<%= enc.mi_voto ? 'display:block' : '' %>"><%= pct %>%</span>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+
+      <!-- OPCIONES tipo estrellas -->
+      <% if (enc.tipo_respuesta === 'estrellas') { %>
+      <div class="enc-opciones">
+        <div class="enc-stars" id="stars-<%= enc.id %>">
+          <% for (let i = 1; i <= 5; i++) { %>
+          <span class="enc-star <%= enc.mi_voto && enc.opciones[i-1] && enc.mi_voto === enc.opciones[i-1].id ? 'active' : '' %>"
+                onclick="votarEstrellas(<%= enc.id %>, <%= i %>)"
+                onmouseover="hoverStars(<%= enc.id %>, <%= i %>)"
+                onmouseout="resetStars(<%= enc.id %>)">★</span>
+          <% } %>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:8px;font-family:'Rajdhani',sans-serif;padding:0 24px 0 0">
+          Calificación promedio: <span id="avg-<%= enc.id %>" style="color:var(--pink);font-family:'Bebas Neue',sans-serif;font-size:14px">
+            <% 
+              const totalV2 = enc.opciones.reduce((s,o)=>s+(o.votos||0),0);
+              const sumV = enc.opciones.reduce((s,o,i)=>s+(o.votos||0)*(i+1),0);
+              const avg = totalV2 > 0 ? (sumV/totalV2).toFixed(1) : '0.0';
+            %><%= avg %> ★
+          </span>
+          &nbsp;·&nbsp; <%= enc.total_votos %> valoraciones
+        </div>
+      </div>
+      <% } %>
+
+      <!-- SUGERENCIA -->
+      <% if (enc.permite_sugerencias && locals.uid) { %>
+      <div class="enc-sug">
+        <div class="enc-sug-label">¿TIENES ALGUNA SUGERENCIA?</div>
+        <input type="text" class="enc-sug-inp" id="sug-<%= enc.id %>" placeholder="Escribe tu sugerencia opcional..." maxlength="200">
+      </div>
+      <% } %>
+
+      <!-- FOOTER -->
+      <div class="enc-footer">
+        <span class="enc-votos-total" id="total-<%= enc.id %>"><%= enc.total_votos %> votos totales</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <% if (enc.mi_voto) { %>
+          <span style="font-size:10px;color:rgba(0,255,100,.7);font-family:'Bebas Neue',sans-serif;letter-spacing:1px"><i class="bi bi-check2 me-1"></i>YA VOTASTE</span>
+          <% } %>
+          <% if (!locals.uid) { %>
+          <a href="/auth/login" class="enc-btn" style="text-decoration:none">VOTAR</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <% }) } %>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="op-sidebar">
+
+    <!-- Admin: crear encuesta -->
+    <% if (locals.user && locals.user.rol === 'admin') { %>
+    <div class="op-scard">
+      <div class="op-scard-title"><i class="bi bi-plus-circle-fill"></i>CREAR ENCUESTA</div>
+      <input type="text" class="op-input" id="cr-titulo" placeholder="Título de la encuesta *">
+      <textarea class="op-input" id="cr-desc" rows="2" placeholder="Descripción (opcional)" style="resize:none"></textarea>
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:2px;font-family:'Bebas Neue',sans-serif;margin-bottom:8px">TIPO DE RESPUESTA</div>
+        <select class="op-input" id="cr-tipo" style="margin-bottom:0" onchange="cambiarTipo(this.value)">
+          <option value="unica">Opción única</option>
+          <option value="botones">Botones de voto</option>
+          <option value="estrellas">Calificación con estrellas</option>
+        </select>
+      </div>
+      <div id="cr-opciones-wrap">
+        <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:2px;font-family:'Bebas Neue',sans-serif;margin-bottom:8px">OPCIONES</div>
+        <div class="op-opciones-list" id="cr-opciones">
+          <div class="op-opcion-row"><input type="text" class="op-input op-opcion" placeholder="Opción 1" style="margin-bottom:0"><button class="op-opcion-del" onclick="delOpcion(this)">×</button></div>
+          <div class="op-opcion-row"><input type="text" class="op-input op-opcion" placeholder="Opción 2" style="margin-bottom:0"><button class="op-opcion-del" onclick="delOpcion(this)">×</button></div>
+        </div>
+        <button class="op-add-opcion" onclick="addOpcion()"><i class="bi bi-plus me-1"></i>AGREGAR OPCIÓN</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <input type="checkbox" id="cr-sug" style="accent-color:var(--pink);width:14px;height:14px">
+        <label for="cr-sug" style="font-size:12px;color:rgba(255,255,255,.5);font-family:'Rajdhani',sans-serif;cursor:pointer">Permitir sugerencias de texto</label>
+      </div>
+      <input type="date" class="op-input" id="cr-fecha" placeholder="Fecha de cierre (opcional)">
+      <button class="enc-btn" style="width:100%" onclick="crearEncuesta()"><i class="bi bi-send me-2"></i>PUBLICAR ENCUESTA</button>
+    </div>
+    <% } %>
+
+    <!-- Info -->
+    <div class="op-scard">
+      <div class="op-scard-title"><i class="bi bi-info-circle"></i>¿CÓMO FUNCIONA?</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.4);font-family:'Rajdhani',sans-serif;line-height:2.1">
+        ✦ Vota en las encuestas activas<br>
+        ✦ Tu opinión moldea el catálogo<br>
+        ✦ Sugiere nuevas ideas y estilos<br>
+        ✦ Ve los resultados en tiempo real<br>
+        ✦ Gana logros por participar
+      </div>
+    </div>
+
+    <!-- Top sugerencias -->
+    <div class="op-scard">
+      <div class="op-scard-title"><i class="bi bi-lightbulb"></i>SUGERENCIAS RECIENTES</div>
+      <div id="sugerencias-lista">
+        <% 
+          const todasSugs = [];
+          encuestas.forEach(e => {
+            // no tenemos sugerencias cargadas aquí, solo placeholder
+          });
+        %>
+        <div style="font-size:12px;color:rgba(255,255,255,.25);font-family:'Rajdhani',sans-serif;text-align:center;padding:16px 0">
+          Las sugerencias de los usuarios aparecerán aquí
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="op-toast" id="opToast"></div>
+
+<script>
+let votando = false;
+
+// ── TOAST ─────────────────────────────────────────────────
+function opToast(msg, color) {
+  const t = document.getElementById('opToast');
+  t.textContent = msg;
+  t.style.borderColor = color || 'var(--pink)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── VOTAR ────────────────────────────────────────────────
+async function votar(encId, opcionId) {
+  <% if (!locals.uid) { %>
+  window.location = '/auth/login'; return;
+  <% } %>
+  if (votando) return;
+  votando = true;
+
+  const sug = document.getElementById('sug-' + encId)?.value || '';
+  try {
+    const r = await fetch(`/opiniones/${encId}/votar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ opcion_id: opcionId, sugerencia: sug })
+    });
+    const d = await r.json();
+    if (d.success) {
+      actualizarResultados(encId, d.resultados, d.total_votos, opcionId);
+      opToast('¡VOTO REGISTRADO!');
+    } else {
+      opToast(d.error || 'Error al votar', '#ff6060');
+    }
+  } catch(e) {
+    opToast('Error de conexión', '#ff6060');
+  }
+  votando = false;
+}
+
+function actualizarResultados(encId, resultados, totalVotos, opcionVotada) {
+  resultados.forEach(op => {
+    const el = document.getElementById('op-' + op.id);
+    const bar = el?.querySelector('.enc-op-bar');
+    const pct = document.getElementById('pct-' + op.id);
+    if (!el) return;
+
+    el.classList.toggle('voted', op.id === opcionVotada);
+    if (bar) {
+      bar.style.transform = `scaleX(${op.porcentaje / 100})`;
+      bar.classList.toggle('voted-bar', op.id === opcionVotada);
+    }
+    if (pct) { pct.textContent = op.porcentaje + '%'; pct.style.display = 'block'; }
+    
+    // Agregar check al votado
+    const content = el.querySelector('.enc-op-content > div');
+    if (content && op.id === opcionVotada) {
+      if (!content.querySelector('.bi-check-circle-fill')) {
+        content.insertAdjacentHTML('afterbegin', '<i class="bi bi-check-circle-fill" style="color:var(--pink);font-size:14px"></i>');
+      }
+    }
+  });
+  const totalEl = document.getElementById('total-' + encId);
+  if (totalEl) totalEl.textContent = totalVotos + ' votos totales';
+}
+
+// ── ESTRELLAS ────────────────────────────────────────────
+function hoverStars(encId, n) {
+  document.querySelectorAll(`#stars-${encId} .enc-star`).forEach((s, i) => {
+    s.style.opacity = i < n ? '1' : '0.35';
+    s.style.transform = i < n ? 'scale(1.15)' : 'scale(1)';
+  });
+}
+function resetStars(encId) {
+  document.querySelectorAll(`#stars-${encId} .enc-star`).forEach((s) => {
+    s.style.opacity = s.classList.contains('active') ? '1' : '0.35';
+    s.style.transform = s.classList.contains('active') ? 'scale(1.15)' : 'scale(1)';
+  });
+}
+async function votarEstrellas(encId, n) {
+  <% if (!locals.uid) { %>
+  window.location = '/auth/login'; return;
+  <% } %>
+  // Buscar opción correspondiente al número de estrellas
+  const stars = document.querySelectorAll(`#stars-${encId} .enc-star`);
+  stars.forEach((s, i) => { s.classList.toggle('active', i < n); });
+  // La opción de estrellas = índice n-1 en la lista de opciones del servidor
+  // Necesitamos el id de la opción — usamos data attribute o fetch
+  const card = document.getElementById('enc-' + encId);
+  const ops = card.querySelectorAll('[id^="op-"]');
+  if (ops[n-1]) {
+    const opId = parseInt(ops[n-1].id.replace('op-', ''));
+    await votar(encId, opId);
+  }
+}
+
+// ── ADMIN: CREAR ENCUESTA ────────────────────────────────
+let opCount = 2;
+
+function addOpcion() {
+  opCount++;
+  const list = document.getElementById('cr-opciones');
+  const div = document.createElement('div');
+  div.className = 'op-opcion-row';
+  div.innerHTML = `<input type="text" class="op-input op-opcion" placeholder="Opción ${opCount}" style="margin-bottom:0"><button class="op-opcion-del" onclick="delOpcion(this)">×</button>`;
+  list.appendChild(div);
+}
+
+function delOpcion(btn) {
+  const rows = document.querySelectorAll('.op-opcion-row');
+  if (rows.length <= 2) { opToast('MÍNIMO 2 OPCIONES', '#ffc800'); return; }
+  btn.closest('.op-opcion-row').remove();
+}
+
+function cambiarTipo(tipo) {
+  const wrap = document.getElementById('cr-opciones-wrap');
+  wrap.style.display = tipo === 'estrellas' ? 'none' : 'block';
+}
+
+async function crearEncuesta() {
+  const titulo = document.getElementById('cr-titulo').value.trim();
+  if (!titulo) { opToast('EL TÍTULO ES OBLIGATORIO', '#ff6060'); return; }
+  
+  const tipo = document.getElementById('cr-tipo').value;
+  let opciones = [];
+  
+  if (tipo !== 'estrellas') {
+    opciones = Array.from(document.querySelectorAll('.op-opcion'))
+      .map(i => i.value.trim()).filter(Boolean);
+    if (opciones.length < 2) { opToast('AGREGA AL MENOS 2 OPCIONES', '#ff6060'); return; }
+  } else {
+    opciones = ['1 estrella', '2 estrellas', '3 estrellas', '4 estrellas', '5 estrellas'];
+  }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'PUBLICANDO...';
+
+  try {
+    const r = await fetch('/opiniones/crear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        titulo,
+        descripcion: document.getElementById('cr-desc').value.trim(),
+        tipo_respuesta: tipo,
+        permite_sugerencias: document.getElementById('cr-sug').checked ? 1 : 0,
+        fecha_cierre: document.getElementById('cr-fecha').value || null,
+        opciones
+      })
+    });
+    const d = await r.json();
+    if (d.success) {
+      opToast('¡ENCUESTA PUBLICADA!');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      opToast('ERROR: ' + (d.error || 'Desconocido'), '#ff6060');
+    }
+  } catch(e) {
+    opToast('ERROR DE RED', '#ff6060');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-send me-2"></i>PUBLICAR ENCUESTA';
+}
+</script>
+
+<%- include('../partials/footer') %>
