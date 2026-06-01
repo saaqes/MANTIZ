@@ -198,14 +198,12 @@
     <div style="font-size:2.5rem;margin-bottom:12px">⚠️</div>
     <div style="font-family:var(--fd);font-size:.85rem;letter-spacing:2px;color:#ff6060;margin-bottom:8px">ELIMINAR USUARIO</div>
     <div style="font-family:var(--fb);color:var(--muted);margin-bottom:24px" id="deleteUserName">¿Confirmar eliminación?</div>
-    <form id="deleteForm" method="POST">
-      <div class="d-flex gap-2 justify-content-center">
-        <button type="button" class="btn btn-om btn-sm" onclick="hideModal('deleteModal')">Cancelar</button>
-        <button type="submit" class="btn btn-sm" style="background:rgba(255,60,60,.2);color:#ff6060;border:1px solid rgba(255,60,60,.3);font-family:var(--fb);font-weight:700">
-          <i class="bi bi-trash me-1"></i>Eliminar
-        </button>
-      </div>
-    </form>
+    <div class="d-flex gap-2 justify-content-center">
+      <button type="button" class="btn btn-om btn-sm" onclick="hideModal('deleteModal')">Cancelar</button>
+      <button type="button" id="confirmDeleteBtn" class="btn btn-sm" style="background:rgba(255,60,60,.2);color:#ff6060;border:1px solid rgba(255,60,60,.3);font-family:var(--fb);font-weight:700">
+        <i class="bi bi-trash me-1"></i>Eliminar
+      </button>
+    </div>
   </div>
 </div>
 
@@ -245,8 +243,41 @@ function showEditModal(u) {
 
 function confirmDelete(id, name) {
   document.getElementById('deleteUserName').textContent = `¿Eliminar a "${name}"?`;
-  document.getElementById('deleteForm').action = `/admin/usuarios/${id}/eliminar`;
+  document.getElementById('confirmDeleteBtn').onclick = () => deleteUser(id);
   document.getElementById('deleteModal').classList.add('show');
+}
+
+async function deleteUser(id) {
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Eliminando...';
+  try {
+    const res = await fetch(`/admin/usuarios/${id}/eliminar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    if (data.success) {
+      hideModal('deleteModal');
+      // Remover fila de la tabla con animación
+      const row = document.querySelector(`tr[data-id="${id}"]`);
+      if (row) {
+        row.style.transition = 'all 0.3s';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(20px)';
+        setTimeout(() => row.remove(), 300);
+      }
+      showToast('Usuario eliminado correctamente', 'success');
+    } else {
+      showToast(data.error || 'Error al eliminar', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-trash me-1"></i>Eliminar';
+    }
+  } catch(e) {
+    showToast('Error de red: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-trash me-1"></i>Eliminar';
+  }
 }
 
 function hideModal(id) {
