@@ -314,13 +314,29 @@ router.post('/usuarios/:id/rol', isAdmin, async (req, res) => {
 router.post('/usuarios/nuevo', isAdmin, async (req, res) => {
   try {
     const { nombre_visible, email, password, rol } = req.body;
-    const bcrypt = require('bcrypt');
+    if (!nombre_visible || !email || !password) {
+      req.flash('error', 'Todos los campos son obligatorios');
+      return res.redirect('/admin/usuarios');
+    }
+    let bcrypt;
+    try { bcrypt = require('bcrypt'); } catch(e) { bcrypt = require('bcryptjs'); }
     const [[existe]] = await db.query('SELECT id FROM usuarios WHERE email=?', [email]);
     if (existe) { req.flash('error', 'Ya existe un usuario con ese email'); return res.redirect('/admin/usuarios'); }
+    // Generar username único a partir del nombre
+    let baseUsername = nombre_visible.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '').substring(0, 15) || 'user';
+    let username = baseUsername;
+    let counter = 1;
+    while (true) {
+      const [[taken]] = await db.query('SELECT id FROM usuarios WHERE username=?', [username]);
+      if (!taken) break;
+      username = baseUsername + counter++;
+    }
     const hash = await bcrypt.hash(password, 10);
     await db.query(
-      'INSERT INTO usuarios (nombre_visible, email, password, rol) VALUES (?,?,?,?)',
-      [nombre_visible, email, hash, rol || 'cliente']
+      'INSERT INTO usuarios (nombre_visible, username, email, password, rol, activo) VALUES (?,?,?,?,?,1)',
+      [nombre_visible, username, email, hash, rol || 'cliente']
     );
     req.flash('success', 'Usuario creado correctamente');
     res.redirect('/admin/usuarios');
@@ -334,7 +350,8 @@ router.post('/usuarios/nuevo', isAdmin, async (req, res) => {
 router.post('/usuarios/:id/editar', isAdmin, async (req, res) => {
   try {
     const { nombre_visible, email, password, rol } = req.body;
-    const bcrypt = require('bcrypt');
+    let bcrypt;
+    try { bcrypt = require('bcrypt'); } catch(e) { bcrypt = require('bcryptjs'); }
     const updates = { nombre_visible, email, rol: rol || 'cliente' };
     if (password && password.trim().length >= 6) {
       updates.password = await bcrypt.hash(password, 10);
