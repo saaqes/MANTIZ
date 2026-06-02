@@ -91,7 +91,7 @@
         <% topProductos.forEach((p,i)=>{ %>
         <div class="d-flex align-items-center gap-3 mb-3">
           <div style="font-family:var(--fm);font-size:.65rem;color:var(--muted);width:16px">#<%= i+1 %></div>
-          <img src="/uploads/products/<%= p.imagen_principal %>" width="36" height="36" style="border-radius:6px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.background='var(--dark2)'">
+          <img src="<%= p.imagen_principal  %>" width="36" height="36" style="border-radius:6px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.background='var(--dark2)'">
           <div style="flex:1;min-width:0">
             <div style="font-family:var(--fb);font-size:.82rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><%= p.titulo %></div>
             <div class="top-prod-bar" style="width:<%= Math.round((p.total_visitas||0)/maxV*100) %>%"></div>

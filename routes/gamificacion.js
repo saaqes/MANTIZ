@@ -44,8 +44,8 @@ router.post('/ping-tiempo', isAuthenticated, async (req, res) => {
   try {
     await db.query(
       `INSERT INTO perfil_config (usuario_id, tiempo_total_seg) VALUES (?,?)
-       ON DUPLICATE KEY UPDATE tiempo_total_seg = COALESCE(tiempo_total_seg,0) + ?`,
-      [uid, segundos, segundos]
+       ON CONFLICT (usuario_id) DO UPDATE SET tiempo_total_seg = COALESCE(perfil_config.tiempo_total_seg,0) + EXCLUDED.tiempo_total_seg`,
+      [uid, segundos]
     );
 
     // Verificar logro de tiempo
@@ -106,7 +106,7 @@ router.post('/conexiones', isAuthenticated, async (req, res) => {
     await db.query(
       `INSERT INTO perfil_conexiones (usuario_id, plataforma, username, publico, url)
        VALUES (?,?,?,?,?)
-       ON DUPLICATE KEY UPDATE username=VALUES(username), publico=VALUES(publico), url=VALUES(url), actualizado_en=NOW()`,
+       ON CONFLICT (usuario_id, plataforma) DO UPDATE SET username=EXCLUDED.username, publico=EXCLUDED.publico, url=EXCLUDED.url, actualizado_en=NOW()`,
       [req.session.user.id, plataforma, username.trim(), publico ? 1 : 0, url || null]
     );
     res.json({ success: true });

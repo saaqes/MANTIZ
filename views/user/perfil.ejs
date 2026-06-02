@@ -2,10 +2,10 @@
 <%
 // Pre-calculate ALL conditional values BEFORE HTML to avoid single-quote issues
 var bannerSrc = (usuario.banner_tipo==='upload' && usuario.banner)
-  ? '/uploads/banners/'+usuario.banner
+  ? usuario.banner
   : '/img/defaults/banners/'+(usuario.banner_preset||'banner1.jpg');
 var avatarSrc = (usuario.foto_perfil_tipo==='upload' && usuario.foto_perfil)
-  ? '/uploads/profiles/'+usuario.foto_perfil
+  ? usuario.foto_perfil
   : '/img/defaults/avatars/'+(usuario.foto_perfil_preset||'avatar1.png');
 var cfgColor  = (perfilConfig && perfilConfig.color_primario) ? perfilConfig.color_primario : '#e91e8c';
 var cfgTema   = (perfilConfig && perfilConfig.tema) ? perfilConfig.tema : 'oscuro';
@@ -130,7 +130,7 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
         <div class="product-card" onclick="window.location='/productos/<%= p.id %>'">
           <div class="pc-label"><span class="pc-label-text"><%= p.titulo.substring(0,16) %></span></div>
           <div class="pc-img-wrap"><div class="pc-img-clip">
-            <img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+            <img class="pc-img" src="<%= p.imagen_principal  %>" alt="<%= p.titulo %>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
           </div>
             <button class="pc-add-btn" onclick="event.stopPropagation();quitarFav(<%= p.id %>,this)" style="background:#ff4444">&#9825;</button>
           </div>
@@ -608,7 +608,7 @@ async function cargarConexionesPerfil() {
         + '<div style="flex:1"><div style="font-size:10px;color:var(--muted);letter-spacing:2px">' + cfg.label.toUpperCase() + '</div>'
         + '<div style="font-size:13px;font-weight:700">@' + c.username + '</div></div>'
         + '<span style="font-size:10px;color:' + (c.publico?'#00c853':'#ff6060') + ';letter-spacing:1px">' + (c.publico?'PÚBLICO':'PRIVADO') + '</span>'
-        + '<button onclick="eliminarConexion(\'' + c.plataforma + '\')" title="Eliminar"'
+        + '<button onclick="eliminarConexion(\c.plataforma + '\')" title="Eliminar"'
         + ' style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;line-height:1;transition:color 0.2s"'
         + ' onmouseover="this.style.color=\'#ff6060\'" onmouseout="this.style.color=\'var(--muted)\'">×</button>'
         + '</div>';
@@ -697,7 +697,7 @@ async function cargarAmigos() {
     if (dP.pendientes && dP.pendientes.length > 0) {
       pendSect.style.display = 'block';
       pendLista.innerHTML = dP.pendientes.map(function(p) {
-        var av = p.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+p.foto_perfil : '/img/defaults/avatars/'+(p.foto_perfil_preset||'avatar1.png');
+        var av = p.foto_perfil_tipo==='upload' ? p.foto_perfil : '/img/defaults/avatars/'+(p.foto_perfil_preset||'avatar1.png');
         return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(233,30,140,0.2)">'
           + '<img src="' + av + '" width="40" height="40" style="border-radius:50%;object-fit:cover;border:2px solid var(--pink)" onerror="this.src=\'/img/defaults/avatars/avatar1.png\'">'
           + '<div style="flex:1"><div style="font-weight:700;font-size:13px">' + p.nombre_visible + '</div>'
@@ -716,7 +716,7 @@ async function cargarAmigos() {
       return;
     }
     grid.innerHTML = dA.amigos.map(function(a) {
-      var av = a.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+a.foto_perfil : '/img/defaults/avatars/'+(a.foto_perfil_preset||'avatar1.png');
+      var av = a.foto_perfil_tipo==='upload' ? a.foto_perfil : '/img/defaults/avatars/'+(a.foto_perfil_preset||'avatar1.png');
       return '<a href="/u/' + a.username + '" style="text-decoration:none;color:var(--white);display:block;padding:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;transition:all 0.3s" onmouseover="this.style.borderColor=\'var(--pink)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'
         + '<img src="' + av + '" width="56" height="56" style="border-radius:50%;object-fit:cover;border:3px solid var(--border);margin-bottom:8px" onerror="this.src=\'/img/defaults/avatars/avatar1.png\'">'
         + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:13px;letter-spacing:1px">' + a.nombre_visible + '</div>'
@@ -816,7 +816,7 @@ async function abrirTablero(id, nombre) {
       return;
     }
     document.getElementById('pines-grid').innerHTML = pines.map(function(p) {
-      var img = p.imagen_url || (p.imagen_principal ? '/uploads/products/'+p.imagen_principal : 'https://via.placeholder.com/400x400/111/888?text=PIN');
+      var img = p.imagen_url || (p.imagen_principal ? p.imagen_principal : 'https://via.placeholder.com/400x400/111/888?text=PIN');
       var titulo = p.titulo || p.prod_titulo || 'Sin titulo';
       var precio = p.precio_descuento || p.precio;
       return '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);overflow:hidden">'
@@ -893,7 +893,7 @@ async function buscarWidget() {
     if (d.results && d.results.length > 0) {
       document.getElementById('wg-results').innerHTML = d.results.map(function(item) {
         var enc = encodeURIComponent(JSON.stringify(item));
-        return '<div onclick="agregarWidget(\''+enc+'\',\''+tipo+'\')" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;max-width:220px">'
+        return '<div onclick="agregarWidget(\enc+'\',\tipo+'\')" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;max-width:220px">'
           + (item.imagen_url ? '<img src="'+item.imagen_url+'" width="36" height="36" style="object-fit:cover;border-radius:4px" onerror="this.style.display=\'none\'">' : '')
           + '<div><div style="font-size:13px;font-weight:600">'+item.titulo+'</div><div style="font-size:11px;color:var(--gray)">'+item.subtitulo+'</div></div></div>';
       }).join('');

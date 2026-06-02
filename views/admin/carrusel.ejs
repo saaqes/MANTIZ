@@ -34,7 +34,7 @@
   <div class="col-12 col-md-6 col-xl-4" id="slide-<%= s.id %>">
     <div class="slide-card" id="card-<%= s.id %>">
       <div class="slide-thumb" onclick="abrirEditar(<%= s.id %>)">
-        <img src="/uploads/banners/<%= s.imagen %>" alt="Slide <%= i+1 %>" onerror="this.parentElement.style.background='var(--dark3)'">
+        <img src="<%= s.imagen %>" alt="Slide <%= i+1 %>" onerror="this.parentElement.style.background='var(--dark3)'">
         <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.7);border:1px solid var(--cp);color:var(--cp);font-family:var(--fd);font-size:.6rem;padding:2px 8px;border-radius:4px">
           #<%= s.orden || i+1 %>
         </div>
@@ -235,7 +235,7 @@ function abrirEditar(id) {
   if (s.countdown_fecha) document.getElementById('f-countdown').value = s.countdown_fecha.substring(0,16);
   // Set preview bg
   var bg = document.getElementById('previewBg');
-  bg.src = '/uploads/banners/' + s.imagen;
+  bg.src = s.imagen;
   bg.style.display = 'block';
   document.getElementById('previewNoBg').style.display = 'none';
   setContentType(s.content_type || 'texto');
@@ -383,7 +383,7 @@ function toggleSlide(form, id) {
     <div class="col-12 col-md-6 col-xl-4">
       <div class="slide-card">
         <div class="slide-thumb">
-          <img src="/uploads/banners/<%= m.imagen %>" alt="Marca <%= i+1 %>" onerror="this.parentElement.style.background='var(--dark3)'">
+          <img src="<%= m.imagen %>" alt="Marca <%= i+1 %>" onerror="this.parentElement.style.background='var(--dark3)'">
           <span class="slide-order-badge">ORDEN <%= m.orden || i+1 %></span>
           <% if (m.activo) { %><span class="slide-active-badge"><i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>ACTIVO</span><% } %>
         </div>

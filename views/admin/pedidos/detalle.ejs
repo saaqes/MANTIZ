@@ -116,7 +116,7 @@
         <h5 class="fw-bold mb-3">Productos</h5>
         <% items.forEach(item => { %>
         <div class="d-flex gap-3 mb-3">
-          <img src="/uploads/products/<%= item.imagen_principal %>" style="width:55px;height:55px;border-radius:8px;object-fit:cover" onerror="this.src='https://via.placeholder.com/55x55/f0f0f0/999?text=IMG'">
+          <img src="<%= item.imagen_principal  %>" style="width:55px;height:55px;border-radius:8px;object-fit:cover" onerror="this.src='https://via.placeholder.com/55x55/f0f0f0/999?text=IMG'">
           <div>
             <div class="small fw-semibold"><%= item.titulo %></div>
             <div class="text-muted small">Talla: <%= item.talla %> × <%= item.cantidad %></div>

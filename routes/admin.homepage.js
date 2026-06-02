@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../config/database');
 const { isAdmin } = require('../middleware/auth');
 const { uploadCarousel } = require('../config/multer');
+const { uploadImage } = require('../config/storage');
 
 // ── GET: página principal de configuración ────────────────────────────────────
 router.get('/', isAdmin, async (req, res) => {
@@ -38,13 +39,13 @@ router.post('/guardar', isAdmin, async (req, res) => {
     for (const c of campos) {
       const val = req.body[c] !== undefined ? req.body[c] : '0';
       await db.query(
-        'INSERT INTO homepage_config (clave,valor) VALUES (?,?) ON DUPLICATE KEY UPDATE valor=VALUES(valor)',
+        'INSERT INTO homepage_config (clave,valor) VALUES (?,?) ON CONFLICT (clave) DO UPDATE SET valor=EXCLUDED.valor',
         [c, val]
       );
     }
     if (req.body.seccion_orden) {
       await db.query(
-        'INSERT INTO homepage_config (clave,valor) VALUES (?,?) ON DUPLICATE KEY UPDATE valor=VALUES(valor)',
+        'INSERT INTO homepage_config (clave,valor) VALUES (?,?) ON CONFLICT (clave) DO UPDATE SET valor=EXCLUDED.valor',
         ['seccion_orden', req.body.seccion_orden]
       );
     }
@@ -67,10 +68,12 @@ router.post('/carrusel/nuevo', isAdmin, uploadCarousel.single('imagen'), async (
   }
   try {
     const { titulo, subtitulo } = req.body;
+    const imgUrl = await uploadImage(req.file.buffer, req.file.originalname, 'banners',
+      { maxWidth: 1920, maxHeight: 900, quality: 88 });
     const [[max]] = await db.query('SELECT COALESCE(MAX(orden),0) AS m FROM carrusel');
     await db.query(
       'INSERT INTO carrusel (imagen, titulo, subtitulo, orden, activo) VALUES (?,?,?,?,1)',
-      [req.file.filename, titulo || '', subtitulo || '', (max.m || 0) + 1]
+      [imgUrl, titulo || '', subtitulo || '', (max.m || 0) + 1]
     );
     req.flash('success', 'Slide agregado correctamente');
   } catch(e) {
@@ -129,10 +132,12 @@ router.post('/carrusel-marca/nuevo', isAdmin, uploadCarousel.single('imagen'), a
   }
   try {
     const { titulo, subtitulo } = req.body;
+    const imgUrl = await uploadImage(req.file.buffer, req.file.originalname, 'banners',
+      { maxWidth: 1200, maxHeight: 600, quality: 85 });
     const [[max]] = await db.query('SELECT COALESCE(MAX(orden),0) AS m FROM carrusel_marca');
     await db.query(
       'INSERT INTO carrusel_marca (imagen, titulo, subtitulo, orden, activo) VALUES (?,?,?,?,1)',
-      [req.file.filename, titulo || '', subtitulo || '', (max.m || 0) + 1]
+      [imgUrl, titulo || '', subtitulo || '', (max.m || 0) + 1]
     );
     req.flash('success', 'Imagen de marca agregada');
   } catch(e) {

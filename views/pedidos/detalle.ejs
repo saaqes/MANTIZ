@@ -38,7 +38,7 @@
           <% if (items && items.length > 0) { %>
             <% items.forEach(function(item) { %>
             <div style="display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05)">
-              <img src="/uploads/products/<%= item.imagen_principal %>" width="72" height="72"
+              <img src="<%= item.imagen_principal  %>" width="72" height="72"
                    style="object-fit:cover;border:2px solid var(--border);flex-shrink:0"
                    onerror="this.src='https://via.placeholder.com/72x72/111/888?text=P'">
               <div style="flex:1;min-width:0">

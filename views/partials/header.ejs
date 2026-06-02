@@ -520,7 +520,7 @@
       <!-- USER DROPDOWN -->
       <div style="position:relative" id="user-wrap">
         <button class="user-btn" id="user-btn">
-          <img src="<%= user.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+user.foto_perfil : '/img/defaults/avatars/'+(user.foto_perfil_preset||'avatar1.png') %>" width="28" height="28" style="object-fit:cover" onerror="this.src='/img/defaults/avatars/avatar1.png'">
+          <img src="<%= user.foto_perfil_tipo==='upload' ? user.foto_perfil : '/img/defaults/avatars/'+(user.foto_perfil_preset||'avatar1.png') %>" width="28" height="28" style="object-fit:cover" onerror="this.src='/img/defaults/avatars/avatar1.png'">
           <span><%= user.nombre_visible.split(' ')[0].toUpperCase() %></span>
           <i class="bi bi-chevron-down" style="font-size:10px;color:var(--gray)"></i>
         </button>
@@ -660,7 +660,7 @@
     </nav>
     <div class="sl-bottom">
       <a href="/perfil" class="sl-user">
-        <img src="<%= user.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+user.foto_perfil : '/img/defaults/avatars/'+(user.foto_perfil_preset||'avatar1.png') %>" width="34" height="34" style="border-radius:50%;object-fit:cover;border:2px solid var(--pink)" onerror="this.src='/img/defaults/avatars/avatar1.png'">
+        <img src="<%= user.foto_perfil_tipo==='upload' ? user.foto_perfil : '/img/defaults/avatars/'+(user.foto_perfil_preset||'avatar1.png') %>" width="34" height="34" style="border-radius:50%;object-fit:cover;border:2px solid var(--pink)" onerror="this.src='/img/defaults/avatars/avatar1.png'">
         <div><div class="sl-name"><%= user.nombre_visible.split(' ')[0] %></div><div class="sl-role">ADMINISTRADOR</div></div>
         <a href="/auth/logout" style="color:var(--muted);margin-left:auto" title="Salir"><i class="bi bi-power"></i></a>
       </a>
@@ -852,7 +852,7 @@ async function cargarConversaciones(){
     if(!d.conversaciones?.length){body.innerHTML='<div style="text-align:center;padding:30px;color:var(--gray);font-size:12px;letter-spacing:1px">Sin conversaciones</div>';return;}
     body.innerHTML=d.conversaciones.map(c=>`
       <a href="/u/${c.username}" class="csp-contact">
-        <img src="${c.foto_perfil_tipo==='upload'?'/uploads/profiles/'+c.foto_perfil:'/img/defaults/avatars/'+(c.foto_perfil_preset||'avatar1.png')}"
+        <img src="${c.foto_perfil_tipo==='upload'?c.foto_perfil:'/img/defaults/avatars/'+(c.foto_perfil_preset||'avatar1.png')}"
              width="36" height="36" style="border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0">
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nombre_visible}</div>

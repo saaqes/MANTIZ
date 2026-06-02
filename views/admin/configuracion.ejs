@@ -78,7 +78,7 @@
         <label class="form-label">Logo actual</label>
         <div class="d-flex align-items-center gap-3">
           <% if (config.logo) { %>
-            <img src="/uploads/logos/<%= config.logo %>" class="logo-current" onerror="this.style.display='none'" alt="Logo">
+            <img src="<%= config.logo %>" class="logo-current" onerror="this.style.display='none'" alt="Logo">
           <% } else { %>
             <div style="width:80px;height:60px;background:var(--dark3);border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.7rem">Sin logo</div>
           <% } %>

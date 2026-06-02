@@ -62,9 +62,9 @@
         </div>
         <div class="pc-img-wrap">
           <div class="pc-img-clip">
-            <img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>"
+            <img class="pc-img" src="<%= p.imagen_principal  %>" alt="<%= p.titulo %>"
                  onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
-            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%>
+            <%if(p.imagen_hover){%><img class="pc-img-hover" src="<%= p.imagen_hover %>" alt="" onerror="this.style.display='none'"><%}%>
           </div>
         </div>
         <div class="pc-info">
@@ -94,7 +94,7 @@
   <div style="display:flex;flex-direction:column;gap:12px">
     <% usuarios.forEach(function(u) {
       var av = (u.foto_perfil_tipo==='upload' && u.foto_perfil)
-        ? '/uploads/profiles/'+u.foto_perfil
+        ? u.foto_perfil
         : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png');
     %>
     <a href="/u/<%= u.username %>" style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:16px 20px;text-decoration:none;transition:border-color 0.2s;position:relative" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">

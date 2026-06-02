@@ -131,7 +131,7 @@
             <% if (items && items.length > 0) { %>
               <% items.forEach(function(item) { %>
               <div style="display:flex;align-items:center;gap:10px">
-                <img src="/uploads/products/<%= item.imagen_principal %>" width="48" height="48"
+                <img src="<%= item.imagen_principal  %>" width="48" height="48"
                      style="object-fit:cover;border:1px solid var(--border);flex-shrink:0"
                      onerror="this.style.background='#111'">
                 <div style="flex:1;min-width:0">

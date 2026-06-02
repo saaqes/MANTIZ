@@ -79,7 +79,7 @@
   <% } else { %>
   <div class="boards-grid">
     <% tableros.forEach(t => {
-      const coverImg = t.imagen_portada ? '/uploads/pines/'+t.imagen_portada : null;
+      const coverImg = t.imagen_portada || null;
     %>
     <div class="board-card" id="board-<%= t.id %>">
       <% if (coverImg) { %>
@@ -96,7 +96,7 @@
         </div>
       </div>
       <div class="board-author">
-        <img src="<%= t.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+t.foto_perfil : '/img/defaults/avatars/'+(t.foto_perfil_preset||'avatar1.png') %>" width="22" height="22" onerror="this.src='/img/defaults/avatars/avatar1.png'">
+        <img src="<%= t.foto_perfil_tipo==='upload' ? t.foto_perfil : '/img/defaults/avatars/'+(t.foto_perfil_preset||'avatar1.png') %>" width="22" height="22" onerror="this.src='/img/defaults/avatars/avatar1.png'">
         <a href="/u/<%= t.username %>" style="font-size:11px;color:var(--gray);text-decoration:none">@<%= t.username %></a>
       </div>
       <div class="board-actions">
@@ -140,7 +140,7 @@
     <div class="sticker-cat"><%= cat.toUpperCase() %></div>
     <% stickers.filter(s => s.categoria === cat).forEach(s => { %>
     <div class="sticker-item" title="<%= s.nombre %>">
-      <img src="/uploads/stickers/<%= s.archivo %>" alt="<%= s.nombre %>" style="width:52px;height:52px;object-fit:contain"
+      <img src="<%= s.archivo %>" alt="<%= s.nombre %>" style="width:52px;height:52px;object-fit:contain"
         onerror="this.parentElement.innerHTML='<span>❓</span>'">
     </div>
     <% }) %>
@@ -170,7 +170,7 @@
       <div style="text-align:center;padding:60px;color:var(--muted);grid-column:1/-1">Sin usuarios destacados</div>
     <% } else { usuarios.forEach(u => { %>
     <a href="/u/<%= u.username %>" class="user-card">
-      <img src="<%= u.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+u.foto_perfil : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png') %>"
+      <img src="<%= u.foto_perfil_tipo==='upload' ? u.foto_perfil : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png') %>"
            onerror="this.src='/img/defaults/avatars/avatar1.png'">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;margin-bottom:4px"><%= u.nombre_visible %></div>
       <div style="font-size:11px;color:var(--muted)">@<%= u.username %></div>

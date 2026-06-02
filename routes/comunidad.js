@@ -101,7 +101,7 @@ router.post('/tablero/:id/reaccion', isAuthenticated, async (req, res) => {
       return res.json({ reaccion: null });
     }
     await db.query(
-      'INSERT INTO tablero_reacciones (tablero_id,usuario_id,tipo) VALUES (?,?,?) ON DUPLICATE KEY UPDATE tipo=VALUES(tipo)',
+      'INSERT INTO tablero_reacciones (tablero_id,usuario_id,tipo) VALUES (?,?,?) ON CONFLICT (tablero_id, usuario_id) DO UPDATE SET tipo=EXCLUDED.tipo',
       [req.params.id, req.session.user.id, tipo]
     );
     res.json({ reaccion: tipo });
@@ -127,20 +127,22 @@ router.get('/stickers', async (req, res) => {
 });
 
 // ─── Stickers: subir (usuarios) ──────────────────────────────────────────────
-router.post('/stickers/subir', isAuthenticated, (req, res, next) => {
-  // Intentar usar uploadSticker si existe, sino manejar sin archivo
-  try {
-    const multerMid = require('../config/multer').uploadSticker;
-    if (multerMid) return multerMid.single('sticker')(req, res, next);
-  } catch(e) {}
-  next();
-}, async (req, res) => {
+router.post('/stickers/subir', isAuthenticated, require('../config/multer').uploadSticker.single('sticker'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Archivo requerido' });
   const { nombre, categoria } = req.body;
   try {
+    const { uploadImage, uploadFile } = require('../config/storage');
+    // GIF animados: subir sin convertir; PNG/JPG: convertir a WebP
+    let stickerUrl;
+    if (req.file.mimetype === 'image/gif') {
+      stickerUrl = await uploadFile(req.file.buffer, req.file.originalname, 'stickers', 'image/gif');
+    } else {
+      stickerUrl = await uploadImage(req.file.buffer, req.file.originalname, 'stickers',
+        { maxWidth: 256, maxHeight: 256, quality: 85, keepPng: true });
+    }
     await db.query(
       'INSERT INTO stickers (nombre, archivo, tipo, subido_por, moderado, categoria) VALUES (?,?,?,?,?,?)',
-      [nombre || 'Mi sticker', req.file.filename, 'usuario', req.session.user.id, 0, categoria || 'general']
+      [nombre || 'Mi sticker', stickerUrl, 'usuario', req.session.user.id, 0, categoria || 'general']
     );
     res.json({ success: true, mensaje: 'Sticker enviado para moderación' });
   } catch(e) { res.status(500).json({ error: e.message }); }

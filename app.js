@@ -1,31 +1,48 @@
 /**
- * app.js — MANTIZ v4 (con nuevas rutas sociales)
- * Reemplaza el app.js existente con este archivo.
- * Cambios: +notificaciones, +amigos, +comunidad, +opiniones, +chat_social, +gamificacion
+ * app.js — MANTIZ v4 (PostgreSQL + Cloudflare R2)
  */
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const flash = require('connect-flash');
 const path = require('path');
-const bodyParser = require('body-parser');
 
 const app = express();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ── Sesiones con PostgreSQL (connect-pg-simple) ───────────────────────────────
+const PgSession = require('connect-pg-simple')(session);
+const { pool } = require('./config/database');
 
 app.use(session({
+  store: new PgSession({ pool, tableName: 'session', createTableIfMissing: true }),
   secret: process.env.SESSION_SECRET || 'mantiz-secret-2025-ultra-secure',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
+  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 },
 }));
 
 app.use(flash());
+
+// ── Helper global: construye URL de imagen/archivo ────────────────────────────
+// Los valores en DB son URLs completas (R2). Las imágenes preset son locales.
+app.use((req, res, next) => {
+  /**
+   * fileUrl(value) — devuelve el valor si ya es URL, o null si está vacío.
+   * Los presets (avatares/banners) se manejan directamente en las vistas.
+   */
+  res.locals.fileUrl = (val) => {
+    if (!val || val === 'null') return null;
+    if (val.startsWith('http')) return val;
+    return null; // ignora filenames legacy
+  };
+  next();
+});
 
 app.use(async (req, res, next) => {
   res.locals.user = req.session.user || null;

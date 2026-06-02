@@ -1,10 +1,10 @@
 <%- include('../partials/header') %>
 <%
 var bannerSrc = (perfil.banner_tipo==='upload' && perfil.banner)
-  ? '/uploads/banners/'+perfil.banner
+  ? perfil.banner
   : '/img/defaults/banners/'+(perfil.banner_preset||'banner1.jpg');
 var avatarSrc = (perfil.foto_perfil_tipo==='upload' && perfil.foto_perfil)
-  ? '/uploads/profiles/'+perfil.foto_perfil
+  ? perfil.foto_perfil
   : '/img/defaults/avatars/'+(perfil.foto_perfil_preset||'avatar1.png');
 var cfgColor = (pcfg && pcfg.color_primario) ? pcfg.color_primario : 'var(--pink)';
 %>
@@ -124,7 +124,7 @@ var cfgColor = (pcfg && pcfg.color_primario) ? pcfg.color_primario : 'var(--pink
       <%if(favoritos.length>0){favoritos.forEach(function(p){%>
       <div class="product-card" onclick="window.location='/productos/<%=p.id%>'">
         <div class="pc-label"><span class="pc-label-text"><%=p.titulo.substring(0,16)%></span></div>
-        <div class="pc-img-wrap"><div class="pc-img-clip"><img class="pc-img" src="/uploads/products/<%=p.imagen_principal%>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'"></div></div>
+        <div class="pc-img-wrap"><div class="pc-img-clip"><img class="pc-img" src="<%= p.imagen_principal %>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'"></div></div>
         <div class="pc-info"><span class="pc-name"><%=p.titulo.substring(0,18)%></span><span class="pc-price">$<%=parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO')%></span></div>
       </div>
       <%})}else{%>
