@@ -85,7 +85,7 @@
           <td style="color:var(--muted);font-family:var(--fm);font-size:.7rem"><%= idx+1 %></td>
           <td>
             <div class="d-flex align-items-center gap-2">
-              <img src="<%= u.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+u.foto_perfil : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png') %>"
+              <img src="<%= u.foto_perfil_tipo==='upload' ? u.foto_perfil : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png') %>"
                    class="user-avatar" onerror="this.src='/img/defaults/avatars/avatar1.png'">
               <div>
                 <div style="font-family:var(--fb);font-weight:700;font-size:.9rem"><%= u.nombre_visible %></div>

@@ -14,7 +14,7 @@
   <div style="display:flex;flex-direction:column;gap:14px">
     <div id="galleryMain" style="position:relative;overflow:hidden;background:#111;aspect-ratio:4/5">
       <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.4);filter:url(#gb);pointer-events:none;z-index:5"></div>
-      <img id="mainImg" src="/uploads/products/<%= producto.imagen_principal %>" alt="<%= producto.titulo %>"
+      <img id="mainImg" src="<%= producto.imagen_principal  %>" alt="<%= producto.titulo %>"
            style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:opacity 0.4s"
            onerror="this.src='https://via.placeholder.com/600x750/111/888?text=MANTIZ'">
       <% if (producto.precio_descuento) { %>
@@ -139,7 +139,7 @@
       <div style="display:flex;align-items:flex-start;gap:12px">
         <%
           var userAvSrc = (user.foto_perfil_tipo === 'upload' && user.foto_perfil)
-            ? '/uploads/profiles/' + user.foto_perfil
+            ? user.foto_perfil
             : '/img/defaults/avatars/' + (user.foto_perfil_preset || 'avatar1.png');
         %>
         <img src="<%= userAvSrc %>" width="36" height="36"
@@ -173,7 +173,7 @@
     <% comentarios.forEach(function(com) { %>
     <%
       var comAvSrc = (com.foto_perfil_tipo === 'upload' && com.foto_perfil)
-        ? '/uploads/profiles/' + com.foto_perfil
+        ? com.foto_perfil
         : '/img/defaults/avatars/' + (com.foto_perfil_preset || 'avatar1.png');
     %>
     <div style="display:flex;align-items:flex-start;gap:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);padding:14px 16px">
@@ -227,7 +227,7 @@
     <% relacionados.forEach(function(p) { %>
     <div class="product-card" onclick="window.location='/productos/<%= p.id %>'">
       <div class="pc-label"><span class="pc-label-text"><%= p.titulo.substring(0,18) %></span></div>
-      <div class="pc-img-wrap"><div class="pc-img-clip"><img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'"></div></div>
+      <div class="pc-img-wrap"><div class="pc-img-clip"><img class="pc-img" src="<%= p.imagen_principal  %>" alt="<%= p.titulo %>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'"></div></div>
       <div class="pc-info"><span class="pc-name"><%= p.titulo.substring(0,20) %></span><span class="pc-price">$<%= parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO') %></span></div>
     </div>
     <% }) %>
@@ -259,8 +259,8 @@
 
 <script>
 var productoId=<%=producto.id%>;
-var galleryImgs=['/uploads/products/<%=producto.imagen_principal%>'];
-<% if(imagenes){imagenes.forEach(function(img){%>galleryImgs.push('/uploads/products/<%=img.imagen%>');<%});}%>
+var galleryImgs=[producto.imagen_principal || ''];
+<% if(imagenes){imagenes.forEach(function(img){%>galleryImgs.push('<%=img.imagen%>');<%});}%>
 var galIdx=0;
 function buildGallery(){
   var dh='',th='';

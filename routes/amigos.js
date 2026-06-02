@@ -24,7 +24,7 @@ router.post('/solicitud/:uid', isAuthenticated, async (req, res) => {
     }
 
     await db.query(
-      'INSERT INTO amistades (solicitante_id, receptor_id, estado) VALUES (?,?,?) ON DUPLICATE KEY UPDATE estado="pendiente", actualizado_en=NOW()',
+      'INSERT INTO amistades (solicitante_id, receptor_id, estado) VALUES (?,?,?) ON CONFLICT (solicitante_id, receptor_id) DO UPDATE SET estado=\'pendiente\', actualizado_en=NOW()',
       [solicitanteId, receptorId, 'pendiente']
     );
 

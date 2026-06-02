@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../config/database');
 const { isAdmin } = require('../middleware/auth');
 const { uploadProduct, uploadCarousel, uploadLogo } = require('../config/multer');
+const { uploadImage, deleteFromR2 } = require('../config/storage');
 
 // DASHBOARD
 router.get('/', isAdmin, async (req, res) => {
@@ -167,7 +168,16 @@ router.post('/productos/nuevo', isAdmin, uploadProduct.fields([
 ]), async (req, res) => {
   const { titulo, descripcion, precio, precio_descuento, categoria, tags, en_inicio, activo, tallas, stocks } = req.body;
   try {
-    const imgPrincipal = req.files?.imagen_principal?.[0]?.filename || null;
+    // Procesar imagen principal con Sharp → R2
+    let imgPrincipal = null;
+    if (req.files?.imagen_principal?.[0]) {
+      imgPrincipal = await uploadImage(
+        req.files.imagen_principal[0].buffer,
+        req.files.imagen_principal[0].originalname,
+        'products',
+        { maxWidth: 800, maxHeight: 1066, quality: 85 }
+      );
+    }
     const [result] = await db.query(
       `INSERT INTO productos (titulo, descripcion, precio, precio_descuento, imagen_principal, categoria, tags, en_inicio, activo)
        VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -181,7 +191,13 @@ router.post('/productos/nuevo', isAdmin, uploadProduct.fields([
     }
     if (req.files?.imagenes_extra) {
       for (let i = 0; i < req.files.imagenes_extra.length; i++) {
-        await db.query('INSERT INTO producto_imagenes (producto_id, imagen, orden) VALUES (?,?,?)', [prodId, req.files.imagenes_extra[i].filename, i + 1]);
+        const extraUrl = await uploadImage(
+          req.files.imagenes_extra[i].buffer,
+          req.files.imagenes_extra[i].originalname,
+          'products',
+          { maxWidth: 800, maxHeight: 1066, quality: 85 }
+        );
+        await db.query('INSERT INTO producto_imagenes (producto_id, imagen, orden) VALUES (?,?,?)', [prodId, extraUrl, i + 1]);
       }
     }
     req.flash('success', 'Producto creado');
@@ -206,7 +222,14 @@ router.post('/productos/:id/editar', isAdmin, uploadProduct.fields([
   const { titulo, descripcion, precio, precio_descuento, categoria, tags, en_inicio, activo } = req.body;
   try {
     const updates = { titulo, descripcion, precio, precio_descuento: precio_descuento || null, categoria, tags: tags || '', en_inicio: en_inicio ? 1 : 0, activo: activo ? 1 : 0 };
-    if (req.files?.imagen_principal?.[0]) updates.imagen_principal = req.files.imagen_principal[0].filename;
+    if (req.files?.imagen_principal?.[0]) {
+      updates.imagen_principal = await uploadImage(
+        req.files.imagen_principal[0].buffer,
+        req.files.imagen_principal[0].originalname,
+        'products',
+        { maxWidth: 800, maxHeight: 1066, quality: 85 }
+      );
+    }
     const setClause = Object.keys(updates).map(k => `${k}=?`).join(',');
     await db.query(`UPDATE productos SET ${setClause} WHERE id=?`, [...Object.values(updates), req.params.id]);
     req.flash('success', 'Producto actualizado');
@@ -244,24 +267,23 @@ router.post('/carrusel/nuevo', isAdmin, (req, res, next) => {
     next();
   });
 }, async (req, res) => {
-  const { titulo, subtitulo, activo } = req.body;
   if (!req.file) { req.flash('error', 'Imagen requerida'); return res.redirect('/admin/carrusel'); }
   try {
+    const imgUrl = await uploadImage(req.file.buffer, req.file.originalname, 'banners',
+      { maxWidth: 1920, maxHeight: 900, quality: 88 });
     const [[maxOrden]] = await db.query('SELECT COALESCE(MAX(orden),0) as m FROM carrusel');
-    const { content_type, mostrar_boton, boton_texto, countdown_fecha, url_destino } = req.body;
-    // Build safe INSERT based on available columns
+    const { content_type, mostrar_boton, boton_texto, countdown_fecha } = req.body;
+    const { titulo, subtitulo, activo } = req.body;
     try {
       await db.query(
         'INSERT INTO carrusel (imagen, titulo, subtitulo, orden, activo, content_type, mostrar_boton, boton_texto, countdown_fecha) VALUES (?,?,?,?,?,?,?,?,?)',
-        [req.file.filename, titulo||'', subtitulo||'', maxOrden.m + 1, activo ? 1 : 0,
-         content_type||'texto', mostrar_boton!=='0'?1:0, boton_texto||'EXPLORAR',
-         countdown_fecha||null]
+        [imgUrl, titulo||'', subtitulo||'', maxOrden.m + 1, activo ? 1 : 0,
+         content_type||'texto', mostrar_boton!=='0'?1:0, boton_texto||'EXPLORAR', countdown_fecha||null]
       );
     } catch(e2) {
-      // Fallback without new columns if they don't exist yet
       await db.query(
         'INSERT INTO carrusel (imagen, titulo, subtitulo, orden, activo) VALUES (?,?,?,?,?)',
-        [req.file.filename, titulo||'', subtitulo||'', maxOrden.m + 1, activo ? 1 : 0]
+        [imgUrl, titulo||'', subtitulo||'', maxOrden.m + 1, activo ? 1 : 0]
       );
     }
     req.flash('success', 'Banner agregado');
@@ -432,7 +454,9 @@ router.post('/configuracion', isAdmin, uploadLogo.single('logo_file'), async (re
     await db.query('UPDATE configuracion_sitio SET valor=? WHERE clave=?', [valor, clave]).catch(() => {});
   }
   if (req.file) {
-    await db.query('UPDATE configuracion_sitio SET valor=? WHERE clave="logo"', [req.file.filename]).catch(() => {});
+    const logoUrl = await uploadImage(req.file.buffer, req.file.originalname, 'logo',
+      { maxWidth: 400, maxHeight: 400, quality: 90, keepPng: true });
+    await db.query("UPDATE configuracion_sitio SET valor=? WHERE clave='logo'", [logoUrl]).catch(() => {});
   }
   req.flash('success', 'Configuracion guardada');
   res.redirect('/admin/configuracion');

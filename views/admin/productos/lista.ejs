@@ -11,7 +11,7 @@
         <tbody>
           <% productos.forEach(p => { %>
           <tr>
-            <td><img src="/uploads/products/<%= p.imagen_principal %>" width="50" height="50" class="rounded-2" style="object-fit:cover" onerror="this.src='https://via.placeholder.com/50x50/f0f0f0/999?text=IMG'"></td>
+            <td><img src="<%= p.imagen_principal  %>" width="50" height="50" class="rounded-2" style="object-fit:cover" onerror="this.src='https://via.placeholder.com/50x50/f0f0f0/999?text=IMG'"></td>
             <td><div class="fw-semibold"><%= p.titulo %></div><div class="text-muted small">ID: #<%= p.id %></div></td>
             <td><span class="badge rounded-pill" style="background:var(--color-primary)"><%= p.categoria %></span></td>
             <td>

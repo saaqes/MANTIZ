@@ -17,11 +17,11 @@ router.post('/', isAuthenticated, async (req, res) => {
     await db.query(
       `INSERT INTO perfil_config (usuario_id,color_primario,tema,fondo_tipo,fondo_valor,fondo_blur,pais,idioma,metodo_pago_pref)
        VALUES (?,?,?,?,?,?,?,?,?)
-       ON DUPLICATE KEY UPDATE
-         color_primario=VALUES(color_primario),tema=VALUES(tema),
-         fondo_tipo=VALUES(fondo_tipo),fondo_valor=VALUES(fondo_valor),
-         fondo_blur=VALUES(fondo_blur),pais=VALUES(pais),
-         idioma=VALUES(idioma),metodo_pago_pref=VALUES(metodo_pago_pref)`,
+       ON CONFLICT (usuario_id) DO UPDATE SET
+         color_primario=EXCLUDED.color_primario, tema=EXCLUDED.tema,
+         fondo_tipo=EXCLUDED.fondo_tipo, fondo_valor=EXCLUDED.fondo_valor,
+         fondo_blur=EXCLUDED.fondo_blur, pais=EXCLUDED.pais,
+         idioma=EXCLUDED.idioma, metodo_pago_pref=EXCLUDED.metodo_pago_pref`,
       [req.session.user.id, color_primario||'#e91e8c', tema||'oscuro', fondo_tipo||'color',
        fondo_valor||'#0a0a0a', fondo_blur||0, pais||'Colombia', idioma||'es', metodo_pago_pref||'tarjeta']
     );

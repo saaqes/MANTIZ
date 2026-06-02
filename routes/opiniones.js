@@ -152,8 +152,8 @@ async function actualizarLogro(userId, clave, db) {
 
     await db.query(
       `INSERT INTO usuario_logros (usuario_id, logro_id, progreso, desbloqueado, fecha_desbloqueo)
-       VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE progreso=VALUES(progreso),
-       desbloqueado=VALUES(desbloqueado), fecha_desbloqueo=VALUES(fecha_desbloqueo)`,
+       VALUES (?,?,?,?,?) ON CONFLICT (usuario_id, logro_id) DO UPDATE SET progreso=EXCLUDED.progreso,
+       desbloqueado=EXCLUDED.desbloqueado, fecha_desbloqueo=EXCLUDED.fecha_desbloqueo`,
       [userId, logro.id, nuevoProg, desbloqueado ? 1 : 0, desbloqueado ? new Date() : null]
     );
 

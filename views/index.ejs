@@ -6,7 +6,7 @@
     <% if (carrusel && carrusel.length > 0) { %>
       <% carrusel.forEach(function(s, i) { %>
       <div class="hslide" style="position:absolute;inset:0;opacity:<%=i===0?1:0%>;transition:opacity 1.2s ease">
-        <img src="/uploads/banners/<%=s.imagen%>" alt="" style="width:100%;height:100%;object-fit:cover;filter:brightness(0.45)">
+        <img src="<%= s.imagen %>" alt="" style="width:100%;height:100%;object-fit:cover;filter:brightness(0.45)">
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.5))"></div>
       </div>
       <% }) %>
@@ -60,8 +60,8 @@
         </div>
         <div class="pc-img-wrap">
           <div class="pc-img-clip">
-            <img class="pc-img" src="/uploads/products/<%=p.imagen_principal%>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
-            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%>
+            <img class="pc-img" src="<%= p.imagen_principal %>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+            <%if(p.imagen_hover){%><img class="pc-img-hover" src="<%= p.imagen_hover %>" alt="" onerror="this.style.display='none'"><%}%>
           </div>
           <button class="pc-add-btn" onclick="event.stopPropagation();quickAdd(<%=p.id%>,'<%=p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39))%>',<%=p.precio_descuento||p.precio%>,'<%=p.imagen_principal%>')">+</button>
         </div>
@@ -104,8 +104,8 @@
         <div class="product-card" onclick="window.location='/productos/<%=p.id%>'">
           <div class="pc-label"><span class="pc-label-text"><%=p.titulo.substring(0,16)%></span></div>
           <div class="pc-img-wrap">
-            <div class="pc-img-clip"><img class="pc-img" src="/uploads/products/<%=p.imagen_principal%>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
-            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%></div>
+            <div class="pc-img-clip"><img class="pc-img" src="<%= p.imagen_principal %>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+            <%if(p.imagen_hover){%><img class="pc-img-hover" src="<%= p.imagen_hover %>" alt="" onerror="this.style.display='none'"><%}%></div>
             <button class="pc-add-btn" onclick="event.stopPropagation();quickAdd(<%=p.id%>,'<%=p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39))%>',<%=p.precio_descuento||p.precio%>,'<%=p.imagen_principal%>')">+</button>
           </div>
           <div class="pc-info"><span class="pc-name"><%=p.titulo.substring(0,18)%></span><span class="pc-price">$<%=parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO')%></span></div>
@@ -173,7 +173,7 @@
   <div id="brand-inner" style="display:flex;height:100%;transition:transform 0.6s cubic-bezier(0.4,0,0.2,1)">
     <%brandSlides.forEach(function(s){%>
     <div style="min-width:100%;height:100%;position:relative">
-      <img src="/uploads/banners/<%=s.imagen%>" alt="<%=s.titulo||''%>"
+      <img src="<%= s.imagen %>" alt="<%=s.titulo||''%>"
            style="width:100%;height:100%;object-fit:cover;filter:brightness(0.55)"
            onerror="this.style.display='none'">
       <%if(s.titulo){%>
@@ -359,8 +359,9 @@ async function initThree(){
 
   // Load model - try local .glb first
   // Dynamic model from admin settings
-  var modeloAtivoUrl = '<%- modeloActivo ? modeloActivo.archivo : "/models/susan.glb" %>';
-  var fallbackUrls=['/models/susan.glb','/models/t_shirt.glb','/models/stella.glb'];
+  var modeloAtivoUrl = '<%- modeloActivo && modeloActivo.archivo ? modeloActivo.archivo : null %>';
+  var usarFallback = !modeloAtivoUrl;
+  var fallbackUrls=['/models/susan.glb','/models/t_shirt.glb','/models/stella.glb']; if(usarFallback) modeloAtivoUrl = fallbackUrls[0];
   var allModelUrls = [modeloAtivoUrl].concat(fallbackUrls.filter(function(u){return u!==modeloAtivoUrl;}));
   var modelUrls = [...new Set(allModelUrls)];
   var loader=new THREE.GLTFLoader();
@@ -397,7 +398,7 @@ async function quickAdd(id,name,price,img){
     if(d.tallas&&d.tallas.length>0){
       document.getElementById('sz-name').textContent=name;
       document.getElementById('sz-price').textContent='$'+parseFloat(price).toLocaleString('es-CO');
-      var h='';d.tallas.forEach(function(t){h+='<button onclick="selSzBtn(this,\''+t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid rgba(255,255,255,0.3);background:none;color:var(--white);font-family:\'Rajdhani\',sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';});
+      var h='';d.tallas.forEach(function(t){h+='<button onclick="selSzBtn(this,\t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid rgba(255,255,255,0.3);background:none;color:var(--white);font-family:\'Rajdhani\',sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';});
       document.getElementById('sz-btns').innerHTML=h;
       pendProd={id:id,name:name,price:price,img:img};selSz=null;
       var m=document.getElementById('size-modal');m.style.opacity='1';m.style.pointerEvents='all';

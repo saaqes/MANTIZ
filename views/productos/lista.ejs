@@ -65,9 +65,9 @@
       </div>
       <div class="pc-img-wrap">
         <div class="pc-img-clip">
-          <img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>"
+          <img class="pc-img" src="<%= p.imagen_principal  %>" alt="<%= p.titulo %>"
                onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
-            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%>
+            <%if(p.imagen_hover){%><img class="pc-img-hover" src="<%= p.imagen_hover %>" alt="" onerror="this.style.display='none'"><%}%>
         </div>
         <button class="pc-add-btn"
                 onclick="event.stopPropagation();quickAdd(<%= p.id %>,'<%= p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39)) %>',<%= p.precio_descuento||p.precio %>,'<%= p.imagen_principal %>')">+</button>
@@ -108,7 +108,7 @@ async function quickAdd(id,name,price,img){
       document.getElementById('sz-price').textContent='$'+parseFloat(price).toLocaleString('es-CO');
       var h='';
       d.tallas.forEach(function(t){
-        h+='<button onclick="selSzBtn(this,\''+t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid rgba(255,255,255,0.3);background:none;color:var(--white);font-family:Rajdhani,sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';
+        h+='<button onclick="selSzBtn(this,\t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid rgba(255,255,255,0.3);background:none;color:var(--white);font-family:Rajdhani,sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';
       });
       document.getElementById('sz-btns').innerHTML=h;
       pendProd={id:id,name:name,price:price,img:img};selSz=null;

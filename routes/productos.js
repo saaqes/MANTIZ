@@ -245,7 +245,7 @@ router.post('/:id/destacar', isAuthenticated, async (req, res) => {
       if (!t) return res.status(403).json({ error: 'Tablero no encontrado' });
       await db.query(
         'INSERT INTO tablero_pines (tablero_id, producto_id, titulo, imagen_url, tipo) VALUES (?,?,?,?,?)',
-        [tablero_id, productoId, prod.titulo, '/uploads/products/'+prod.imagen_principal, 'producto']
+        [tablero_id, productoId, prod.titulo, prod.imagen_principal, 'producto']
       );
       res.json({ success: true, message: 'Guardado en ' + t.nombre });
     } else {
@@ -274,7 +274,7 @@ router.post('/:id/destacar/nuevo-tablero', isAuthenticated, async (req, res) => 
     );
     await db.query(
       'INSERT INTO tablero_pines (tablero_id, producto_id, titulo, imagen_url, tipo) VALUES (?,?,?,?,?)',
-      [r.insertId, productoId, prod.titulo, '/uploads/products/'+prod.imagen_principal, 'producto']
+      [r.insertId, productoId, prod.titulo, prod.imagen_principal, 'producto']
     );
     res.json({ success: true, tableroId: r.insertId, message: 'Tablero creado y producto guardado' });
   } catch(e) {

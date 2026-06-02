@@ -48,7 +48,7 @@
             <label class="form-label">Imagen principal *</label>
             <div class="img-preview-box" id="mainImgBox" onclick="document.getElementById('mainImgInput').click()" style="aspect-ratio:3/4;max-height:280px">
               <% if (producto?.imagen_principal) { %>
-                <img id="mainImgPreview" src="/uploads/products/<%= producto.imagen_principal %>" alt="">
+                <img id="mainImgPreview" src="<%= producto.imagen_principal  %>" alt="">
               <% } else { %>
                 <img id="mainImgPreview" style="display:none">
               <% } %>

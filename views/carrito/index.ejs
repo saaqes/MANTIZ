@@ -11,7 +11,7 @@
       <% items.forEach(item=>{%>
       <div style="display:flex;gap:20px;padding:20px;background:rgba(255,255,255,0.03);border:1px solid var(--border);margin-bottom:12px;position:relative" id="cart-item-<%=item.id%>">
         <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
-        <img src="/uploads/products/<%=item.imagen_principal%>" alt="<%=item.titulo%>" style="width:100px;height:130px;object-fit:cover;flex-shrink:0;filter:url(#gb)" onerror="this.src='https://via.placeholder.com/100x130/111/888?text=?'">
+        <img src="<%= item.imagen_principal %>" alt="<%=item.titulo%>" style="width:100px;height:130px;object-fit:cover;flex-shrink:0;filter:url(#gb)" onerror="this.src='https://via.placeholder.com/100x130/111/888?text=?'">
         <div style="flex:1;min-width:0">
           <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);margin-bottom:4px"><%=item.titulo%></div>
           <% if(item.talla){%><div style="font-size:12px;color:var(--pink);letter-spacing:2px;margin-bottom:8px">TALLA: <%=item.talla%></div><%}%>
