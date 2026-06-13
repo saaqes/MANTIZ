@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %> | <%= sitio.nombre_tienda || 'MANTIZ' %></title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&display=swap">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -19,17 +18,23 @@
       --black: #0a0a0a;
       --dark: #111111;
       --dark2: #0d0d0d;
+      --dark3: #151515;
       --card-bg: #1a1a1a;
+      --card: rgba(255,255,255,0.03);
       --pink: <%= sitio.color_primario || '#e91e8c' %>;
       --pink-light: #ff3da6;
       --white: #f0f0f0;
       --gray: #888;
       --border: rgba(233,30,140,0.2);
       --text: #e8e8f0;
-      --muted: #666;
+      --muted: #888;
       --sw: 252px;
       --cp: <%= sitio.color_primario || '#e91e8c' %>;
       --ca: <%= sitio.color_acento || '#ff5cb8' %>;
+      --color-primary: <%= sitio.color_primario || '#e91e8c' %>;
+      --fd: 'Bebas Neue', sans-serif;
+      --fb: 'Rajdhani', sans-serif;
+      --fm: 'Rajdhani', sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -72,6 +77,13 @@
       font-size: 18px; padding: 6px; transition: color 0.2s, transform 0.2s; position: relative; line-height: 1;
     }
     .nav-btn:hover { color: var(--pink); transform: scale(1.1); }
+    .theme-toggle-btn {
+      background: none; border: 1px solid var(--border); color: var(--white);
+      width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; transition: all 0.2s; flex-shrink: 0;
+    }
+    .theme-toggle-btn:hover { border-color: var(--pink); color: var(--pink); background: rgba(233,30,140,0.08); }
     .cart-count {
       position: absolute; top: -4px; right: -4px; background: var(--pink); color: white;
       font-size: 9px; width: 16px; height: 16px; border-radius: 50%;
@@ -390,17 +402,72 @@
 
     /* ── DARK MODE / LIGHT MODE ── */
     body.light-mode {
-      --black: #f0f0f0; --dark: #e4e4e4; --dark2: #d8d8d8; --card-bg: #ffffff;
-      --white: #111111; --gray: #555; --border: rgba(233,30,140,0.3);
-      --text: #111111; --muted: #777;
+      --black: #f5f5f5; --dark: #ebebeb; --dark2: #e0e0e0; --dark3: #d5d5d5;
+      --card-bg: #ffffff; --card: #ffffff;
+      --white: #1a1a1a; --gray: #555; --border: rgba(0,0,0,0.12);
+      --text: #1a1a1a; --muted: #666;
     }
-    body.light-mode #navbar { background: rgba(240,240,240,0.92); }
+    body.light-mode #navbar { background: rgba(255,255,255,0.95); border-bottom: 1px solid rgba(0,0,0,0.06); }
+    body.light-mode #navbar.scrolled { background: rgba(255,255,255,0.98) !important; }
+    body.light-mode #search-bar { background: rgba(255,255,255,0.98); }
+    body.light-mode #search-bar input { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: var(--white); }
+    body.light-mode .search-suggestions { background: #fff; border-color: rgba(0,0,0,0.1); }
+    body.light-mode .search-suggestions .item { border-color: rgba(0,0,0,0.05); }
     body.light-mode #cart-panel,
     body.light-mode .notif-panel,
-    body.light-mode .user-dropdown { background: rgba(240,240,240,0.98); }
-    body.light-mode .product-card { background: #fff; }
-    body.light-mode .chat-window { background: rgba(240,240,240,0.98); }
+    body.light-mode .user-dropdown { background: rgba(255,255,255,0.98); }
+    body.light-mode .cart-ph, body.light-mode .notif-ph { border-color: rgba(0,0,0,0.08); }
+    body.light-mode .cart-pitem, body.light-mode .notif-item { border-color: rgba(0,0,0,0.06); }
+    body.light-mode .product-card { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    body.light-mode .product-card::before { border-color: rgba(0,0,0,0.15); }
+    body.light-mode .chat-window { background: rgba(255,255,255,0.98); }
+    body.light-mode .chat-msg.bot { background: rgba(0,0,0,0.05); }
+    body.light-mode #mobile-menu { background: rgba(255,255,255,0.98); border-color: rgba(0,0,0,0.08); }
+    body.light-mode .mobile-menu-inner a { border-color: rgba(0,0,0,0.05); }
+    body.light-mode .mantiz-input,
+    body.light-mode .mantiz-select { background: rgba(0,0,0,0.03); }
+    body.light-mode .user-dropdown a { border-color: rgba(0,0,0,0.05); }
+    body.light-mode .chat-social-panel { background: rgba(255,255,255,0.98); }
+    body.light-mode .csp-contact { border-color: rgba(0,0,0,0.06); }
+    body.light-mode footer { background: #eee !important; }
+    body.light-mode footer a, body.light-mode footer p, body.light-mode footer div { color: var(--gray) !important; }
+    body.light-mode footer h4 { color: var(--pink) !important; }
+    body.light-mode .theme-toggle-btn { border-color: rgba(0,0,0,0.15); }
+    body.light-mode .admin-sidebar { background: #f0f0f0; }
+    body.light-mode .admin-topbar { background: rgba(255,255,255,0.97); }
+    body.light-mode .admin-content { background: var(--black); }
+    body.light-mode .sl-link { color: #555; }
+    body.light-mode .sl-link:hover, body.light-mode .sl-link.active { color: var(--pink); }
+    body.light-mode .stat-card { background: #fff; }
+    body.light-mode .card { background: #fff !important; }
+    body.light-mode .form-control, body.light-mode .form-select { background: rgba(0,0,0,0.03) !important; }
+    body.light-mode .table thead th { background: rgba(0,0,0,0.04) !important; }
+    body.light-mode .modal-content { background: #fff !important; }
+    body.light-mode .dropdown-menu { background: #fff !important; }
+    body.light-mode .accordion-item { background: #fff !important; }
+    body.light-mode .accordion-button { background: #fff !important; }
+    body.light-mode .accordion-body { background: rgba(0,0,0,0.02) !important; }
     .theme-transition { transition: background 0.3s, color 0.3s, border-color 0.3s; }
+
+    /* ── ADMIN TEXT FIXES ── */
+    .admin-content h1, .admin-content h2, .admin-content h3,
+    .admin-content h4, .admin-content h5, .admin-content h6,
+    .admin-content .fw-bold, .admin-content .fw-semibold { color: var(--text) !important; }
+    .admin-content p, .admin-content label, .admin-content span,
+    .admin-content td, .admin-content th, .admin-content li { color: var(--text); }
+    .admin-content .small, .admin-content small { color: var(--muted) !important; }
+    .admin-content .text-dark { color: var(--text) !important; }
+    .admin-content .table-light { --bs-table-bg: rgba(17,17,17,0.8); --bs-table-color: var(--pink); }
+    .admin-content .table-light th { background: rgba(17,17,17,0.8) !important; color: var(--pink) !important; }
+    body.light-mode .admin-content .table-light th { background: rgba(0,0,0,0.05) !important; color: var(--pink) !important; }
+    .admin-content .btn-outline-secondary { color: var(--text) !important; border-color: var(--border) !important; }
+    .admin-content .btn-outline-secondary:hover { background: rgba(255,255,255,0.08) !important; color: var(--pink) !important; }
+    .admin-content .shadow-sm { box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
+    body.light-mode .admin-content .shadow-sm { box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; }
+    .admin-content .card { color: var(--text); }
+    .admin-content .form-select { color: var(--text) !important; }
+    .admin-content .page-link { background: rgba(255,255,255,0.04); border-color: var(--border); color: var(--text); }
+    .admin-content .page-link:hover { background: rgba(233,30,140,0.1); color: var(--pink); }
 
     /* ── NOTIFICATION PANEL ── */
     .notif-panel {
@@ -491,10 +558,13 @@
       <a href="/comunidad">COMUNIDAD</a>
       <a href="/opiniones">OPINIONES</a>
       <a href="/tiendas">TIENDAS</a>
-      <a href="/ia/chat">IA</a>
+      <a href="/ayuda">AYUDA</a>
     </div>
     <a href="/" class="nav-logo"><%= sitio.nombre_tienda || 'MANTIZ' %></a>
     <div class="nav-right">
+      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema">
+        <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+      </button>
       <button class="nav-btn" id="search-toggle" title="Buscar">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
@@ -530,10 +600,6 @@
           <a href="/carrito"><i class="bi bi-bag me-2" style="color:var(--pink)"></i>MI CARRITO</a>
           <a href="/comunidad"><i class="bi bi-people-fill me-2" style="color:var(--pink)"></i>COMUNIDAD</a>
           <% if (user.rol==='admin') { %><a href="/admin" style="color:var(--pink)"><i class="bi bi-shield-lock me-2"></i>ADMIN</a><% } %>
-          <a href="#" id="theme-toggle-btn" onclick="toggleTheme();return false;" style="cursor:pointer">
-            <i class="bi bi-moon-stars-fill me-2" id="theme-icon" style="color:var(--pink)"></i>
-            <span id="theme-label">MODO CLARO</span>
-          </a>
           <a href="/auth/logout" style="color:#ff6060"><i class="bi bi-box-arrow-right me-2"></i>SALIR</a>
         </div>
       </div>
@@ -577,11 +643,10 @@
     <a href="/comunidad">COMUNIDAD</a>
     <a href="/opiniones">OPINIONES</a>
     <a href="/tiendas">TIENDAS</a>
-    <a href="/ia/chat">ASISTENTE IA</a>
+    <a href="/ayuda">AYUDA</a>
     <% if (user) { %>
     <a href="/perfil">MI PERFIL</a>
     <a href="/pedidos">MIS PEDIDOS</a>
-    <a href="#" onclick="toggleTheme();return false;" id="mobile-theme-btn">🌙 MODO CLARO</a>
     <a href="/auth/logout" style="color:#ff6060">CERRAR SESIÓN</a>
     <% } else { %>
     <a href="/auth/login">INGRESAR</a>
@@ -618,12 +683,14 @@
 <div id="toast">¡PRODUCTO AÑADIDO!</div>
 
 <!-- CHAT FAB -->
+<% if (typeof hideChatFab === 'undefined' || !hideChatFab) { %>
 <button class="chat-fab" onclick="toggleChat()" title="Asistente IA"><i class="bi bi-robot" id="chatFabIc"></i></button>
 <div class="chat-window" id="chatWin">
   <div class="chat-header-bar"><span><i class="bi bi-robot me-2"></i>ASISTENTE MANTIZ</span><button onclick="toggleChat()" style="background:none;border:none;color:white;cursor:pointer;font-size:16px">✕</button></div>
-  <div class="chat-messages" id="chatMsgs"><div class="chat-msg bot">👋 ¡Hola! Soy el asistente de <strong>Mantiz</strong>. ¿En qué te ayudo?</div></div>
+  <div class="chat-messages" id="chatMsgs"><div class="chat-msg bot">¡Hola! Soy el asistente de <strong>Mantiz</strong>. ¿En qué te ayudo?</div></div>
   <div class="chat-input-row"><input type="text" id="chatInp" placeholder="Escribe tu mensaje..." onkeydown="if(event.key==='Enter')sendChat()"><button class="chat-send-btn" onclick="sendChat()"><i class="bi bi-send-fill" style="font-size:13px"></i></button></div>
 </div>
+<% } %>
 
 <main style="padding-top:64px;position:relative;z-index:1">
 
@@ -673,6 +740,9 @@
         <div><div class="page-title"><%= title||'Admin' %></div><div class="page-bc">MANTIZ / ADMIN / <%= (title||'').toUpperCase() %></div></div>
       </div>
       <div style="display:flex;align-items:center;gap:16px">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema" style="width:30px;height:30px;font-size:13px">
+          <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+        </button>
         <% if(success&&success.length>0){%><div class="alert-mantiz alert-success" style="margin:0;padding:6px 12px;font-size:12px"><i class="bi bi-check-circle me-1"></i><%=success[0]%></div><%}%>
         <% if(error&&error.length>0){%><div class="alert-mantiz alert-danger" style="margin:0;padding:6px 12px;font-size:12px"><i class="bi bi-exclamation-circle me-1"></i><%=error[0]%></div><%}%>
         <span style="font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--muted);letter-spacing:1px" id="adminClock"></span>
@@ -740,11 +810,12 @@ setTimeout(()=>{document.querySelectorAll('.alert-mantiz').forEach(a=>{a.style.t
 // ── DARK MODE ──────────────────────────────────────────────────────────────────
 function applyTheme(t){
   document.body.classList.toggle('light-mode',t==='claro');
-  const icon=document.getElementById('theme-icon'),label=document.getElementById('theme-label');
-  const mBtn=document.getElementById('mobile-theme-btn');
-  if(icon)icon.className=t==='claro'?'bi bi-sun-fill me-2':'bi bi-moon-stars-fill me-2';
-  if(label)label.textContent=t==='claro'?'MODO OSCURO':'MODO CLARO';
-  if(mBtn)mBtn.textContent=t==='claro'?'☀️ MODO OSCURO':'🌙 MODO CLARO';
+  const icon=document.getElementById('theme-icon');
+  const btn=document.getElementById('theme-toggle-btn');
+  if(icon){
+    icon.className=t==='claro'?'bi bi-sun-fill':'bi bi-moon-stars-fill';
+  }
+  if(btn)btn.title=t==='claro'?'Cambiar a modo oscuro':'Cambiar a modo claro';
 }
 function toggleTheme(){
   const actual=localStorage.getItem('mantiz_tema')||'oscuro';

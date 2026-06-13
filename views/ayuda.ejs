@@ -1,0 +1,252 @@
+<%- include('partials/header') %>
+
+<style>
+  .ayuda-wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 280px 1fr; gap: 32px; min-height: calc(100vh - 200px); }
+  .ayuda-sidebar { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px 0; height: fit-content; position: sticky; top: 84px; }
+  .ayuda-sidebar-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; color: var(--white); padding: 0 20px 16px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .ayuda-cat { border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .ayuda-cat-btn {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 20px;
+    background: none; border: none; color: var(--white); cursor: pointer;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 14px; text-align: left;
+    transition: background 0.2s; position: relative;
+  }
+  .ayuda-cat-btn:hover { background: rgba(233,30,140,0.06); }
+  .ayuda-cat-btn.active { background: rgba(233,30,140,0.08); }
+  .ayuda-cat-btn.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--pink); }
+  .ayuda-cat-btn i.cat-icon { font-size: 16px; color: var(--gray); width: 20px; text-align: center; }
+  .ayuda-cat-btn .chevron { margin-left: auto; font-size: 11px; color: var(--gray); transition: transform 0.2s; }
+  .ayuda-cat-btn.open .chevron { transform: rotate(180deg); }
+  .ayuda-sublist { display: none; padding: 4px 0 8px; }
+  .ayuda-sublist.open { display: block; }
+  .ayuda-subitem {
+    display: block; padding: 8px 20px 8px 50px; color: var(--gray); text-decoration: none;
+    font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .ayuda-subitem:hover { color: var(--pink); background: rgba(233,30,140,0.04); }
+  .ayuda-subitem.active { color: var(--pink); background: rgba(233,30,140,0.08); border-left-color: var(--pink); font-weight: 600; }
+
+  .ayuda-main { min-width: 0; }
+  .ayuda-faq-item { border-bottom: 1px solid var(--border); }
+  .ayuda-faq-q {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 18px 4px; cursor: pointer; font-family: 'Rajdhani', sans-serif;
+    font-weight: 600; font-size: 15px; color: var(--white); transition: color 0.2s;
+    background: none; border: none; width: 100%; text-align: left;
+  }
+  .ayuda-faq-q:hover { color: var(--pink); }
+  .ayuda-faq-q .faq-chevron { font-size: 12px; color: var(--gray); transition: transform 0.25s; flex-shrink: 0; }
+  .ayuda-faq-item.open .ayuda-faq-q .faq-chevron { transform: rotate(180deg); }
+  .ayuda-faq-a { display: none; padding: 0 4px 20px; font-family: 'Rajdhani', sans-serif; font-size: 14px; line-height: 1.7; color: var(--gray); }
+  .ayuda-faq-item.open .ayuda-faq-a { display: block; }
+  .ayuda-feedback { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .ayuda-feedback span { font-size: 13px; color: var(--muted); }
+  .ayuda-fb-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px;
+    border: 1px solid var(--border); border-radius: 20px; background: transparent;
+    color: var(--white); font-family: 'Rajdhani', sans-serif; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .ayuda-fb-btn:hover { border-color: var(--pink); color: var(--pink); }
+  .ayuda-fb-btn.selected { border-color: var(--pink); background: rgba(233,30,140,0.1); color: var(--pink); }
+
+  .ayuda-cta { text-align: center; margin-top: 48px; padding-top: 32px; }
+  .ayuda-cta p { font-family: 'Rajdhani', sans-serif; font-size: 15px; color: var(--gray); margin-bottom: 16px; }
+  .ayuda-cta-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 14px 48px; border: 1px solid var(--border); border-radius: 50px;
+    background: transparent; color: var(--white); text-decoration: none;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 15px;
+    transition: all 0.25s; min-width: 280px;
+  }
+  .ayuda-cta-btn:hover { border-color: var(--pink); color: var(--pink); background: rgba(233,30,140,0.06); transform: translateY(-1px); }
+  .ayuda-cta-btn i { font-size: 18px; }
+
+  body.light-mode .ayuda-sidebar { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  body.light-mode .ayuda-cat-btn.active { background: #faf5f0; }
+  body.light-mode .ayuda-subitem.active { background: #faf5f0; }
+  body.light-mode .ayuda-cta-btn { background: #fff; }
+
+  @media (max-width: 768px) {
+    .ayuda-wrap { grid-template-columns: 1fr; padding: 24px 16px 60px; }
+    .ayuda-sidebar { position: static; }
+  }
+</style>
+
+<div class="ayuda-wrap">
+  <!-- Sidebar -->
+  <aside class="ayuda-sidebar">
+    <div class="ayuda-sidebar-title">TODOS LOS TEMAS DE AYUDA</div>
+
+    <div class="ayuda-cat">
+      <button class="ayuda-cat-btn open active" data-cat="comprar" onclick="toggleCat(this)">
+        <i class="bi bi-bag cat-icon"></i> Comprar en <%= sitio.nombre_tienda || 'MANTIZ' %>
+        <i class="bi bi-chevron-down chevron"></i>
+      </button>
+      <div class="ayuda-sublist open" id="sub-comprar">
+        <a href="#" class="ayuda-subitem active" data-topic="comprar" onclick="selectTopic(event,'comprar')">Comprar en <%= sitio.nombre_tienda || 'MANTIZ' %></a>
+        <a href="#" class="ayuda-subitem" data-topic="pagos" onclick="selectTopic(event,'pagos')">Pagos y facturación</a>
+        <a href="#" class="ayuda-subitem" data-topic="cupones" onclick="selectTopic(event,'cupones')">Cupones y ofertas</a>
+      </div>
+    </div>
+
+    <div class="ayuda-cat">
+      <button class="ayuda-cat-btn" data-cat="pedidos" onclick="toggleCat(this)">
+        <i class="bi bi-box-seam cat-icon"></i> Pedidos y envíos
+        <i class="bi bi-chevron-down chevron"></i>
+      </button>
+      <div class="ayuda-sublist" id="sub-pedidos">
+        <a href="#" class="ayuda-subitem" data-topic="seguimiento" onclick="selectTopic(event,'seguimiento')">Seguimiento de pedidos</a>
+        <a href="#" class="ayuda-subitem" data-topic="envios" onclick="selectTopic(event,'envios')">Envíos y entregas</a>
+        <a href="#" class="ayuda-subitem" data-topic="devoluciones" onclick="selectTopic(event,'devoluciones')">Devoluciones</a>
+      </div>
+    </div>
+
+    <div class="ayuda-cat">
+      <button class="ayuda-cat-btn" data-cat="cuenta" onclick="toggleCat(this)">
+        <i class="bi bi-person cat-icon"></i> Mi cuenta
+        <i class="bi bi-chevron-down chevron"></i>
+      </button>
+      <div class="ayuda-sublist" id="sub-cuenta">
+        <a href="#" class="ayuda-subitem" data-topic="registro" onclick="selectTopic(event,'registro')">Registro e inicio de sesión</a>
+        <a href="#" class="ayuda-subitem" data-topic="perfil" onclick="selectTopic(event,'perfil')">Configuración de perfil</a>
+        <a href="#" class="ayuda-subitem" data-topic="seguridad" onclick="selectTopic(event,'seguridad')">Seguridad de la cuenta</a>
+      </div>
+    </div>
+
+    <div class="ayuda-cat">
+      <button class="ayuda-cat-btn" data-cat="productos" onclick="toggleCat(this)">
+        <i class="bi bi-question-circle cat-icon"></i> Productos y tallas
+        <i class="bi bi-chevron-down chevron"></i>
+      </button>
+      <div class="ayuda-sublist" id="sub-productos">
+        <a href="#" class="ayuda-subitem" data-topic="tallas" onclick="selectTopic(event,'tallas')">Guía de tallas</a>
+        <a href="#" class="ayuda-subitem" data-topic="calidad" onclick="selectTopic(event,'calidad')">Calidad y materiales</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main FAQ -->
+  <div class="ayuda-main">
+    <div id="faq-container"></div>
+
+    <div class="ayuda-cta">
+      <p>¿Aún no se resuelve el problema?</p>
+      <a href="/ia/chat" class="ayuda-cta-btn">
+        <i class="bi bi-chat-dots-fill"></i>
+        Pregúntale a la IA
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+const FAQ_DATA = {
+  comprar: [
+    { q: '¿Cómo puedo comprar en <%= sitio.nombre_tienda || "MANTIZ" %>?', a: 'Navega por nuestra tienda, selecciona el producto que te guste, elige la talla y cantidad, y haz clic en "Agregar al carrito". Cuando estés listo, ve al carrito y procede al checkout para completar tu compra.' },
+    { q: '¿Puedo comprar sin registrarme?', a: 'Necesitas crear una cuenta para realizar compras. El registro es gratuito y te permite hacer seguimiento de tus pedidos, guardar favoritos y acceder a ofertas exclusivas.' },
+    { q: '¿Cómo agrego productos al carrito?', a: 'En la página de cada producto, selecciona la talla disponible y presiona el botón de agregar al carrito. También puedes usar el botón "+" en las tarjetas de producto desde la página de inicio o tienda.' },
+    { q: '¿Los precios incluyen impuestos?', a: 'Sí, todos los precios mostrados en la tienda ya incluyen los impuestos aplicables. El total en el checkout refleja el precio final a pagar.' }
+  ],
+  pagos: [
+    { q: '¿Qué métodos de pago aceptan?', a: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard), PayPal y pagos en efectivo contra entrega en ciertas zonas.' },
+    { q: '¿Es seguro pagar en línea?', a: 'Sí, utilizamos conexiones cifradas y procesadores de pago certificados para proteger tu información financiera.' },
+    { q: '¿Puedo pagar en cuotas?', a: 'Dependiendo de tu banco y tarjeta, podrías tener la opción de pagar en cuotas. Consulta con tu entidad financiera al momento del pago.' }
+  ],
+  cupones: [
+    { q: '¿Cómo uso un cupón de descuento?', a: 'Durante el proceso de checkout, encontrarás un campo para ingresar tu código de cupón. Escríbelo y presiona "Aplicar" para ver el descuento reflejado en tu total.' },
+    { q: '¿Dónde encuentro ofertas activas?', a: 'Las ofertas aparecen en la página de inicio, en productos marcados con etiqueta de descuento, y en las notificaciones si tienes cuenta registrada.' }
+  ],
+  seguimiento: [
+    { q: '¿Cómo hago seguimiento de mi pedido?', a: 'Inicia sesión y ve a "Mis Pedidos" en tu perfil. Allí verás el estado actualizado de cada pedido con su historial de seguimiento.' },
+    { q: '¿Cuánto tarda en actualizarse el estado?', a: 'El estado se actualiza cuando el pedido cambia de etapa (confirmado, en preparación, enviado, entregado). Esto puede tomar entre 1 y 24 horas según la etapa.' }
+  ],
+  envios: [
+    { q: '¿Cuánto cuesta el envío?', a: 'El costo de envío estándar es de $8.99. En algunas promociones el envío puede ser gratuito para pedidos que superen un monto mínimo.' },
+    { q: '¿Cuánto tarda la entrega?', a: 'Los envíos tardan entre 3 y 7 días hábiles dependiendo de tu ubicación en Colombia.' },
+    { q: '¿Hacen envíos internacionales?', a: 'Actualmente solo realizamos envíos dentro de Colombia. Estamos trabajando para expandir nuestra cobertura.' }
+  ],
+  devoluciones: [
+    { q: '¿Cuál es la política de devoluciones?', a: 'Tienes 7 días desde la recepción del producto para solicitar una devolución, siempre que el artículo esté en su estado original con etiquetas.' },
+    { q: '¿Cómo inicio una devolución?', a: 'Contacta a nuestro asistente de IA o revisa el detalle de tu pedido en "Mis Pedidos" para iniciar el proceso de devolución.' }
+  ],
+  registro: [
+    { q: '¿Cómo creo una cuenta?', a: 'Haz clic en "Ingresar" en la barra superior y luego en "Registrarse". Completa el formulario con tu nombre, email y contraseña.' },
+    { q: 'Olvidé mi contraseña, ¿qué hago?', a: 'En la página de inicio de sesión, usa la opción de recuperar contraseña. Te enviaremos un enlace a tu correo registrado.' }
+  ],
+  perfil: [
+    { q: '¿Cómo edito mi perfil?', a: 'Ve a "Mi Perfil" desde el menú de usuario. Allí puedes cambiar tu foto, nombre visible, biografía y configuración de privacidad.' },
+    { q: '¿Puedo cambiar entre modo claro y oscuro?', a: 'Sí, usa el botón de sol/luna en la barra de navegación superior para cambiar el tema, disponible para todos los usuarios.' }
+  ],
+  seguridad: [
+    { q: '¿Cómo protegen mis datos?', a: 'Tus datos se almacenan de forma segura y nunca compartimos tu información personal con terceros sin tu consentimiento.' },
+    { q: '¿Puedo eliminar mi cuenta?', a: 'Sí, puedes solicitar la eliminación de tu cuenta contactando al asistente de IA o al equipo de soporte.' }
+  ],
+  tallas: [
+    { q: '¿Cómo elijo la talla correcta?', a: 'Cada producto muestra las tallas disponibles. Si tienes dudas, pregunta al asistente de IA que te ayudará según el tipo de prenda y tus medidas.' },
+    { q: '¿Qué hago si la talla no me queda?', a: 'Puedes solicitar un cambio dentro de los 7 días de devolución, sujeto a disponibilidad de stock en la talla deseada.' }
+  ],
+  calidad: [
+    { q: '¿De qué materiales están hechas las prendas?', a: 'Cada producto incluye una descripción detallada con composición de materiales. Revísala en la página del producto antes de comprar.' },
+    { q: '¿Cómo cuido mis prendas?', a: 'Sigue las instrucciones de lavado en la etiqueta del producto. En general, recomendamos lavar en agua fría y no usar secadora para prendas estampadas.' }
+  ]
+};
+
+let currentTopic = 'comprar';
+
+function renderFAQs(topic) {
+  const faqs = FAQ_DATA[topic] || FAQ_DATA.comprar;
+  const container = document.getElementById('faq-container');
+  container.innerHTML = faqs.map((f, i) => `
+    <div class="ayuda-faq-item${i === 0 ? ' open' : ''}">
+      <button class="ayuda-faq-q" onclick="toggleFaq(this)">
+        <span>${f.q}</span>
+        <i class="bi bi-chevron-down faq-chevron"></i>
+      </button>
+      <div class="ayuda-faq-a">
+        <p>${f.a}</p>
+        <div class="ayuda-feedback">
+          <span>¿Esto es útil?</span>
+          <button class="ayuda-fb-btn" onclick="feedback(this,'yes')"><i class="bi bi-hand-thumbs-up"></i> Sí</button>
+          <button class="ayuda-fb-btn" onclick="feedback(this,'no')"><i class="bi bi-hand-thumbs-down"></i> No</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleCat(btn) {
+  const cat = btn.dataset.cat;
+  const sub = document.getElementById('sub-' + cat);
+  const isOpen = btn.classList.contains('open');
+  document.querySelectorAll('.ayuda-cat-btn').forEach(b => { b.classList.remove('open','active'); });
+  document.querySelectorAll('.ayuda-sublist').forEach(s => s.classList.remove('open'));
+  if (!isOpen) { btn.classList.add('open','active'); sub.classList.add('open'); }
+}
+
+function selectTopic(e, topic) {
+  e.preventDefault();
+  currentTopic = topic;
+  document.querySelectorAll('.ayuda-subitem').forEach(s => s.classList.remove('active'));
+  e.target.classList.add('active');
+  renderFAQs(topic);
+}
+
+function toggleFaq(btn) {
+  const item = btn.closest('.ayuda-faq-item');
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.ayuda-faq-item').forEach(i => i.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
+
+function feedback(btn, type) {
+  const wrap = btn.closest('.ayuda-feedback');
+  wrap.querySelectorAll('.ayuda-fb-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+renderFAQs('comprar');
+</script>
+
+<%- include('partials/footer') %>

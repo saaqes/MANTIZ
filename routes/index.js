@@ -102,7 +102,8 @@ router.get('/', async (req, res) => {
     res.render('index', {
       title: 'Inicio', productos, carrusel, recomendados,
       recomendadosLabel, hasPersonalized, viewer3d,
-      modeloActivo, hcfg, seccionOrden, carruselMarca
+      modeloActivo, hcfg, seccionOrden, carruselMarca,
+      hideChatFab: true
     });
   } catch(e) {
     console.error(e);
@@ -110,7 +111,8 @@ router.get('/', async (req, res) => {
       title: 'Inicio', productos: [], carrusel: [], recomendados: [],
       recomendadosLabel: 'LO MAS VENDIDO', hasPersonalized: false,
       viewer3d: null, modeloActivo: null,
-      hcfg: {}, seccionOrden: ['hero','productos','bestsellers','carrusel_marca'], carruselMarca: []
+      hcfg: {}, seccionOrden: ['hero','productos','bestsellers','carrusel_marca'], carruselMarca: [],
+      hideChatFab: true
     });
   }
 });
@@ -185,6 +187,11 @@ router.get('/buscar', async (req, res) => {
     console.error(e);
     res.render('buscar', { title: 'Busqueda', productos: [], usuarios: [], q, tipo, orden, categorias: [] });
   }
+});
+
+// Centro de ayuda
+router.get('/ayuda', (req, res) => {
+  res.render('ayuda', { title: 'Centro de Ayuda' });
 });
 
 module.exports = router;
