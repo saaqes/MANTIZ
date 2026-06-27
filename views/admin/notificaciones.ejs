@@ -1,141 +1,143 @@
-/**
- * routes/notificaciones.js
- * Sistema completo de notificaciones + like a comentarios + amistades
- */
-const express = require('express');
-const router = express.Router();
-const db = require('../config/database');
-const { isAuthenticated, isAdmin } = require('../middleware/auth');
+<%- include('../partials/header', {isAdmin: true}) %>
 
-// ─── GET mis notificaciones ──────────────────────────────────────────────────
-router.get('/', isAuthenticated, async (req, res) => {
+<style>
+.notif-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .2s}
+.notif-card:hover{border-color:rgba(233,30,140,.3)}
+.section-title{font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.sticker-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--dark2)}
+.poll-bar-bg{background:var(--dark2);border-radius:6px;height:8px;overflow:hidden;flex:1}
+.poll-bar-fill{background:var(--cp);height:100%;border-radius:6px}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-state i{font-size:1.8rem;display:block;margin-bottom:8px}
+</style>
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+  <div>
+    <div style="font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase">GESTIÓN</div>
+    <div style="font-family:var(--fd);font-size:1.1rem;font-weight:800;color:var(--text)">Notificaciones y Comunidad</div>
+  </div>
+</div>
+
+<!-- Stats rápidas -->
+<div class="row g-3 mb-4">
+  <% const stats = [
+       {bg:'rgba(233,30,140,.1)',color:'var(--cp)',val:pendStickers.length,label:'Stickers pendientes'},
+       {bg:'rgba(0,255,100,.1)',color:'#00ff64',val:encuestas.filter(e=>e.activa).length,label:'Encuestas activas'},
+       {bg:'rgba(255,200,0,.1)',color:'#ffc800',val:encuestas.reduce((s,e)=>s+Number(e.total_votos||0),0),label:'Votos totales'}
+     ]; %>
+  <% stats.forEach(s=>{ %>
+  <div class="col-6 col-md-4">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
+      <div style="font-family:var(--fd);font-size:1.3rem;font-weight:800;color:<%= s.color %>"><%= s.val %></div>
+      <div style="font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px"><%= s.label %></div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+
+<!-- Notificación masiva -->
+<div class="notif-card mb-4">
+  <div class="section-title">◈ Enviar notificación a todos los usuarios</div>
+  <form id="broadcastForm" class="row g-2">
+    <div class="col-12 col-md-5">
+      <input type="text" class="form-control form-control-sm" name="titulo" placeholder="Título" required>
+    </div>
+    <div class="col-12 col-md-7">
+      <input type="text" class="form-control form-control-sm" name="mensaje" placeholder="Mensaje" required>
+    </div>
+    <div class="col-6 col-md-3">
+      <select class="form-select form-select-sm" name="tipo">
+        <option value="noticia">Noticia</option>
+        <option value="descuento">Descuento</option>
+        <option value="mantenimiento">Mantenimiento</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <input type="text" class="form-control form-control-sm" name="icono" placeholder="bi-megaphone" value="bi-megaphone">
+    </div>
+    <div class="col-6 col-md-3">
+      <input type="color" class="form-control form-control-sm" name="color" value="#e91e8c" style="height:31px">
+    </div>
+    <div class="col-6 col-md-3">
+      <input type="text" class="form-control form-control-sm" name="enlace" placeholder="/productos (opcional)">
+    </div>
+    <div class="col-12">
+      <button type="submit" class="btn btn-pm btn-sm"><i class="bi bi-send me-1"></i>Enviar a todos</button>
+      <span id="broadcastMsg" style="font-family:var(--fm);font-size:.7rem;color:var(--muted);margin-left:10px"></span>
+    </div>
+  </form>
+</div>
+
+<!-- Stickers pendientes -->
+<div class="notif-card mb-4">
+  <div class="section-title">◈ Stickers pendientes de moderación</div>
+  <% if (pendStickers.length === 0) { %>
+    <div class="empty-state"><i class="bi bi-emoji-smile"></i>No hay stickers pendientes</div>
+  <% } else { %>
+  <div class="d-flex flex-wrap gap-3" id="stickersList">
+    <% pendStickers.forEach(s => { %>
+    <div class="d-flex align-items-center gap-2 p-2" style="background:var(--dark2);border-radius:8px" id="sticker-<%= s.id %>">
+      <img class="sticker-thumb" src="/uploads/stickers/<%= s.archivo %>" alt="<%= s.nombre %>" onerror="this.src='/img/defaults/sticker-placeholder.png'">
+      <div>
+        <div style="font-family:var(--fb);font-weight:700;font-size:.8rem;color:var(--text)"><%= s.nombre %></div>
+        <div style="font-family:var(--fm);font-size:.6rem;color:var(--muted)">por <%= s.nombre_visible || 'desconocido' %></div>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(0,255,100,.1);color:#00ff64;border:1px solid rgba(0,255,100,.2)" onclick="moderarSticker(<%= s.id %>,'aprobar',this)"><i class="bi bi-check-lg"></i></button>
+      <button class="btn btn-sm" style="background:rgba(255,60,60,.1);color:#ff6060;border:1px solid rgba(255,60,60,.2)" onclick="moderarSticker(<%= s.id %>,'rechazar',this)"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<!-- Encuestas de la comunidad -->
+<div class="notif-card">
+  <div class="section-title">◈ Encuestas de la comunidad</div>
+  <% if (encuestas.length === 0) { %>
+    <div class="empty-state"><i class="bi bi-bar-chart"></i>No hay encuestas creadas todavía</div>
+  <% } else { %>
+  <% encuestas.forEach(e => { %>
+  <div class="mb-3 pb-3" style="border-bottom:1px solid var(--border)">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+      <div style="font-family:var(--fb);font-weight:700;color:var(--text)"><%= e.titulo %></div>
+      <span style="font-family:var(--fm);font-size:.6rem;color:var(--muted)">
+        <%= e.activa ? '🟢 Activa' : '⚪ Cerrada' %> · <%= e.total_votos %> voto<%= e.total_votos==1?'':'s' %> · por <%= e.creador %>
+      </span>
+    </div>
+    <% if (e.descripcion) { %><div style="font-family:var(--fb);font-size:.8rem;color:var(--muted);margin-bottom:6px"><%= e.descripcion %></div><% } %>
+  </div>
+  <% }) %>
+  <% } %>
+</div>
+
+<script>
+document.getElementById('broadcastForm').addEventListener('submit', async function(ev){
+  ev.preventDefault();
+  const msg = document.getElementById('broadcastMsg');
+  const data = Object.fromEntries(new FormData(this).entries());
+  msg.textContent = 'Enviando...';
   try {
-    const [nots] = await db.query(
-      `SELECT * FROM notificaciones WHERE usuario_id=? ORDER BY creado_en DESC LIMIT 50`,
-      [req.session.user.id]
-    );
-    res.json({ notificaciones: nots });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+    const r = await fetch('/admin/notificaciones/broadcast', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const j = await r.json();
+    if (j.success) { msg.textContent = `✓ Enviada a ${j.enviadas} usuario(s)`; this.reset(); }
+    else { msg.textContent = '✗ ' + (j.error || 'Error'); }
+  } catch(e) { msg.textContent = '✗ Error de red'; }
 });
 
-// ─── GET conteo no leídas (para el badge del navbar) ────────────────────────
-router.get('/count', isAuthenticated, async (req, res) => {
+async function moderarSticker(id, accion, btn){
+  btn.closest('div[id^="sticker-"]').style.opacity='.4';
   try {
-    const [[r]] = await db.query(
-      'SELECT COUNT(*) as total FROM notificaciones WHERE usuario_id=? AND leida=0',
-      [req.session.user.id]
-    );
-    res.json({ count: r.total });
-  } catch(e) { res.json({ count: 0 }); }
-});
+    const r = await fetch(`/admin/notificaciones/stickers/${id}/${accion}`, {method:'POST'});
+    const j = await r.json();
+    if (j.success) document.getElementById('sticker-'+id).remove();
+    else { alert(j.error||'Error'); btn.closest('div[id^="sticker-"]').style.opacity='1'; }
+  } catch(e) { alert('Error de red'); btn.closest('div[id^="sticker-"]').style.opacity='1'; }
+}
+</script>
 
-// ─── MARCAR leída ────────────────────────────────────────────────────────────
-router.post('/:id/leer', isAuthenticated, async (req, res) => {
-  await db.query('UPDATE notificaciones SET leida=1 WHERE id=? AND usuario_id=?',
-    [req.params.id, req.session.user.id]);
-  res.json({ success: true });
-});
-
-// ─── MARCAR TODAS como leídas ────────────────────────────────────────────────
-router.post('/leer-todas', isAuthenticated, async (req, res) => {
-  await db.query('UPDATE notificaciones SET leida=1 WHERE usuario_id=?',
-    [req.session.user.id]);
-  res.json({ success: true });
-});
-
-// ─── ADMIN: enviar notificación masiva ───────────────────────────────────────
-router.post('/broadcast', isAdmin, async (req, res) => {
-  const { titulo, mensaje, tipo, enlace, icono, color } = req.body;
-  try {
-    const [usuarios] = await db.query('SELECT id FROM usuarios WHERE activo=1');
-    const inserts = usuarios.map(u => [u.id, tipo||'noticia', titulo, mensaje, enlace||null, icono||'bi-megaphone', color||'#e91e8c']);
-    if (inserts.length > 0) {
-      await db.query(
-        'INSERT INTO notificaciones (usuario_id,tipo,titulo,mensaje,enlace,icono,color) VALUES ?',
-        [inserts]
-      );
-    }
-    res.json({ success: true, enviadas: inserts.length });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
-// ─── LIKE A COMENTARIO (fix 404) ─────────────────────────────────────────────
-router.post('/comentario/:id/like', isAuthenticated, async (req, res) => {
-  const cid = req.params.id;
-  const uid = req.session.user.id;
-  try {
-    const [[com]] = await db.query('SELECT * FROM comentarios WHERE id=? AND activo=1', [cid]);
-    if (!com) return res.status(404).json({ error: 'Comentario no encontrado' });
-
-    const [[reaccion]] = await db.query(
-      'SELECT * FROM comentario_reacciones WHERE comentario_id=? AND usuario_id=?', [cid, uid]
-    );
-
-    if (reaccion) {
-      if (reaccion.tipo === 'like') {
-        // quitar like
-        await db.query('DELETE FROM comentario_reacciones WHERE id=?', [reaccion.id]);
-        await db.query('UPDATE comentarios SET likes=GREATEST(likes-1,0) WHERE id=?', [cid]);
-        return res.json({ liked: false, likes: Math.max(0, com.likes - 1) });
-      } else {
-        // cambiar dislike→like
-        await db.query('UPDATE comentario_reacciones SET tipo=? WHERE id=?', ['like', reaccion.id]);
-        await db.query('UPDATE comentarios SET likes=likes+1, dislikes=GREATEST(dislikes-1,0) WHERE id=?', [cid]);
-        const [[updated]] = await db.query('SELECT likes,dislikes FROM comentarios WHERE id=?', [cid]);
-        return res.json({ liked: true, ...updated });
-      }
-    } else {
-      await db.query('INSERT INTO comentario_reacciones (comentario_id,usuario_id,tipo) VALUES (?,?,?)', [cid, uid, 'like']);
-      await db.query('UPDATE comentarios SET likes=likes+1 WHERE id=?', [cid]);
-      // Notificar al autor del comentario (si no es el mismo)
-      if (com.usuario_id !== uid) {
-        const [[liker]] = await db.query('SELECT nombre_visible FROM usuarios WHERE id=?', [uid]);
-        await db.query(
-          'INSERT INTO notificaciones (usuario_id,tipo,titulo,mensaje,icono,color) VALUES (?,?,?,?,?,?)',
-          [com.usuario_id, 'reaccion', '¡Le dieron like a tu comentario!',
-           `${liker.nombre_visible} le dio like a tu comentario`, 'bi-hand-thumbs-up-fill', '#e91e8c']
-        );
-      }
-      return res.json({ liked: true, likes: com.likes + 1 });
-    }
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
-// ─── ADMIN: página de gestión de notificaciones ──────────────────────────────
-router.get('/', isAdmin, async (req, res) => {
-  let pendStickers = [], encuestas = [];
-  try {
-    [pendStickers] = await db.query(
-      'SELECT s.*, u.nombre_visible FROM stickers s LEFT JOIN usuarios u ON s.subido_por=u.id WHERE s.moderado=0 ORDER BY s.creado_en DESC'
-    ).catch(() => [[]]);
-  } catch(e) { pendStickers = []; }
-  try {
-    [encuestas] = await db.query(
-      `SELECT e.*, u.nombre_visible as creador,
-        (SELECT COUNT(*) FROM encuesta_votos WHERE encuesta_id=e.id) as total_votos
-       FROM encuestas e JOIN usuarios u ON e.creado_por=u.id ORDER BY e.creado_en DESC LIMIT 20`
-    ).catch(() => [[]]);
-  } catch(e) { encuestas = []; }
-  res.render('admin/notificaciones', {
-    title: 'Admin - Notificaciones',
-    pendStickers, encuestas, isAdmin: true
-  });
-});
-
-// ─── ADMIN: stickers pendientes API ──────────────────────────────────────────
-router.get('/stickers', isAdmin, async (req, res) => {
-  try {
-    const [stickers] = await db.query(
-      'SELECT s.*, u.nombre_visible FROM stickers s LEFT JOIN usuarios u ON s.subido_por=u.id WHERE s.moderado=0'
-    );
-    res.json({ stickers });
-  } catch(e) { res.json({ stickers: [] }); }
-});
-
-// ─── ADMIN: rechazar/eliminar sticker ────────────────────────────────────────
-router.post('/stickers/:id/rechazar', isAdmin, async (req, res) => {
-  await db.query('DELETE FROM stickers WHERE id=?', [req.params.id]);
-  res.json({ success: true });
-});
-
-module.exports = router;
+<%- include('../partials/footer') %>

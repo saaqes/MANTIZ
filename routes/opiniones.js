@@ -93,7 +93,7 @@ router.post('/:id/votar', isAuthenticated, async (req, res) => {
     }));
 
     res.json({ success: true, resultados, total_votos: totalVotos });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // ─── Admin: crear encuesta ────────────────────────────────────────────────────
@@ -120,7 +120,7 @@ router.post('/crear', isAdmin, async (req, res) => {
     }
 
     res.json({ success: true, id: encId });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // ─── Admin: cerrar/abrir encuesta ────────────────────────────────────────────

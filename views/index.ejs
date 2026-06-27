@@ -1,495 +1,476 @@
-<%- include('partials/header') %>
-
-<!-- HERO CAROUSEL -->
-<section id="hero" style="position:relative;height:100vh;overflow:hidden;margin-top:-64px">
-  <div id="carousel-slides" style="position:relative;height:100%">
-    <% if (carrusel && carrusel.length > 0) { %>
-      <% carrusel.forEach(function(s, i) { %>
-      <div class="hslide" style="position:absolute;inset:0;opacity:<%=i===0?1:0%>;transition:opacity 1.2s ease">
-        <img src="/uploads/banners/<%=s.imagen%>" alt="" style="width:100%;height:100%;object-fit:cover;filter:brightness(0.45)">
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.5))"></div>
-      </div>
-      <% }) %>
-    <% } else { %>
-      <div class="hslide" style="position:absolute;inset:0;opacity:1;background:linear-gradient(135deg,#0a0a0a,#1a0a16,#0a0a0a)"></div>
-    <% } %>
-  </div>
-
-  <!-- Dynamic hero content driven by slide config -->
-  <div id="hero-center" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;z-index:5;pointer-events:none;padding:0 40px">
-    <!-- Slide titulo (Bebas Neue, large) -->
-    <h1 id="hero-title" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,9vw,110px);letter-spacing:10px;line-height:1.05;color:white;opacity:0;text-shadow:0 2px 40px rgba(0,0,0,0.7);margin:0;max-width:900px"></h1>
-    <!-- Slide subtitulo -->
-    <p id="hero-subtitle" style="font-family:'Rajdhani',sans-serif;font-size:clamp(14px,2vw,20px);letter-spacing:3px;color:rgba(255,255,255,0.85);margin:0;max-width:600px;display:none;text-shadow:0 1px 12px rgba(0,0,0,0.8)"></p>
-    <!-- Countdown -->
-    <div id="hero-countdown" style="display:none;font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,4vw,48px);letter-spacing:8px;color:white;filter:url(#gb);text-shadow:0 2px 20px rgba(233,30,140,0.6)">
-      <span id="cd-dias">00</span>D&nbsp;<span id="cd-horas">00</span>H&nbsp;<span id="cd-mins">00</span>M&nbsp;<span id="cd-segs">00</span>S
-    </div>
-    <!-- CTA button -->
-    <div id="hero-btn" style="pointer-events:all;margin-top:8px">
-      <button id="hero-cta-btn" style="background:transparent;border:3px solid var(--pink);color:var(--pink);padding:12px 52px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:7px;cursor:pointer;transition:all 0.3s;filter:url(#gb)" onmouseover="this.style.color='white';this.style.background='rgba(233,30,140,0.2)'" onmouseout="this.style.color='var(--pink)';this.style.background='transparent'">EXPLORAR</button>
-    </div>
-  </div>
-
-  <div style="position:absolute;bottom:28px;right:32px;display:flex;gap:10px;z-index:10">
-    <% var dc=(carrusel&&carrusel.length>0)?carrusel.length:1; %>
-    <% for(var di=0;di<dc;di++){%>
-    <div class="cdot" data-idx="<%=di%>" style="width:8px;height:8px;border-radius:50%;cursor:pointer;transition:all 0.3s;background:<%=di===0?'var(--pink)':'rgba(255,255,255,0.3)'%>"></div>
-    <%}%>
-  </div>
-</section>
-
-<!-- SCROLL ARROW -->
-<div onclick="document.getElementById('products-sec').scrollIntoView({behavior:'smooth'})" style="display:flex;justify-content:center;align-items:center;position:relative;z-index:20;margin-top:-26px;margin-bottom:-26px;cursor:pointer">
-  <div style="width:52px;height:52px;border:3px solid var(--pink);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:bounce 2s infinite;color:var(--pink);font-size:20px;background:var(--black);filter:url(#gb)">&#8595;</div>
-</div>
-
-<!-- PRODUCTOS DESTACADOS -->
-<% if (hcfg.mostrar_productos !== '0') { %>
-<section id="products-sec" style="padding:80px 40px;background:var(--black)">
-  <h2 class="section-title">PRODUCTOS</h2>
-  <div class="tribal-div"></div>
-
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1200px;margin:0 auto 40px" class="pgrid">
-    <% if(productos&&productos.length>0){%>
-      <%productos.forEach(function(p){%>
-      <div class="product-card" onclick="window.location='/productos/<%=p.id%>'">
-        <div class="pc-label">
-          <span class="pc-label-text"><%=p.titulo.substring(0,16)%></span>
-          <%if(p.precio_descuento){%><span class="badge-oferta">-<%=Math.round((1-p.precio_descuento/p.precio)*100)%>%</span><%}%>
-        </div>
-        <div class="pc-img-wrap">
-          <div class="pc-img-clip">
-            <img class="pc-img" src="/uploads/products/<%=p.imagen_principal%>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
-            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%>
-          </div>
-          <button class="pc-add-btn" onclick="event.stopPropagation();quickAdd(<%=p.id%>,'<%=p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39))%>',<%=p.precio_descuento||p.precio%>,'<%=p.imagen_principal%>')">+</button>
-        </div>
-        <div class="pc-info">
-          <span class="pc-name"><%=p.titulo.substring(0,18)%></span>
-          <span class="pc-price">$<%=parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO')%></span>
-        </div>
-      </div>
-      <%})%>
-    <%}else{%>
-    <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--gray)"><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:4px">SIN PRODUCTOS AUN</div></div>
-    <%}%>
-  </div>
-  <div style="text-align:center"><a href="/productos" class="btn-grunge">VER TODOS &#8594;</a></div>
-</section>
-
-</section>
-<% } %>
-<!-- DIVIDER -->
-<div style="padding:8px 0;text-align:center;opacity:0.5">
-  <svg width="400" height="18" viewBox="0 0 400 18" fill="none"><line x1="0" y1="9" x2="170" y2="9" stroke="rgba(233,30,140,0.4)" stroke-width="1"/><circle cx="185" cy="9" r="4" fill="var(--pink)" opacity="0.5"/><circle cx="200" cy="9" r="6" fill="var(--pink)"/><circle cx="215" cy="9" r="4" fill="var(--pink)" opacity="0.5"/><line x1="230" y1="9" x2="400" y2="9" stroke="rgba(233,30,140,0.4)" stroke-width="1"/></svg>
-</div>
-
-<!-- LO MAS VENDIDO + 3D VIEWER -->
-<section id="bestsellers" style="padding:80px 40px;background:linear-gradient(180deg,var(--black),#0d0d0d)">
-  <div style="max-width:1280px;margin:0 auto">
-    <h2 class="section-title"><%=recomendadosLabel||'LO MAS VENDIDO'%></h2>
-    <% if(hasPersonalized){%>
-    <div style="text-align:center;margin-top:-20px;margin-bottom:30px;font-size:12px;color:var(--pink);letter-spacing:2px;font-family:'Bebas Neue',sans-serif">
-      BASADO EN TUS GUSTOS
-    </div>
-    <%}%>
-    <div class="tribal-div"></div>
-
-    <!-- 3D VIEWER ROW -->
-    <div style="display:grid;grid-template-columns:1fr 520px;gap:40px;align-items:start;margin-bottom:60px" class="viewer-row-grid">
-      <!-- Products grid (4 recomendados) -->
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px" class="rec-sub-grid">
-        <%if(recomendados&&recomendados.length>0){recomendados.slice(0,4).forEach(function(p){%>
-        <div class="product-card" onclick="window.location='/productos/<%=p.id%>'">
-          <div class="pc-label"><span class="pc-label-text"><%=p.titulo.substring(0,16)%></span></div>
-          <div class="pc-img-wrap">
-            <div class="pc-img-clip"><img class="pc-img" src="/uploads/products/<%=p.imagen_principal%>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
-            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%></div>
-            <button class="pc-add-btn" onclick="event.stopPropagation();quickAdd(<%=p.id%>,'<%=p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39))%>',<%=p.precio_descuento||p.precio%>,'<%=p.imagen_principal%>')">+</button>
-          </div>
-          <div class="pc-info"><span class="pc-name"><%=p.titulo.substring(0,18)%></span><span class="pc-price">$<%=parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO')%></span></div>
-        </div>
-        <%})}else{%>
-        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray)"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px">PROXIMAMENTE</div></div>
-        <%}%>
-      </div>
-
-      <!-- 3D VIEWER -->
-      <div id="viewer-wrap" style="position:relative">
-        <div id="model-container" style="position:relative;background:#0e0e0e;overflow:hidden;aspect-ratio:1;max-width:520px">
-          <!-- Grunge border -->
-          <div style="position:absolute;inset:0;border:4px solid rgba(255,255,255,0.35);filter:url(#gb);pointer-events:none;z-index:5"></div>
-          <canvas id="three-canvas" style="display:block;width:100%!important;height:100%!important"></canvas>
-
-          <!-- Product info overlay -->
-          <div id="model-info-overlay" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:28px;background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.3) 60%,transparent 100%);transition:opacity 0.5s ease;z-index:6;pointer-events:none">
-            <% if(viewer3d){%>
-            <div style="font-size:10px;letter-spacing:3px;color:var(--pink);font-family:'Bebas Neue',sans-serif;margin-bottom:4px"><%=viewer3d.categoria||'COLECCION'%></div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:white;line-height:1;margin-bottom:6px"><%=viewer3d.titulo%></div>
-            <div style="font-size:13px;color:rgba(255,255,255,0.75);letter-spacing:0.5px;margin-bottom:12px;line-height:1.5"><%=(viewer3d.descripcion||'').substring(0,80)%>...</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--pink);letter-spacing:2px">
-              $<%=parseFloat(viewer3d.precio_descuento||viewer3d.precio).toLocaleString('es-CO')%>
-              <%if(viewer3d.precio_descuento){%><span style="font-size:14px;color:rgba(255,255,255,0.45);text-decoration:line-through;margin-left:8px">$<%=parseFloat(viewer3d.precio).toLocaleString('es-CO')%></span><%}%>
-            </div>
-            <%}else{%>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:white">MANTIZ 3D</div>
-            <div style="font-size:13px;color:rgba(255,255,255,0.6)">Arrastra para girar el modelo</div>
-            <%}%>
-          </div>
-
-          <!-- Model loading indicator -->
-          <div id="model-loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:7;background:#0e0e0e">
-            <div style="width:40px;height:40px;border:3px solid rgba(233,30,140,0.2);border-top-color:var(--pink);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px"></div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gray)">CARGANDO 3D</div>
-          </div>
-        </div>
-
-        <!-- CTA button: half inside, half outside the bottom edge -->
-        <div style="display:flex;justify-content:center;margin-top:-20px;position:relative;z-index:10">
-          <% if(viewer3d){%>
-          <a href="/productos/<%=viewer3d.id%>" style="background:var(--pink);border:3px solid white;color:white;padding:12px 36px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:4px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;filter:url(#gb);transition:all 0.3s;box-shadow:0 8px 32px rgba(233,30,140,0.4)" onmouseover="this.style.background='var(--pink-light)'" onmouseout="this.style.background='var(--pink)'">
-            VER PRODUCTO &#8594;
-          </a>
-          <%}else{%>
-          <a href="/productos" class="btn-grunge-fill" style="color:white;text-decoration:none">VER COLECCION</a>
-          <%}%>
-        </div>
-      </div>
-    </div>
-
-    <div style="text-align:center;margin-top:20px">
-      <a href="/productos" style="background:transparent;border:3px solid rgba(255,255,255,0.3);color:var(--white);padding:10px 48px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:4px;text-decoration:none;display:inline-block;filter:url(#gb)" onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.3)';this.style.color='var(--white)'">VER MAS</a>
-    </div>
-  </div>
-</section>
-
-<!-- BRAND CAROUSEL - uses carruselMarca (separate from hero) -->
-<%
-  var brandSlides = (carruselMarca && carruselMarca.length > 0) ? carruselMarca : [];
-%>
-<%if(brandSlides.length > 0){%>
-<section style="position:relative;overflow:hidden;height:480px;background:#050505">
-  <div id="brand-inner" style="display:flex;height:100%;transition:transform 0.6s cubic-bezier(0.4,0,0.2,1)">
-    <%brandSlides.forEach(function(s){%>
-    <div style="min-width:100%;height:100%;position:relative">
-      <img src="/uploads/banners/<%=s.imagen%>" alt="<%=s.titulo||''%>"
-           style="width:100%;height:100%;object-fit:cover;filter:brightness(0.55)"
-           onerror="this.style.display='none'">
-      <%if(s.titulo){%>
-      <div style="position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:8px;text-shadow:0 2px 20px rgba(0,0,0,0.8);white-space:nowrap;color:white">
-        <%=s.titulo%>
-      </div>
-      <%}%>
-      <%if(s.subtitulo){%>
-      <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:'Rajdhani',sans-serif;font-size:16px;letter-spacing:3px;color:rgba(255,255,255,0.75);white-space:nowrap">
-        <%=s.subtitulo%>
-      </div>
-      <%}%>
-    </div>
-    <%})%>
-  </div>
-  <div style="position:absolute;top:50%;transform:translateY(-50%);z-index:10;display:flex;justify-content:space-between;width:100%;padding:0 24px;pointer-events:none">
-    <button id="brand-prev" style="pointer-events:all;width:48px;height:48px;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.4);color:white;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;filter:url(#gb)" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.4)'">&#8249;</button>
-    <button id="brand-next" style="pointer-events:all;width:48px;height:48px;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.4);color:white;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;filter:url(#gb)" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.4)'">&#8250;</button>
-  </div>
-</section>
-<%}%>
-
-<!-- SIZE MODAL -->
-<div id="size-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
-  <div style="background:var(--card-bg);max-width:400px;width:90%;padding:32px;position:relative">
-    <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
-    <button onclick="closeSzModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;z-index:20" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'">&#x2715;</button>
-    <div id="sz-name" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--pink);margin-bottom:8px"></div>
-    <div id="sz-price" style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);margin-bottom:20px"></div>
-    <div style="font-size:11px;letter-spacing:2px;color:var(--gray);text-transform:uppercase;margin-bottom:10px">Selecciona talla</div>
-    <div id="sz-btns" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px"></div>
-    <button onclick="confirmAdd()" style="width:100%;background:var(--pink);border:2px solid white;color:white;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:4px;cursor:pointer;filter:url(#gb)" onmouseover="this.style.background='var(--pink-light)'" onmouseout="this.style.background='var(--pink)'">AÑADIR AL CARRITO</button>
-  </div>
-</div>
+<%- include('../partials/header') %>
 
 <style>
-.tribal-div{text-align:center;margin:12px 0 40px;opacity:0.8;background-image:url("data:image/svg+xml,%3Csvg width='300' height='24' viewBox='0 0 300 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='12' x2='120' y2='12' stroke='rgba(233,30,140,0.4)' stroke-width='1'/%3E%3Cpath d='M130 12 L140 4 L150 12 L140 20 Z' fill='%23e91e8c' opacity='0.6'/%3E%3Cpath d='M150 12 L160 4 L170 12 L160 20 Z' fill='%23e91e8c'/%3E%3Cpath d='M170 12 L180 4 L190 12 L180 20 Z' fill='%23e91e8c' opacity='0.6'/%3E%3Cline x1='200' y1='12' x2='300' y2='12' stroke='rgba(233,30,140,0.4)' stroke-width='1'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;height:24px}
-/* ── Sistema de animaciones del hero (configurable desde el editor de banners) ── */
-@keyframes hanim-fade-in{from{opacity:0}to{opacity:1}}
-@keyframes hanim-fade-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
-@keyframes hanim-fade-left{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
-@keyframes hanim-fade-right{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:translateX(0)}}
-@keyframes hanim-zoom-in{from{opacity:0;transform:scale(0.82)}to{opacity:1;transform:scale(1)}}
-@keyframes hanim-zoom-out{from{opacity:0;transform:scale(1.18)}to{opacity:1;transform:scale(1)}}
-@keyframes hanim-scale{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
-@keyframes hanim-slide{from{opacity:0;transform:translateX(-70px)}to{opacity:1;transform:translateX(0)}}
-.hanim-fade-in{animation:hanim-fade-in .9s ease forwards}
-.hanim-fade-up{animation:hanim-fade-up .9s cubic-bezier(.22,1,.36,1) forwards}
-.hanim-fade-left{animation:hanim-fade-left .9s cubic-bezier(.22,1,.36,1) forwards}
-.hanim-fade-right{animation:hanim-fade-right .9s cubic-bezier(.22,1,.36,1) forwards}
-.hanim-zoom-in{animation:hanim-zoom-in .9s cubic-bezier(.22,1,.36,1) forwards}
-.hanim-zoom-out{animation:hanim-zoom-out .9s cubic-bezier(.22,1,.36,1) forwards}
-.hanim-scale{animation:hanim-scale .7s cubic-bezier(.34,1.56,.64,1) forwards}
-.hanim-slide{animation:hanim-slide .8s cubic-bezier(.22,1,.36,1) forwards}
-.hanim-ninguna{opacity:1;animation:none}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(9px)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:1024px){.viewer-row-grid{grid-template-columns:1fr!important}.rec-sub-grid{grid-template-columns:repeat(4,1fr)!important}}
-@media(max-width:768px){.pgrid,.rec-sub-grid{grid-template-columns:repeat(2,1fr)!important}#products-sec,#bestsellers{padding:60px 20px!important}}
-@media(max-width:480px){.pgrid{grid-template-columns:1fr!important}}
+/* ── HERO ── */
+.op-hero { text-align:center; padding:64px 24px 40px; position:relative; }
+.op-hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 70% 60% at 50% 0%, rgba(233,30,140,.12), transparent); pointer-events:none; }
+.op-tag { font-family:'Bebas Neue',sans-serif; font-size:10px; letter-spacing:5px; color:var(--pink); margin-bottom:10px; }
+.op-hero p { color:var(--muted); font-size:13px; letter-spacing:1.5px; max-width:500px; margin:12px auto 0; }
+
+/* ── STATS BAR ── */
+.op-stats { display:flex; justify-content:center; gap:0; max-width:700px; margin:0 auto 48px; border:1px solid rgba(233,30,140,.18); }
+.op-stat { flex:1; padding:18px 24px; text-align:center; border-right:1px solid rgba(233,30,140,.12); }
+.op-stat:last-child { border-right:none; }
+.op-stat-val { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--pink); line-height:1; }
+.op-stat-label { font-size:10px; color:var(--muted); letter-spacing:2px; margin-top:4px; font-family:'Rajdhani',sans-serif; }
+
+/* ── LAYOUT ── */
+.op-layout { max-width:1100px; margin:0 auto; padding:0 24px 80px; display:grid; grid-template-columns:1fr 340px; gap:28px; }
+
+/* ── ENCUESTA CARD ── */
+.enc-card { background:var(--card); border:1px solid var(--faint-1); margin-bottom:20px; overflow:hidden; transition:border-color .3s; }
+.enc-card:hover { border-color:rgba(233,30,140,.25); }
+.enc-top { padding:22px 24px 18px; }
+.enc-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(233,30,140,.1); border:1px solid rgba(233,30,140,.25); color:var(--pink); font-family:'Bebas Neue',sans-serif; font-size:10px; letter-spacing:2px; padding:3px 10px; margin-bottom:12px; }
+.enc-titulo { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; color:var(--text); margin-bottom:6px; }
+.enc-desc { font-size:13px; color:var(--muted); font-family:'Rajdhani',sans-serif; line-height:1.5; }
+.enc-meta { display:flex; gap:16px; margin-top:10px; font-size:11px; color:var(--muted); font-family:'Rajdhani',sans-serif; }
+.enc-meta i { color:var(--pink); margin-right:4px; }
+
+/* ── OPCIONES ── */
+.enc-opciones { padding:0 24px 8px; display:flex; flex-direction:column; gap:8px; }
+.enc-op { position:relative; cursor:pointer; overflow:hidden; border:1px solid var(--faint-1); transition:all .25s; }
+.enc-op:hover { border-color:rgba(233,30,140,.4); transform:translateX(3px); }
+.enc-op.voted { border-color:var(--pink); }
+.enc-op-bar { position:absolute; inset:0; background:rgba(233,30,140,.12); transform-origin:left; transition:transform .6s cubic-bezier(.4,0,.2,1); transform:scaleX(0); }
+.enc-op-bar.voted-bar { background:rgba(233,30,140,.18); }
+.enc-op-content { position:relative; padding:11px 14px; display:flex; justify-content:space-between; align-items:center; }
+.enc-op-text { font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:600; color:var(--text); }
+.enc-op-pct { font-family:'Bebas Neue',sans-serif; font-size:16px; color:var(--pink); display:none; }
+.enc-op-check { color:var(--pink); font-size:14px; display:none; margin-left:8px; }
+
+/* Tipo rating */
+.enc-stars { display:flex; gap:8px; padding:4px 0; }
+.enc-star { font-size:28px; cursor:pointer; transition:all .2s; opacity:.35; color:var(--pink); }
+.enc-star:hover, .enc-star.active { opacity:1; transform:scale(1.15); }
+
+/* ── FOOTER CARD ── */
+.enc-footer { padding:14px 24px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--faint-1); }
+.enc-votos-total { font-size:11px; color:var(--muted); font-family:'Rajdhani',sans-serif; }
+.enc-btn { background:var(--pink); border:none; color:white; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; padding:9px 22px; cursor:pointer; transition:all .2s; }
+.enc-btn:hover { background:#c2185b; transform:scale(1.03); }
+.enc-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.enc-btn-outline { background:transparent; border:1px solid var(--faint-2); color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:2px; padding:8px 16px; cursor:pointer; transition:all .2s; }
+.enc-btn-outline:hover { border-color:var(--pink); color:var(--pink); }
+
+/* Sugerencia */
+.enc-sug { padding:12px 24px 20px; border-top:1px solid var(--faint-1); }
+.enc-sug-inp { width:100%; background:var(--card); border:1px solid var(--faint-2); color:var(--text); padding:10px 14px; font-family:'Rajdhani',sans-serif; font-size:13px; outline:none; transition:border-color .2s; }
+.enc-sug-inp:focus { border-color:var(--pink); }
+.enc-sug-label { font-size:10px; color:var(--muted); letter-spacing:2px; font-family:'Bebas Neue',sans-serif; margin-bottom:8px; }
+
+/* ── SIDEBAR ── */
+.op-sidebar { display:flex; flex-direction:column; gap:18px; }
+.op-scard { background:var(--card); border:1px solid var(--faint-1); padding:20px; }
+.op-scard-title { font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:3px; color:var(--pink); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+
+/* Admin crear */
+.op-input { width:100%; background:var(--card); border:1px solid var(--faint-2); color:var(--text); padding:10px 13px; font-family:'Rajdhani',sans-serif; font-size:13px; outline:none; margin-bottom:10px; transition:border-color .2s; }
+.op-input:focus { border-color:var(--pink); }
+.op-input::placeholder { color:var(--muted); }
+.op-opciones-list { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+.op-opcion-row { display:flex; gap:6px; align-items:center; }
+.op-opcion-row input { flex:1; }
+.op-opcion-del { background:none; border:1px solid rgba(255,60,60,.25); color:rgba(255,100,100,.6); width:28px; height:28px; cursor:pointer; font-size:14px; transition:all .2s; flex-shrink:0; }
+.op-opcion-del:hover { background:rgba(255,60,60,.1); color:#ff6060; }
+.op-add-opcion { background:none; border:1px dashed var(--faint-2); color:var(--muted); width:100%; padding:8px; font-family:'Rajdhani',sans-serif; font-size:12px; cursor:pointer; transition:all .2s; margin-bottom:12px; }
+.op-add-opcion:hover { border-color:var(--pink); color:var(--pink); }
+
+/* Sugerencias de usuarios */
+.sug-item { padding:10px 12px; background:var(--card); border:1px solid var(--faint-1); margin-bottom:7px; }
+.sug-item-text { font-size:13px; color:var(--text); font-family:'Rajdhani',sans-serif; line-height:1.4; }
+.sug-item-meta { font-size:10px; color:var(--muted); margin-top:4px; font-family:'Rajdhani',sans-serif; }
+
+/* Empty state */
+.op-empty { text-align:center; padding:80px 20px; color:var(--muted); }
+.op-empty i { font-size:3rem; display:block; margin-bottom:16px; color:rgba(233,30,140,.3); }
+.op-empty-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px; margin-bottom:8px; }
+
+/* Toast */
+.op-toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px); background:rgba(12,12,12,.98); border:1px solid var(--pink); color:white; padding:12px 28px; font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; z-index:9999; opacity:0; transition:all .35s; pointer-events:none; }
+.op-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* Login notice */
+.op-login-notice { background:rgba(233,30,140,.07); border:1px solid rgba(233,30,140,.2); padding:12px 16px; text-align:center; font-size:12px; font-family:'Rajdhani',sans-serif; color:var(--muted); margin-bottom:20px; }
+.op-login-notice a { color:var(--pink); text-decoration:none; font-weight:700; }
+
+@media(max-width:820px) { .op-layout { grid-template-columns:1fr; } }
+@media(max-width:480px) { .op-stats { flex-wrap:wrap; } .op-stat { min-width:50%; border-bottom:1px solid rgba(233,30,140,.1); } }
 </style>
 
+<!-- HERO -->
+<div class="op-hero">
+  <div class="op-tag">COMUNIDAD · VOZ DE LOS CLIENTES</div>
+  <h1 class="section-title">OPINIONES</h1>
+  <div class="tribal-divider">
+    <svg width="200" height="16" viewBox="0 0 200 16"><path d="M0,8 L80,8 L90,2 L100,14 L110,2 L120,8 L200,8" fill="none" stroke="rgba(233,30,140,0.6)" stroke-width="1.5"/></svg>
+  </div>
+  <p>Vota en nuestras encuestas y ayúdanos a mejorar MANTIZ</p>
+</div>
+
+<!-- STATS -->
+<div style="max-width:1100px;margin:0 auto;padding:0 24px">
+  <div class="op-stats">
+    <div class="op-stat">
+      <div class="op-stat-val"><%= encuestas.length %></div>
+      <div class="op-stat-label">ENCUESTAS ACTIVAS</div>
+    </div>
+    <div class="op-stat">
+      <div class="op-stat-val"><%= encuestas.reduce((s,e)=>s+(parseInt(e.total_votos)||0),0) %></div>
+      <div class="op-stat-label">VOTOS TOTALES</div>
+    </div>
+    <div class="op-stat">
+      <div class="op-stat-val"><%= encuestas.filter(e=>e.mi_voto).length %></div>
+      <div class="op-stat-label">TUS VOTOS</div>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="op-layout">
+
+  <!-- ENCUESTAS -->
+  <div id="enc-lista">
+    <% if (!locals.uid) { %>
+    <div class="op-login-notice">
+      <i class="bi bi-lock me-2"></i>
+      <a href="/auth/login">Inicia sesión</a> para votar en las encuestas y hacer tu voz contar.
+    </div>
+    <% } %>
+
+    <% if (!encuestas || encuestas.length === 0) { %>
+    <div class="op-empty">
+      <i class="bi bi-bar-chart"></i>
+      <div class="op-empty-title">SIN ENCUESTAS AÚN</div>
+      <p style="font-size:13px">El equipo de Mantiz publicará encuestas pronto.</p>
+    </div>
+    <% } else { encuestas.forEach(enc => { %>
+
+    <div class="enc-card" id="enc-<%= enc.id %>">
+      <div class="enc-top">
+        <div class="enc-badge">
+          <i class="bi bi-bar-chart-fill"></i>
+          <%= enc.tipo_respuesta === 'estrellas' ? 'CALIFICACIÓN' : enc.tipo_respuesta === 'unica' ? 'OPCIÓN ÚNICA' : 'VOTACIÓN' %>
+        </div>
+        <div class="enc-titulo"><%= enc.titulo %></div>
+        <% if (enc.descripcion) { %><div class="enc-desc"><%= enc.descripcion %></div><% } %>
+        <div class="enc-meta">
+          <span><i class="bi bi-person"></i><%= enc.creador %></span>
+          <span><i class="bi bi-people"></i><%= enc.total_votos %> votos</span>
+          <% if (enc.fecha_cierre) { %><span><i class="bi bi-clock"></i>Cierra <%= new Date(enc.fecha_cierre).toLocaleDateString('es-CO') %></span><% } %>
+        </div>
+      </div>
+
+      <!-- OPCIONES tipo botones/única -->
+      <% if (enc.tipo_respuesta !== 'estrellas') { %>
+      <div class="enc-opciones">
+        <% enc.opciones.forEach(op => {
+          const yaVotada = enc.mi_voto === op.id;
+          const totalV = enc.opciones.reduce((s,o)=>s+(o.votos||0),0);
+          const pct = totalV > 0 ? Math.round((op.votos/totalV)*100) : 0;
+        %>
+        <div class="enc-op <%= yaVotada ? 'voted' : '' %>"
+             id="op-<%= op.id %>"
+             onclick="votar(<%= enc.id %>, <%= op.id %>)"
+             data-enc="<%= enc.id %>"
+             data-op="<%= op.id %>">
+          <div class="enc-op-bar <%= yaVotada ? 'voted-bar' : '' %>"
+               style="transform:scaleX(<%= enc.mi_voto ? pct/100 : 0 %>)"></div>
+          <div class="enc-op-content">
+            <div style="display:flex;align-items:center;gap:10px">
+              <% if (yaVotada) { %><i class="bi bi-check-circle-fill" style="color:var(--pink);font-size:14px"></i><% } %>
+              <span class="enc-op-text"><%= op.texto %></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="enc-op-pct" id="pct-<%= op.id %>" style="<%= enc.mi_voto ? 'display:block' : '' %>"><%= pct %>%</span>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+
+      <!-- OPCIONES tipo estrellas -->
+      <% if (enc.tipo_respuesta === 'estrellas') { %>
+      <div class="enc-opciones">
+        <div class="enc-stars" id="stars-<%= enc.id %>">
+          <% for (let i = 1; i <= 5; i++) { %>
+          <span class="enc-star <%= enc.mi_voto && enc.opciones[i-1] && enc.mi_voto === enc.opciones[i-1].id ? 'active' : '' %>"
+                onclick="votarEstrellas(<%= enc.id %>, <%= i %>)"
+                onmouseover="hoverStars(<%= enc.id %>, <%= i %>)"
+                onmouseout="resetStars(<%= enc.id %>)">★</span>
+          <% } %>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:'Rajdhani',sans-serif;padding:0 24px 0 0">
+          Calificación promedio: <span id="avg-<%= enc.id %>" style="color:var(--pink);font-family:'Bebas Neue',sans-serif;font-size:14px">
+            <% 
+              const totalV2 = enc.opciones.reduce((s,o)=>s+(o.votos||0),0);
+              const sumV = enc.opciones.reduce((s,o,i)=>s+(o.votos||0)*(i+1),0);
+              const avg = totalV2 > 0 ? (sumV/totalV2).toFixed(1) : '0.0';
+            %><%= avg %> ★
+          </span>
+          &nbsp;·&nbsp; <%= enc.total_votos %> valoraciones
+        </div>
+      </div>
+      <% } %>
+
+      <!-- SUGERENCIA -->
+      <% if (enc.permite_sugerencias && locals.uid) { %>
+      <div class="enc-sug">
+        <div class="enc-sug-label">¿TIENES ALGUNA SUGERENCIA?</div>
+        <input type="text" class="enc-sug-inp" id="sug-<%= enc.id %>" placeholder="Escribe tu sugerencia opcional..." maxlength="200">
+      </div>
+      <% } %>
+
+      <!-- FOOTER -->
+      <div class="enc-footer">
+        <span class="enc-votos-total" id="total-<%= enc.id %>"><%= enc.total_votos %> votos totales</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <% if (enc.mi_voto) { %>
+          <span style="font-size:10px;color:rgba(0,255,100,.7);font-family:'Bebas Neue',sans-serif;letter-spacing:1px"><i class="bi bi-check2 me-1"></i>YA VOTASTE</span>
+          <% } %>
+          <% if (!locals.uid) { %>
+          <a href="/auth/login" class="enc-btn" style="text-decoration:none">VOTAR</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <% }) } %>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="op-sidebar">
+
+    <!-- Admin: crear encuesta -->
+    <% if (locals.user && locals.user.rol === 'admin') { %>
+    <div class="op-scard">
+      <div class="op-scard-title"><i class="bi bi-plus-circle-fill"></i>CREAR ENCUESTA</div>
+      <input type="text" class="op-input" id="cr-titulo" placeholder="Título de la encuesta *">
+      <textarea class="op-input" id="cr-desc" rows="2" placeholder="Descripción (opcional)" style="resize:none"></textarea>
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:2px;font-family:'Bebas Neue',sans-serif;margin-bottom:8px">TIPO DE RESPUESTA</div>
+        <select class="op-input" id="cr-tipo" style="margin-bottom:0" onchange="cambiarTipo(this.value)">
+          <option value="unica">Opción única</option>
+          <option value="botones">Botones de voto</option>
+          <option value="estrellas">Calificación con estrellas</option>
+        </select>
+      </div>
+      <div id="cr-opciones-wrap">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:2px;font-family:'Bebas Neue',sans-serif;margin-bottom:8px">OPCIONES</div>
+        <div class="op-opciones-list" id="cr-opciones">
+          <div class="op-opcion-row"><input type="text" class="op-input op-opcion" placeholder="Opción 1" style="margin-bottom:0"><button class="op-opcion-del" onclick="delOpcion(this)">×</button></div>
+          <div class="op-opcion-row"><input type="text" class="op-input op-opcion" placeholder="Opción 2" style="margin-bottom:0"><button class="op-opcion-del" onclick="delOpcion(this)">×</button></div>
+        </div>
+        <button class="op-add-opcion" onclick="addOpcion()"><i class="bi bi-plus me-1"></i>AGREGAR OPCIÓN</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <input type="checkbox" id="cr-sug" style="accent-color:var(--pink);width:14px;height:14px">
+        <label for="cr-sug" style="font-size:12px;color:var(--muted);font-family:'Rajdhani',sans-serif;cursor:pointer">Permitir sugerencias de texto</label>
+      </div>
+      <input type="date" class="op-input" id="cr-fecha" placeholder="Fecha de cierre (opcional)">
+      <button class="enc-btn" style="width:100%" onclick="crearEncuesta()"><i class="bi bi-send me-2"></i>PUBLICAR ENCUESTA</button>
+    </div>
+    <% } %>
+
+    <!-- Info -->
+    <div class="op-scard">
+      <div class="op-scard-title"><i class="bi bi-info-circle"></i>¿CÓMO FUNCIONA?</div>
+      <div style="font-size:12px;color:var(--muted);font-family:'Rajdhani',sans-serif;line-height:2.1">
+        ✦ Vota en las encuestas activas<br>
+        ✦ Tu opinión moldea el catálogo<br>
+        ✦ Sugiere nuevas ideas y estilos<br>
+        ✦ Ve los resultados en tiempo real<br>
+        ✦ Gana logros por participar
+      </div>
+    </div>
+
+    <!-- Top sugerencias -->
+    <div class="op-scard">
+      <div class="op-scard-title"><i class="bi bi-lightbulb"></i>SUGERENCIAS RECIENTES</div>
+      <div id="sugerencias-lista">
+        <% 
+          const todasSugs = [];
+          encuestas.forEach(e => {
+            // no tenemos sugerencias cargadas aquí, solo placeholder
+          });
+        %>
+        <div style="font-size:12px;color:var(--muted);font-family:'Rajdhani',sans-serif;text-align:center;padding:16px 0">
+          Las sugerencias de los usuarios aparecerán aquí
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="op-toast" id="opToast"></div>
+
 <script>
-// PAGE TIME TRACKING
-setInterval(function(){fetch('/stats/ping',{method:'POST'}).catch(function(){});},30000);
+let votando = false;
 
-// Slide config data from server
-var slideConfigs = <%- JSON.stringify((carrusel||[]).map(function(s){
-  return {
-    content_type: s.content_type||'texto',
-    mostrar_boton: s.mostrar_boton!==0 && s.mostrar_boton!=='0',
-    boton_texto: s.boton_texto||'EXPLORAR',
-    boton_url: s.boton_url||'/productos',
-    countdown_fecha: s.countdown_fecha||null,
-    titulo: s.titulo||'',
-    subtitulo: s.subtitulo||'',
-    animacion: s.animacion||'fade-in',
-    posicion_texto: s.posicion_texto||'centro'
-  };
-})) %>;
-var countdownInterval = null;
-var HANIM_CLASSES = ['hanim-fade-in','hanim-fade-up','hanim-fade-left','hanim-fade-right','hanim-zoom-in','hanim-zoom-out','hanim-scale','hanim-slide','hanim-ninguna'];
-
-// Reinicia una animación CSS forzando reflow (necesario porque las clases ya
-// aplicadas no se "reproducen" de nuevo solo con remove+add sin un reflow).
-function replayAnim(el, animClass) {
-  HANIM_CLASSES.forEach(function(c){ el.classList.remove(c); });
-  el.style.opacity = '0';
-  void el.offsetWidth; // fuerza reflow
-  el.classList.add(animClass);
+// ── TOAST ─────────────────────────────────────────────────
+function opToast(msg, color) {
+  const t = document.getElementById('opToast');
+  t.textContent = msg;
+  t.style.borderColor = color || 'var(--pink)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-function applySlideConfig(idx) {
-  var cfg = slideConfigs[idx] || { content_type:'texto', mostrar_boton:true, boton_texto:'EXPLORAR', boton_url:'/productos', titulo:'', subtitulo:'', animacion:'fade-in', posicion_texto:'centro' };
-  var heroCenter = document.getElementById('hero-center');
-  var titleEl = document.getElementById('hero-title');
-  var subEl = document.getElementById('hero-subtitle');
-  var cdEl = document.getElementById('hero-countdown');
-  var btnEl = document.getElementById('hero-btn');
-  var ctaBtn = document.getElementById('hero-cta-btn');
+// ── VOTAR ────────────────────────────────────────────────
+async function votar(encId, opcionId) {
+  <% if (!locals.uid) { %>
+  window.location = '/auth/login'; return;
+  <% } %>
+  if (votando) return;
+  votando = true;
 
-  var showText = cfg.content_type === 'texto' || cfg.content_type === 'texto_cronometro';
-  var showCd = cfg.content_type === 'cronometro' || cfg.content_type === 'texto_cronometro';
-  var showNada = cfg.content_type === 'nada';
-
-  // Posición del texto: izquierda / centro / derecha
-  if (heroCenter) {
-    var posMap = { izquierda: { align:'flex-start', text:'left', pad:'0 40px 0 60px' },
-                   centro:    { align:'center',     text:'center', pad:'0 40px' },
-                   derecha:   { align:'flex-end',   text:'right', pad:'0 60px 0 40px' } };
-    var pos = posMap[cfg.posicion_texto] || posMap.centro;
-    heroCenter.style.alignItems = pos.align;
-    heroCenter.style.textAlign = pos.text;
-  }
-
-  // Title: show slide titulo if text mode (con animación configurable)
-  if (titleEl) {
-    titleEl.textContent = cfg.titulo || '';
-    var showTitle = showText && cfg.titulo;
-    titleEl.style.display = showTitle ? 'block' : 'none';
-    if (showTitle) {
-      var animClass = 'hanim-' + (cfg.animacion || 'fade-in');
-      if (HANIM_CLASSES.indexOf(animClass) === -1) animClass = 'hanim-fade-in';
-      replayAnim(titleEl, animClass);
+  const sug = document.getElementById('sug-' + encId)?.value || '';
+  try {
+    const r = await fetch(`/opiniones/${encId}/votar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ opcion_id: opcionId, sugerencia: sug })
+    });
+    const d = await r.json();
+    if (d.success) {
+      actualizarResultados(encId, d.resultados, d.total_votos, opcionId);
+      opToast('¡VOTO REGISTRADO!');
+    } else {
+      opToast(d.error || 'Error al votar', '#ff6060');
     }
+  } catch(e) {
+    opToast('Error de conexión', '#ff6060');
   }
-  if (subEl) {
-    subEl.textContent = cfg.subtitulo || '';
-    subEl.style.display = (showText && cfg.subtitulo) ? 'block' : 'none';
-  }
-  if (cdEl) { cdEl.style.display = showCd ? 'block' : 'none'; }
-  if (btnEl) { btnEl.style.display = cfg.mostrar_boton ? 'block' : 'none'; }
-  if (ctaBtn) {
-    if (cfg.boton_texto) ctaBtn.textContent = cfg.boton_texto;
-    // Destino dinámico del botón (antes quedaba fijo a /productos sin importar lo configurado)
-    ctaBtn.onclick = function(){ window.location.href = cfg.boton_url || '/productos'; };
-  }
+  votando = false;
+}
 
-  // Countdown
-  if (countdownInterval) clearInterval(countdownInterval);
-  if (showCd && cfg.countdown_fecha) {
-    function updateCd() {
-      var target = new Date(cfg.countdown_fecha).getTime();
-      var now = Date.now();
-      var diff = Math.max(0, target - now);
-      var d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000);
-      var m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
-      var pad = function(n){ return String(n).padStart(2,'0'); };
-      document.getElementById('cd-dias').textContent = pad(d);
-      document.getElementById('cd-horas').textContent = pad(h);
-      document.getElementById('cd-mins').textContent = pad(m);
-      document.getElementById('cd-segs').textContent = pad(s);
+function actualizarResultados(encId, resultados, totalVotos, opcionVotada) {
+  resultados.forEach(op => {
+    const el = document.getElementById('op-' + op.id);
+    const bar = el?.querySelector('.enc-op-bar');
+    const pct = document.getElementById('pct-' + op.id);
+    if (!el) return;
+
+    el.classList.toggle('voted', op.id === opcionVotada);
+    if (bar) {
+      bar.style.transform = `scaleX(${op.porcentaje / 100})`;
+      bar.classList.toggle('voted-bar', op.id === opcionVotada);
     }
-    updateCd(); countdownInterval = setInterval(updateCd, 1000);
-  }
-}
-applySlideConfig(0);
-
-// HERO CAROUSEL
-var hSlides=document.querySelectorAll('.hslide'),hDots=document.querySelectorAll('.cdot'),hCur=0;
-function goSlide(n){
-  if(hSlides.length<=1)return;
-  hSlides[hCur].style.opacity='0';if(hDots[hCur])hDots[hCur].style.background='rgba(255,255,255,0.3)';
-  hCur=(n+hSlides.length)%hSlides.length;
-  hSlides[hCur].style.opacity='1';if(hDots[hCur])hDots[hCur].style.background='var(--pink)';
-  applySlideConfig(hCur); // antes: el texto/botón/cronómetro se quedaban congelados en el slide 1 para siempre
-}
-hDots.forEach(function(d){d.addEventListener('click',function(){goSlide(parseInt(d.dataset.idx));});});
-if(hSlides.length>1)setInterval(function(){goSlide(hCur+1);},4800);
-
-// BRAND CAROUSEL (uses carruselMarca images)
-var bInner = document.getElementById('brand-inner');
-if (bInner) {
-  var bSl = bInner.children; // direct children = slides
-  var bI = 0;
-  function gB(n) {
-    if (bSl.length === 0) return;
-    bI = ((n % bSl.length) + bSl.length) % bSl.length;
-    bInner.style.transform = 'translateX(-' + (bI * 100) + '%)';
-  }
-  var bPrev = document.getElementById('brand-prev');
-  var bNext = document.getElementById('brand-next');
-  if (bPrev) bPrev.addEventListener('click', function() { gB(bI - 1); });
-  if (bNext) bNext.addEventListener('click', function() { gB(bI + 1); });
-  // Hide arrows if only 1 slide
-  if (bSl.length <= 1) {
-    if (bPrev) bPrev.parentElement.style.display = 'none';
-  } else {
-    setInterval(function() { gB(bI + 1); }, 5000);
-  }
-}
-
-// ── 3D VIEWER ─────────────────────────────────────────────
-var threeLoaded=false,threeScene,threeRenderer,threeCamera,threeControls,threeModel;
-var infoOverlay=document.getElementById('model-info-overlay');
-var modelLoading=document.getElementById('model-loading');
-var modelContainer=document.getElementById('model-container');
-var isZoomed=false,mouseInside=false;
-
-function setOverlayVisible(v){if(!infoOverlay)return;infoOverlay.style.opacity=v?'1':'0';}
-
-// Salvavidas: si por cualquier motivo (red lenta, error no controlado dentro
-// de THREE/GLTFLoader, CDN bloqueado, etc.) el visor 3D nunca termina de
-// resolver, este overlay no debe quedar visible para siempre.
-if(modelLoading){setTimeout(function(){modelLoading.style.display='none';},12000);}
-
-if(modelContainer){
-  modelContainer.addEventListener('mouseenter',function(){mouseInside=true;if(!isZoomed)setOverlayVisible(true);});
-  modelContainer.addEventListener('mouseleave',function(){mouseInside=false;setOverlayVisible(false);});
-  modelContainer.addEventListener('touchstart',function(){setOverlayVisible(true);},{passive:true});
-  modelContainer.addEventListener('touchend',function(){setTimeout(function(){if(!mouseInside)setOverlayVisible(false);},3000);},{passive:true});
-  // Hide overlay initially
-  if(infoOverlay)infoOverlay.style.opacity='0';
-}
-
-async function initThree(){
-  var canvas=document.getElementById('three-canvas');
-  var container=document.getElementById('model-container');
-  if(!canvas||!container)return;
-
-  // Load Three.js
-  await new Promise(function(res,rej){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
-  await new Promise(function(res,rej){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
-  await new Promise(function(res,rej){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
-
-  var w=container.clientWidth,h=container.clientHeight||container.clientWidth;
-  threeScene=new THREE.Scene();
-  threeScene.background=new THREE.Color(0x0e0e0e);
-  threeCamera=new THREE.PerspectiveCamera(45,w/h,0.01,1000);
-  threeCamera.position.set(0,1,3);
-  threeRenderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
-  threeRenderer.setSize(w,h);
-  threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  threeRenderer.outputEncoding=THREE.sRGBEncoding;
-  threeRenderer.toneMapping=THREE.ACESFilmicToneMapping;
-  threeRenderer.toneMappingExposure=1.2;
-
-  // Lighting
-  threeScene.add(new THREE.AmbientLight(0xffffff,0.6));
-  var dir=new THREE.DirectionalLight(0xffffff,1.3);dir.position.set(5,8,5);threeScene.add(dir);
-  var pink=new THREE.PointLight(0xe91e8c,1.2,12);pink.position.set(-3,2,3);threeScene.add(pink);
-  var fill=new THREE.DirectionalLight(0xffffff,0.4);fill.position.set(-5,-3,-5);threeScene.add(fill);
-
-  threeControls=new THREE.OrbitControls(threeCamera,canvas);
-  threeControls.enableDamping=true;threeControls.dampingFactor=0.05;threeControls.enablePan=false;
-
-  var initialDist=threeCamera.position.length();
-  threeControls.addEventListener('change',function(){
-    var dist=threeCamera.position.length();
-    var nowZoomed=dist<initialDist*0.75;
-    if(nowZoomed!==isZoomed){isZoomed=nowZoomed;if(isZoomed){setOverlayVisible(false);}else if(mouseInside){setOverlayVisible(true);}}
+    if (pct) { pct.textContent = op.porcentaje + '%'; pct.style.display = 'block'; }
+    
+    // Agregar check al votado
+    const content = el.querySelector('.enc-op-content > div');
+    if (content && op.id === opcionVotada) {
+      if (!content.querySelector('.bi-check-circle-fill')) {
+        content.insertAdjacentHTML('afterbegin', '<i class="bi bi-check-circle-fill" style="color:var(--pink);font-size:14px"></i>');
+      }
+    }
   });
+  const totalEl = document.getElementById('total-' + encId);
+  if (totalEl) totalEl.textContent = totalVotos + ' votos totales';
+}
 
-  // Load model - try local .glb first
-  // Dynamic model from admin settings
-  var modeloAtivoUrl = '<%- modeloActivo ? modeloActivo.archivo : "/models/susan.glb" %>';
-  var fallbackUrls=['/models/susan.glb','/models/t_shirt.glb','/models/stella.glb'];
-  var allModelUrls = [modeloAtivoUrl].concat(fallbackUrls.filter(function(u){return u!==modeloAtivoUrl;}));
-  var modelUrls = [...new Set(allModelUrls)];
-  var loader=new THREE.GLTFLoader();
-  function tryLoad(idx){
-    if(idx>=modelUrls.length){if(modelLoading)modelLoading.style.display='none';return;}
-    loader.load(modelUrls[idx],function(gltf){
-      if(threeModel)threeScene.remove(threeModel);
-      threeModel=gltf.scene;threeScene.add(threeModel);
-      var box=new THREE.Box3().setFromObject(threeModel);
-      var center=box.getCenter(new THREE.Vector3());
-      var size=box.getSize(new THREE.Vector3());
-      var maxDim=Math.max(size.x,size.y,size.z);
-      threeModel.position.sub(center);
-      threeCamera.position.set(0,maxDim*0.2,maxDim*2);
-      threeControls.target.set(0,0,0);threeControls.update();
-      if(modelLoading)modelLoading.style.display='none';
-    },undefined,function(){tryLoad(idx+1);});
+// ── ESTRELLAS ────────────────────────────────────────────
+function hoverStars(encId, n) {
+  document.querySelectorAll(`#stars-${encId} .enc-star`).forEach((s, i) => {
+    s.style.opacity = i < n ? '1' : '0.35';
+    s.style.transform = i < n ? 'scale(1.15)' : 'scale(1)';
+  });
+}
+function resetStars(encId) {
+  document.querySelectorAll(`#stars-${encId} .enc-star`).forEach((s) => {
+    s.style.opacity = s.classList.contains('active') ? '1' : '0.35';
+    s.style.transform = s.classList.contains('active') ? 'scale(1.15)' : 'scale(1)';
+  });
+}
+async function votarEstrellas(encId, n) {
+  <% if (!locals.uid) { %>
+  window.location = '/auth/login'; return;
+  <% } %>
+  // Buscar opción correspondiente al número de estrellas
+  const stars = document.querySelectorAll(`#stars-${encId} .enc-star`);
+  stars.forEach((s, i) => { s.classList.toggle('active', i < n); });
+  // La opción de estrellas = índice n-1 en la lista de opciones del servidor
+  // Necesitamos el id de la opción — usamos data attribute o fetch
+  const card = document.getElementById('enc-' + encId);
+  const ops = card.querySelectorAll('[id^="op-"]');
+  if (ops[n-1]) {
+    const opId = parseInt(ops[n-1].id.replace('op-', ''));
+    await votar(encId, opId);
   }
-  tryLoad(0);
-
-  function animate(){requestAnimationFrame(animate);threeControls.update();threeRenderer.render(threeScene,threeCamera);}
-  animate();
-  window.addEventListener('resize',function(){var w2=container.clientWidth,h2=container.clientHeight||w2;threeCamera.aspect=w2/h2;threeCamera.updateProjectionMatrix();threeRenderer.setSize(w2,h2);});
-  threeLoaded=true;
 }
 
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',function(){initThree().catch(function(e){console.log('3D init failed:',e);if(modelLoading)modelLoading.style.display='none';});});
-}else{
-  initThree().catch(function(e){console.log('3D init failed:',e);if(modelLoading)modelLoading.style.display='none';});
+// ── ADMIN: CREAR ENCUESTA ────────────────────────────────
+let opCount = 2;
+
+function addOpcion() {
+  opCount++;
+  const list = document.getElementById('cr-opciones');
+  const div = document.createElement('div');
+  div.className = 'op-opcion-row';
+  div.innerHTML = `<input type="text" class="op-input op-opcion" placeholder="Opción ${opCount}" style="margin-bottom:0"><button class="op-opcion-del" onclick="delOpcion(this)">×</button>`;
+  list.appendChild(div);
 }
 
-// QUICK ADD
-var pendProd=null,selSz=null;
-async function quickAdd(id,name,price,img){
-  try{
-    var r=await fetch('/productos/'+id+'/tallas');var d=await r.json();
-    if(d.tallas&&d.tallas.length>0){
-      document.getElementById('sz-name').textContent=name;
-      document.getElementById('sz-price').textContent='$'+parseFloat(price).toLocaleString('es-CO');
-      var h='';d.tallas.forEach(function(t){h+='<button onclick="selSzBtn(this,\''+t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid rgba(255,255,255,0.3);background:none;color:var(--white);font-family:\'Rajdhani\',sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';});
-      document.getElementById('sz-btns').innerHTML=h;
-      pendProd={id:id,name:name,price:price,img:img};selSz=null;
-      var m=document.getElementById('size-modal');m.style.opacity='1';m.style.pointerEvents='all';
-    }else{await addCart(id,null);}
-  }catch(e){await addCart(id,null);}
+function delOpcion(btn) {
+  const rows = document.querySelectorAll('.op-opcion-row');
+  if (rows.length <= 2) { opToast('MÍNIMO 2 OPCIONES', '#ffc800'); return; }
+  btn.closest('.op-opcion-row').remove();
 }
-function selSzBtn(btn,t){if(btn.dataset.stock==='0')return;document.querySelectorAll('.sz-b').forEach(function(b){b.style.background='none';b.style.borderColor='rgba(255,255,255,0.3)';b.style.color='var(--white)';});btn.style.background='var(--pink)';btn.style.borderColor='var(--pink)';selSz=t;}
-function closeSzModal(){var m=document.getElementById('size-modal');m.style.opacity='0';m.style.pointerEvents='none';pendProd=null;selSz=null;}
-document.getElementById('size-modal').addEventListener('click',function(e){if(e.target===document.getElementById('size-modal'))closeSzModal();});
-async function confirmAdd(){if(!pendProd)return;if(!selSz){var sb=document.getElementById('sz-btns');sb.style.outline='1px solid var(--pink)';setTimeout(function(){sb.style.outline='';},500);return;}await addCart(pendProd.id,selSz);closeSzModal();}
-async function addCart(id,talla){
-  try{
-    var r=await fetch('/carrito/agregar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto_id:id,talla:talla,cantidad:1})});
-    var d=await r.json();
-    if(d.success){showToast('PRODUCTO ANADIDO');var cc=document.getElementById('cart-count');if(cc){var n=(parseInt(cc.textContent)||0)+1;cc.textContent=n;cc.classList.add('show');}var cp=document.getElementById('cart-panel');if(cp){cp.classList.add('open');loadCartPanel();}}
-    else if(d.redirect){window.location=d.redirect;}
-  }catch(e){}
+
+function cambiarTipo(tipo) {
+  const wrap = document.getElementById('cr-opciones-wrap');
+  wrap.style.display = tipo === 'estrellas' ? 'none' : 'block';
+}
+
+async function crearEncuesta() {
+  const titulo = document.getElementById('cr-titulo').value.trim();
+  if (!titulo) { opToast('EL TÍTULO ES OBLIGATORIO', '#ff6060'); return; }
+  
+  const tipo = document.getElementById('cr-tipo').value;
+  let opciones = [];
+  
+  if (tipo !== 'estrellas') {
+    opciones = Array.from(document.querySelectorAll('.op-opcion'))
+      .map(i => i.value.trim()).filter(Boolean);
+    if (opciones.length < 2) { opToast('AGREGA AL MENOS 2 OPCIONES', '#ff6060'); return; }
+  } else {
+    opciones = ['1 estrella', '2 estrellas', '3 estrellas', '4 estrellas', '5 estrellas'];
+  }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'PUBLICANDO...';
+
+  try {
+    const r = await fetch('/opiniones/crear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        titulo,
+        descripcion: document.getElementById('cr-desc').value.trim(),
+        tipo_respuesta: tipo,
+        permite_sugerencias: document.getElementById('cr-sug').checked ? 1 : 0,
+        fecha_cierre: document.getElementById('cr-fecha').value || null,
+        opciones
+      })
+    });
+    const d = await r.json();
+    if (d.success) {
+      opToast('¡ENCUESTA PUBLICADA!');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      opToast('ERROR: ' + (d.error || 'Desconocido'), '#ff6060');
+    }
+  } catch(e) {
+    opToast('ERROR DE RED', '#ff6060');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-send me-2"></i>PUBLICAR ENCUESTA';
 }
 </script>
 
-<%- include('partials/footer') %>
+<%- include('../partials/footer') %>

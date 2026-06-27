@@ -14,19 +14,24 @@ const sseClients = new Map();
 router.get('/stream', isAuthenticated, (req, res) => {
   const uid = req.session.user.id;
   res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // evita que proxies (Render/Nginx) buffericen el stream
+  req.socket.setTimeout(0); // no cerrar por timeout: esta conexión vive a propósito
   res.flushHeaders();
   res.write('data: {"tipo":"conectado"}\n\n');
 
   if (!sseClients.has(uid)) sseClients.set(uid, []);
   sseClients.get(uid).push(res);
 
-  req.on('close', () => {
+  const cleanup = () => {
     const arr = sseClients.get(uid) || [];
     const idx = arr.indexOf(res);
     if (idx > -1) arr.splice(idx, 1);
-  });
+    if (arr.length === 0) sseClients.delete(uid);
+  };
+  req.on('close', cleanup);
+  res.on('close', cleanup);
 });
 
 // Función helper: notificar por SSE

@@ -39,7 +39,7 @@ router.post('/solicitud/:uid', isAuthenticated, async (req, res) => {
     );
 
     res.json({ success: true, estado: 'pendiente' });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // ─── Aceptar/Rechazar solicitud ───────────────────────────────────────────────
@@ -68,7 +68,7 @@ router.post('/responder/:uid', isAuthenticated, async (req, res) => {
     }
 
     res.json({ success: true, estado: nuevoEstado });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // ─── Lista de amigos del usuario actual ──────────────────────────────────────
@@ -82,7 +82,7 @@ router.get('/lista', isAuthenticated, async (req, res) => {
       [req.session.user.id, req.session.user.id, req.session.user.id]
     );
     res.json({ amigos });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // ─── Solicitudes pendientes RECIBIDAS ────────────────────────────────────────
@@ -96,7 +96,7 @@ router.get('/pendientes', isAuthenticated, async (req, res) => {
       [req.session.user.id]
     );
     res.json({ pendientes });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // ─── Estado de amistad con un usuario ────────────────────────────────────────

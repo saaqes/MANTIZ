@@ -18,7 +18,7 @@ router.get('/logros', isAuthenticated, async (req, res) => {
       [req.session.user.id]
     );
     res.json({ logros });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // ─── GET logros de un usuario público ────────────────────────────────────────
@@ -33,7 +33,7 @@ router.get('/logros/:uid', async (req, res) => {
       [req.params.uid]
     );
     res.json({ logros });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // ─── POST registrar tiempo de sesión ─────────────────────────────────────────
@@ -81,7 +81,7 @@ router.get('/conexiones', isAuthenticated, async (req, res) => {
       [req.session.user.id]
     );
     res.json({ conexiones });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // GET conexiones públicas de un usuario
@@ -92,7 +92,7 @@ router.get('/conexiones/:uid', async (req, res) => {
       [req.params.uid]
     );
     res.json({ conexiones });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // POST guardar/actualizar conexión
@@ -110,7 +110,7 @@ router.post('/conexiones', isAuthenticated, async (req, res) => {
       [req.session.user.id, plataforma, username.trim(), publico ? 1 : 0, url || null]
     );
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
 // DELETE quitar conexión
