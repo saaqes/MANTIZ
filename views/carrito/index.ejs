@@ -9,29 +9,29 @@
     <!-- Items -->
     <div id="cartItems">
       <% items.forEach(item=>{%>
-      <div style="display:flex;gap:20px;padding:20px;background:rgba(255,255,255,0.03);border:1px solid var(--border);margin-bottom:12px;position:relative" id="cart-item-<%=item.id%>">
-        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
-        <img src="/uploads/products/<%=item.imagen_principal%>" alt="<%=item.titulo%>" style="width:100px;height:130px;object-fit:cover;flex-shrink:0;filter:url(#gb)" onerror="this.src='https://via.placeholder.com/100x130/111/888?text=?'">
-        <div style="flex:1;min-width:0">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);margin-bottom:4px"><%=item.titulo%></div>
+      <div style="display:flex;gap:20px;padding:20px;background:var(--card);border:1px solid var(--border);margin-bottom:12px;position:relative" id="cart-item-<%=item.id%>" class="cart-item-row">
+        <div style="position:absolute;inset:0;border:2px solid var(--faint-3);filter:url(#gb);pointer-events:none"></div>
+        <img src="/uploads/products/<%=item.imagen_principal%>" alt="<%=item.titulo%>" style="width:100px;height:130px;object-fit:cover;flex-shrink:0;filter:url(#gb)" class="cart-item-img" onerror="this.src='https://via.placeholder.com/100x130/111/888?text=?'">
+        <div style="flex:1;min-width:0" class="cart-item-content">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);margin-bottom:4px;overflow-wrap:break-word"><%=item.titulo%></div>
           <% if(item.talla){%><div style="font-size:12px;color:var(--pink);letter-spacing:2px;margin-bottom:8px">TALLA: <%=item.talla%></div><%}%>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--pink);letter-spacing:1px;margin-bottom:12px">$<%=parseFloat(item.precio_final).toLocaleString('es-CO')%></div>
-          <div style="display:flex;align-items:center;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap" class="cart-item-qtyrow">
             <div style="display:flex;align-items:center;gap:8px">
               <button onclick="cambiarCantidad(<%=item.id%>, -1)"
-                style="width:28px;height:28px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.2);color:var(--white);cursor:pointer;transition:all 0.15s;font-size:16px"
-                onmouseover="this.style.background='var(--pink)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">−</button>
+                style="width:28px;height:28px;background:var(--faint-1);border:1px solid var(--faint-3);color:var(--text);cursor:pointer;transition:all 0.15s;font-size:16px"
+                onmouseover="this.style.background='var(--pink)'" onmouseout="this.style.background='var(--faint-1)'">−</button>
               <span id="qty-<%=item.id%>" style="font-family:'Bebas Neue',sans-serif;font-size:18px;min-width:24px;text-align:center"><%=item.cantidad%></span>
               <button onclick="cambiarCantidad(<%=item.id%>, 1)"
-                style="width:28px;height:28px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.2);color:var(--white);cursor:pointer;transition:all 0.15s;font-size:16px"
-                onmouseover="this.style.background='var(--pink)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">+</button>
+                style="width:28px;height:28px;background:var(--faint-1);border:1px solid var(--faint-3);color:var(--text);cursor:pointer;transition:all 0.15s;font-size:16px"
+                onmouseover="this.style.background='var(--pink)'" onmouseout="this.style.background='var(--faint-1)'">+</button>
             </div>
             <button onclick="eliminarItem(<%=item.id%>)"
-              style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;cursor:pointer;transition:color 0.2s"
-              onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='rgba(255,255,255,0.3)'" title="Eliminar">✕</button>
+              style="background:none;border:none;color:var(--faint-3);font-size:18px;cursor:pointer;transition:color 0.2s"
+              onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='var(--faint-3)'" title="Eliminar">✕</button>
           </div>
         </div>
-        <div id="subtotal-<%=item.id%>" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;flex-shrink:0">
+        <div id="subtotal-<%=item.id%>" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;flex-shrink:0" class="cart-item-subtotal">
           $<%=parseFloat(item.precio_final*item.cantidad).toLocaleString('es-CO')%>
         </div>
       </div>
@@ -40,13 +40,13 @@
 
     <!-- Summary -->
     <div>
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:28px;position:relative;top:0">
-        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.3);filter:url(#gb);pointer-events:none"></div>
+      <div style="background:var(--card);border:1px solid var(--border);padding:28px;position:relative;top:0">
+        <div style="position:absolute;inset:0;border:2px solid var(--faint-3);filter:url(#gb);pointer-events:none"></div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--pink);margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px">RESUMEN</div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:14px;color:rgba(240,240,240,0.7)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:14px;color:var(--muted)">
           <span>SUBTOTAL</span><span id="resumen-subtotal" style="font-family:'Bebas Neue',sans-serif;font-size:16px">$<%=parseFloat(subtotal).toLocaleString('es-CO')%></span>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:14px;color:rgba(240,240,240,0.7)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:14px;color:var(--muted)">
           <span>ENVÍO</span><span id="resumen-envio" style="font-family:'Bebas Neue',sans-serif;font-size:16px">$<%=parseFloat(envio).toLocaleString('es-CO')%></span>
         </div>
         <div style="height:1px;background:var(--border);margin-bottom:16px"></div>
@@ -69,7 +69,23 @@
   <%}%>
 </div>
 
-<style>@media(max-width:768px){.cart-layout{grid-template-columns:1fr!important}div[style*="padding:40px"]{padding:20px!important}}</style>
+<style>
+@media(max-width:768px){
+  .cart-layout{grid-template-columns:1fr!important}
+  div[style*="padding:40px"]{padding:20px!important}
+}
+/* ── Fix: en 320-480px la fila del item (img 100px + contenido + subtotal)
+   dejaba ~20px reales para título/talla/precio/controles de cantidad —
+   completamente roto. Se apila el subtotal a su propia línea y se reduce
+   la imagen, liberando espacio real para los controles. ── */
+@media(max-width:480px){
+  .cart-item-row{flex-wrap:wrap}
+  .cart-item-img{width:72px!important;height:94px!important}
+  .cart-item-content{flex-basis:0;min-width:140px!important}
+  .cart-item-subtotal{flex-basis:100%;text-align:right;margin-top:10px;padding-top:10px;border-top:1px solid var(--faint-1)}
+  .cart-item-qtyrow{gap:8px!important}
+}
+</style>
 
 <script>
 // Precios por item para recalcular totales localmente

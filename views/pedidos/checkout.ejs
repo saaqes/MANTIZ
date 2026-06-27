@@ -15,8 +15,8 @@
       <div style="display:flex;flex-direction:column;gap:20px">
 
         <!-- 1. DIRECCIÓN -->
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:28px;position:relative">
-          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
+        <div style="background:var(--card);border:1px solid var(--border);padding:28px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid var(--faint-3);filter:url(#gb);pointer-events:none"></div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--pink);margin-bottom:20px">
             <i class="bi bi-geo-alt-fill me-2"></i>DIRECCIÓN DE ENTREGA
           </div>
@@ -37,7 +37,7 @@
             </label>
             <% }) %>
           </div>
-          <button type="button" onclick="toggleNuevaDireccion()" style="background:none;border:1px solid rgba(255,255,255,0.2);color:var(--pink);padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'">
+          <button type="button" onclick="toggleNuevaDireccion()" style="background:none;border:1px solid var(--faint-3);color:var(--pink);padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--faint-3)'">
             + AGREGAR NUEVA DIRECCIÓN
           </button>
           <div id="nueva-dir-section" style="display:none;margin-top:16px">
@@ -89,8 +89,8 @@
         </div>
 
         <!-- 2. MÉTODO DE PAGO -->
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:28px;position:relative">
-          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
+        <div style="background:var(--card);border:1px solid var(--border);padding:28px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid var(--faint-3);filter:url(#gb);pointer-events:none"></div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--pink);margin-bottom:20px">
             <i class="bi bi-credit-card-fill me-2"></i>MÉTODO DE PAGO
           </div>
@@ -114,8 +114,8 @@
         </div>
 
         <!-- 3. NOTAS -->
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
-          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
+        <div style="background:var(--card);border:1px solid var(--border);padding:24px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid var(--faint-3);filter:url(#gb);pointer-events:none"></div>
           <label class="mantiz-label"><i class="bi bi-chat-left-text me-2"></i>Notas adicionales</label>
           <textarea name="notas" class="mantiz-input" rows="3" placeholder="Instrucciones especiales para tu pedido..."></textarea>
         </div>
@@ -123,8 +123,8 @@
 
       <!-- RIGHT: ORDER SUMMARY -->
       <div style="display:flex;flex-direction:column;gap:16px;position:sticky;top:84px;align-self:start">
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
-          <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.2);filter:url(#gb);pointer-events:none"></div>
+        <div style="background:var(--card);border:1px solid var(--border);padding:24px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid var(--faint-3);filter:url(#gb);pointer-events:none"></div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--pink);margin-bottom:16px">RESUMEN DEL PEDIDO</div>
 
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">

@@ -83,7 +83,189 @@
   </div>
 </footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+<!-- ── Lazy loading universal ──────────────────────────────────────────────
+  Estrategia en dos capas:
+  1. Atributo nativo `loading="lazy"` — cero JS, máxima compatibilidad.
+     Este script lo añade automáticamente a TODAS las imágenes de la página
+     que no sean "above the fold" (fuera del viewport inicial) ni tengan
+     ya el atributo establecido explícitamente.
+  2. IntersectionObserver — para `data-src` en imágenes con srcset o casos
+     especiales donde el atributo nativo no es suficiente.
+  No añade dependencias: nativo + ~30 líneas de JS inline mínimo.
+──────────────────────────────────────────────────────────────────────── -->
+<script>
+(function(){
+  // Añadir loading="lazy" a todas las <img> que aún no lo tienen
+  // excepto las que ya están en el viewport (above the fold ≈ primeras 3)
+  var imgs = document.querySelectorAll('img:not([loading])');
+  var viewportH = window.innerHeight || 800;
+  imgs.forEach(function(img, i){
+    var rect = img.getBoundingClientRect();
+    // Si está fuera del viewport O es una imagen tardía en la lista → lazy
+    if (rect.top > viewportH || i > 2) {
+      img.setAttribute('loading','lazy');
+    } else {
+      img.setAttribute('loading','eager'); // asegurar carga inmediata above fold
+    }
+  });
+  // IntersectionObserver para data-src (progressive enhancement)
+  if ('IntersectionObserver' in window){
+    var lazyObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          var img=e.target;
+          if(img.dataset.src){ img.src=img.dataset.src; delete img.dataset.src; }
+          if(img.dataset.srcset){ img.srcset=img.dataset.srcset; delete img.dataset.srcset; }
+          lazyObs.unobserve(img);
+        }
+      });
+    },{rootMargin:'200px 0px'});
+    document.querySelectorAll('img[data-src]').forEach(function(img){ lazyObs.observe(img); });
+  }
+})();
+</script>
+
+<!-- ── Animaciones de scroll (Intersection Observer) ───────────────────────
+  Sistema en dos niveles:
+  1. CSS: define las clases .reveal y sus variantes (.reveal-left, .reveal-right,
+     .reveal-scale, .stagger-*) con @keyframes, completamente sin JS.
+  2. JS: un único IntersectionObserver que añade la clase .visible cuando el
+     elemento entra en el viewport, disparando la animación.
+
+  DISEÑO DE LA ESTRATEGIA:
+  - Ninguna vista individual necesita cambios: el JS encuentra automáticamente
+    todos los elementos con .reveal / .reveal-left / etc. ya presentes en el DOM.
+  - Los selectores CSS de "auto-reveal" (tarjetas, stats, secciones) se aplican
+    con un observer separado, para no mezclar elementos que el dev marca
+    explícitamente con los que la página decide animar por defecto.
+  - Sin dependencias externas (cero GSAP, cero Animate.css).
+  - Respeta `prefers-reduced-motion`: si el usuario ha pedido menos movimiento,
+    todas las animaciones se desactivan con una sola regla CSS.
+──────────────────────────────────────────────────────────────────────── -->
+<style>
+/* Respetar preferencia del sistema "reducir movimiento" */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal-left, .reveal-right, .reveal-scale,
+  [class*="stagger-"] { opacity:1!important; transform:none!important; transition:none!important; animation:none!important; }
+}
+
+/* ── Estado inicial (oculto) ── */
+.reveal        { opacity:0; transform:translateY(32px); transition:opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
+.reveal-left   { opacity:0; transform:translateX(-40px); transition:opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
+.reveal-right  { opacity:0; transform:translateX(40px);  transition:opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
+.reveal-scale  { opacity:0; transform:scale(0.88);       transition:opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1); }
+
+/* Delays de escalonado para grupos (stagger) */
+.stagger-1 { transition-delay:.05s }
+.stagger-2 { transition-delay:.12s }
+.stagger-3 { transition-delay:.19s }
+.stagger-4 { transition-delay:.26s }
+.stagger-5 { transition-delay:.33s }
+.stagger-6 { transition-delay:.40s }
+
+/* ── Estado visible (tras cruzar el viewport) ── */
+.reveal.visible, .reveal-left.visible, .reveal-right.visible, .reveal-scale.visible { opacity:1; transform:none; }
+
+/* ── Auto-reveal de los componentes recurrentes del proyecto ──
+   Se aplica automáticamente via JS a los selectores listados debajo.
+   No afecta a elementos que ya tenían .reveal en el HTML (para no duplicar). */
+.ao-reveal        { opacity:0; transform:translateY(24px); transition:opacity .6s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.22,1,.36,1); }
+.ao-reveal.visible { opacity:1; transform:none; }
+</style>
+
+<script>
+(function(){
+  if (!('IntersectionObserver' in window)) return;
+
+  // ── Observer 1: elementos con clase .reveal / .reveal-left / etc.
+  // que los devs ponen explícitamente en el HTML ────────────────────
+  var revealObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        revealObs.unobserve(e.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -60px 0px', threshold: 0.08 });
+
+  document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale')
+    .forEach(function(el){ revealObs.observe(el); });
+
+  // ── Observer 2: auto-reveal de componentes recurrentes del proyecto
+  // Se aplica la clase .ao-reveal a cada elemento que coincida con los
+  // selectores definidos, y se observa. El threshold más alto (0.15)
+  // requiere que el elemento esté algo más en pantalla antes de animar.
+  // ──────────────────────────────────────────────────────────────────
+  var AUTO_SELECTORS = [
+    // Cards de producto y comunidad
+    '.pgrid > a', '.pgrid > div',
+    '.board-card', '.pin-card',
+    // Directorio de usuarios
+    '.dir-grid > a', '.dir-grid > div',
+    // Stats y KPIs
+    '.pp-stat', '.stat-chip',
+    // Tarjetas del admin
+    '.slide-card', '.model-card',
+    // Secciones en la home
+    '#products-sec', '#bestsellers',
+    // Logros y conexiones
+    '.logro-card', '.conex-item',
+    // Encuestas y notificaciones
+    '.enc-card', '.notif-card',
+    // Tiendas
+    '.tienda-item',
+    // Tarjetas de creadores en comunidad
+    '.creador-card',
+    // Resumen de checkout y carrito
+    '.cart-item-row',
+    // Perfil usuario
+    '.sidebar-card'
+  ].join(',');
+
+  var autoObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        autoObs.unobserve(e.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -40px 0px', threshold: 0.08 });
+
+  // Añadir .ao-reveal solo si el elemento no tiene ya una clase .reveal*
+  // y no está en el viewport initial (above the fold) para no esconder
+  // contenido que el usuario ya puede ver al cargar la página.
+  var viewportH2 = window.innerHeight || 800;
+  document.querySelectorAll(AUTO_SELECTORS).forEach(function(el){
+    if (el.classList.contains('reveal') || el.classList.contains('reveal-left') ||
+        el.classList.contains('reveal-right') || el.classList.contains('reveal-scale') ||
+        el.classList.contains('ao-reveal')) return;
+    var rect = el.getBoundingClientRect();
+    if (rect.top < viewportH2) return; // already visible: don't hide
+    el.classList.add('ao-reveal');
+    autoObs.observe(el);
+  });
+
+  // ── Stagger automático en grupos (grids con N hijos) ─────────────
+  // Si un contenedor tiene 2-6 hijos todos con .ao-reveal recién añadido,
+  // les añade clases de delay escalonado para una entrada en cascada.
+  var GRID_SELECTORS = ['.pgrid','.dir-grid','.boards-masonry','.logros-grid',
+                        '.fav-grid','.tab-grid','.row.g-3'];
+  GRID_SELECTORS.forEach(function(sel){
+    document.querySelectorAll(sel).forEach(function(container){
+      var children = Array.from(container.children).filter(function(c){
+        return c.classList.contains('ao-reveal');
+      });
+      if (children.length >= 2 && children.length <= 6) {
+        children.forEach(function(c, i){
+          c.classList.add('stagger-' + (i + 1));
+        });
+      }
+    });
+  });
+})();
+</script>
 <% } else { %>
     </div><!-- end admin content padding -->
   </div><!-- end admin-content -->

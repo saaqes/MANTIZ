@@ -3,7 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %> | <%= sitio.nombre_tienda || 'MANTIZ' %></title>
+  <%
+    // ── SEO: valores por página con fallback al default global del sitio ──
+    // Cada controlador puede pasar `metaDescription`/`ogImage`/`ogType` como
+    // locals para personalizar cómo se ve la página al compartirse (WhatsApp,
+    // Twitter, Facebook, etc). Si no los pasa, se usa el default de
+    // configuracion_sitio (clave meta_descripcion/og_image).
+    var pageTitle = title + ' | ' + (sitio.nombre_tienda || 'MANTIZ');
+    var pageDesc = (typeof metaDescription !== 'undefined' && metaDescription)
+      ? metaDescription
+      : (sitio.meta_descripcion || 'MANTIZ — Moda urbana y streetwear Y2K. Ropa, accesorios y piezas exclusivas con probador virtual y modelos 3D.');
+    var pageKeywords = (typeof metaKeywords !== 'undefined' && metaKeywords) ? metaKeywords : (sitio.meta_keywords || 'mantiz, ropa y2k, streetwear, moda urbana');
+    var pageOgType = (typeof ogType !== 'undefined' && ogType) ? ogType : 'website';
+    var pageOgImageRaw = (typeof ogImage !== 'undefined' && ogImage) ? ogImage : (sitio.og_image || '');
+    var pageOgImage = pageOgImageRaw
+      ? (pageOgImageRaw.indexOf('http') === 0 ? pageOgImageRaw : (baseUrl + pageOgImageRaw))
+      : (baseUrl + '/img/og-default.png'); // fallback estático (ver nota en CAMBIOS_SEO.md)
+    var pageCanonical = (typeof canonicalUrlOverride !== 'undefined' && canonicalUrlOverride) ? canonicalUrlOverride : canonicalUrl;
+    var pageNoindex = (typeof noindex !== 'undefined' && noindex) ? true : false;
+  %>
+  <title><%= pageTitle %></title>
+  <meta name="description" content="<%= pageDesc %>">
+  <meta name="keywords" content="<%= pageKeywords %>">
+  <link rel="canonical" href="<%= pageCanonical %>">
+  <% if (pageNoindex) { %><meta name="robots" content="noindex, nofollow"><% } else { %><meta name="robots" content="index, follow"><% } %>
+
+  <!-- Favicon: SVG inline con el color de marca actual, sin depender de ningún archivo subido -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='<%= encodeURIComponent(sitio.color_primario || '#e91e8c') %>'/><text x='50' y='68' font-family='Arial,sans-serif' font-size='58' font-weight='900' fill='white' text-anchor='middle'>M</text></svg>">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="<%= pageOgType %>">
+  <meta property="og:title" content="<%= pageTitle %>">
+  <meta property="og:description" content="<%= pageDesc %>">
+  <meta property="og:image" content="<%= pageOgImage %>">
+  <meta property="og:url" content="<%= pageCanonical %>">
+  <meta property="og:site_name" content="<%= sitio.nombre_tienda || 'MANTIZ' %>">
+  <meta property="og:locale" content="es_CO">
+  <% if (typeof ogPrice !== 'undefined' && ogPrice) { %>
+  <meta property="product:price:amount" content="<%= ogPrice %>">
+  <meta property="product:price:currency" content="COP">
+  <% } %>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= pageTitle %>">
+  <meta name="twitter:description" content="<%= pageDesc %>">
+  <meta name="twitter:image" content="<%= pageOgImage %>">
+
+  <!-- JSON-LD: Organization (siempre presente, ayuda a Google a entender la marca).
+       Usa el og_image GLOBAL del sitio (configuracion_sitio), nunca la imagen
+       específica de la página actual (ej. la foto de un producto no es el
+       logo de la empresa, aunque sí sea el og:image correcto para esa página). -->
+  <% var orgLogo = sitio.og_image ? (sitio.og_image.indexOf('http') === 0 ? sitio.og_image : (baseUrl + sitio.og_image)) : undefined; %>
+  <script type="application/ld+json"><%- JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": sitio.nombre_tienda || 'MANTIZ',
+    "url": baseUrl,
+    "logo": orgLogo
+  }) %></script>
+  <!-- JSON-LD adicional específico de la página (p.ej. Product, BreadcrumbList) -->
+  <% if (typeof jsonLd !== 'undefined' && jsonLd) { %>
+  <script type="application/ld+json"><%- JSON.stringify(jsonLd) %></script>
+  <% } %>
+
+  <!-- ── Resource hints: reducen latencia de CDN en la primera carga ─────── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://unpkg.com">
+  <!-- ───────────────────────────────────────────────────────────────────── -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&display=swap">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -35,6 +104,15 @@
       --fd: 'Bebas Neue', sans-serif;
       --fb: 'Rajdhani', sans-serif;
       --fm: 'Rajdhani', sans-serif;
+      /* Variables "faint" para elementos sutiles sobre fondo que SÍ cambia
+         con el tema: bordes hairline, divisores, íconos/estrellas/puntos
+         inactivos. Antes estos casos usaban rgba(255,255,255,X) fijo
+         directamente, lo que los volvía invisibles en modo claro (texto
+         casi-blanco sobre fondo casi-blanco). Usar estas variables en vez
+         del rgba fijo hace que el elemento se vea bien en ambos temas. */
+      --faint-1: rgba(255,255,255,0.07);  /* divisores/hairlines sutiles */
+      --faint-2: rgba(255,255,255,0.15);  /* bordes/íconos inactivos */
+      --faint-3: rgba(255,255,255,0.2);   /* estrellas/dots inactivos, algo más visibles */
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -178,12 +256,12 @@
     .btn-grunge::after { content: ''; position: absolute; inset: 0; border: 2px solid var(--pink); background: transparent; filter: url(#gb); pointer-events: none; z-index: 2; }
     .btn-grunge:hover { color: white; background: rgba(233,30,140,0.15); }
     .btn-grunge-w {
-      position: relative; background: transparent; border: 2px solid white; color: white;
+      position: relative; background: transparent; border: 2px solid var(--text); color: var(--text);
       padding: 14px; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 4px;
       cursor: pointer; transition: all 0.2s; text-transform: uppercase; width: 100%;
       text-align: center; text-decoration: none; display: block; isolation: isolate;
     }
-    .btn-grunge-w::after { content: ''; position: absolute; inset: 0; border: 2px solid white; filter: url(#gb); pointer-events: none; z-index: 2; }
+    .btn-grunge-w::after { content: ''; position: absolute; inset: 0; border: 2px solid var(--text); filter: url(#gb); pointer-events: none; z-index: 2; }
     .btn-grunge-w:hover { color: var(--pink); }
     .btn-grunge-fill {
       position: relative; background: var(--pink); border: 2px solid white; color: white;
@@ -406,6 +484,9 @@
       --card-bg: #ffffff; --card: #ffffff;
       --white: #1a1a1a; --gray: #555; --border: rgba(0,0,0,0.12);
       --text: #1a1a1a; --muted: #666;
+      --faint-1: rgba(0,0,0,0.06);
+      --faint-2: rgba(0,0,0,0.13);
+      --faint-3: rgba(0,0,0,0.18);
     }
     body.light-mode #navbar { background: rgba(255,255,255,0.95); border-bottom: 1px solid rgba(0,0,0,0.06); }
     body.light-mode #navbar.scrolled { background: rgba(255,255,255,0.98) !important; }
@@ -469,6 +550,44 @@
     .admin-content .page-link { background: rgba(255,255,255,0.04); border-color: var(--border); color: var(--text); }
     .admin-content .page-link:hover { background: rgba(233,30,140,0.1); color: var(--pink); }
 
+    /* ════════════════════════════════════════════════════════════════════
+       MODO CLARO — OVERRIDES GLOBALES DE CONTRASTE (conservador)
+       ════════════════════════════════════════════════════════════════════
+       IMPORTANTE: este bloque es DELIBERADAMENTE conservador. Una primera
+       versión usaba selectores de atributo `[style*="color: white"]` para
+       forzar TODO texto blanco a oscuro en modo claro, pero se detectó que
+       varios componentes del proyecto son "siempre oscuros por diseño"
+       independientemente del tema — por ejemplo:
+         • El footer completo (`background:#060606`, fijo)
+         • Las flechas de la galería de fotos sobre el producto
+           (`background:rgba(10,10,10,0.7)`, fijo — para legibilidad sobre
+           la imagen, no relacionado con el tema del sitio)
+         • Overlays/badges sobre imágenes de productos y tableros
+       Esos elementos tienen fondo oscuro FIJO + texto blanco FIJO a
+       propósito: deben verse igual en ambos temas. Un selector global que
+       solo mira "tiene color:white" no puede distinguir ese caso del caso
+       real de bug (texto fijo sobre un fondo que SÍ cambia con el tema).
+       Por eso aquí solo se incluyen overrides 100% seguros y predecibles
+       (clases utilitarias, inputs nativos); los bugs reales de contraste
+       se corrigieron directamente en cada vista — ver CAMBIOS_DARKMODE.md.
+       ════════════════════════════════════════════════════════════════════ */
+
+    /* Clases utilitarias Bootstrap usadas en admin (fondo SÍ adapta vía var(--card)) */
+    body.light-mode .text-white { color: var(--text) !important; }
+    body.light-mode .text-white-50 { color: var(--muted) !important; }
+    body.light-mode .text-light { color: var(--text) !important; }
+
+    /* Inputs/selects/textareas nativos: SIEMPRE deben adaptar (no hay
+       "input intencionalmente oscuro" en este proyecto) */
+    body.light-mode input::placeholder,
+    body.light-mode textarea::placeholder { color: var(--muted) !important; opacity: 0.8; }
+    body.light-mode input:not([type="color"]):not([type="range"]),
+    body.light-mode textarea,
+    body.light-mode select { color: var(--text); }
+
+    /* Scrollbar: track más sutil sobre fondo claro */
+    body.light-mode ::-webkit-scrollbar-track { background: rgba(0,0,0,0.04); }
+
     /* ── NOTIFICATION PANEL ── */
     .notif-panel {
       position: fixed; top: 0; right: 0; width: 360px; height: 100vh;
@@ -516,16 +635,215 @@
       min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center;
       justify-content: center; margin-left: auto; padding: 0 4px; }
 
-    /* RESPONSIVE */
+    /* ═══════════════════════════════════════════════════════════════════════
+       RESPONSIVE — existente (tablet + desktop se mantiene intacto)
+       ═══════════════════════════════════════════════════════════════════════ */
     @media (max-width: 768px) {
-      .nav-left { display: none; } .login-btn { display: none; } .hamburger-btn { display: flex; }
-      .nav-inner { padding: 0 20px; } .nav-logo { font-size: 26px; }
-      #mobile-menu { display: block; visibility: hidden; opacity: 0; transition: transform 0.4s, opacity 0.4s, visibility 0.4s; }
-      #mobile-menu.open { visibility: visible; opacity: 1; }
       .admin-sidebar { transform: translateX(-100%); } .admin-sidebar.open { transform: translateX(0); }
       .admin-content { margin-left: 0; } .sidebar-toggle-btn { display: block; }
       #cart-panel { width: 100%; } .chat-window { width: calc(100vw - 32px); right: 16px; }
       .notif-panel { width: 100%; } .chat-social-panel { width: calc(100vw - 32px); right: 16px; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       PINTEREST MOBILE UI — solo ≤767px
+       REGLA ABSOLUTA: nada de lo que hay debajo toca tablet ni desktop.
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    /* ── Ocultar elementos del navbar original en móvil ── */
+    @media (max-width: 767px) {
+      #navbar               { display: none !important; }
+      #mobile-menu          { display: none !important; }
+      .hamburger-btn        { display: none !important; }
+    }
+
+    /* ── Mobile header / cats / bottom-nav: ocultos en tablet+ ── */
+    #mn-header, #mn-cats, #mn-nav, #mn-search-overlay { display: none; }
+
+    @media (max-width: 767px) {
+      /* compensar la nueva barra superior (56px) + barra de categorías (46px) */
+      main { padding-top: 108px !important; padding-bottom: 80px !important; }
+
+      /* ── MN-HEADER: top bar flotante ── */
+      #mn-header {
+        display: flex;
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1100;
+        height: 56px; padding: 0 16px;
+        align-items: center; justify-content: space-between;
+        background: rgba(10,10,10,0.82);
+        backdrop-filter: blur(18px) saturate(180%);
+        -webkit-backdrop-filter: blur(18px) saturate(180%);
+        border-bottom: 1px solid rgba(233,30,140,0.15);
+        box-shadow: 0 2px 24px rgba(0,0,0,0.5);
+      }
+      body.light-mode #mn-header {
+        background: rgba(255,255,255,0.88);
+        border-bottom-color: rgba(233,30,140,0.2);
+        box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+      }
+      #mn-logo {
+        font-family: var(--fd); font-size: 22px; letter-spacing: 4px;
+        color: var(--cp); text-decoration: none; filter: url(#gb);
+        flex-shrink: 0;
+      }
+      .mn-icons {
+        display: flex; align-items: center; gap: 4px;
+      }
+      .mn-icon-btn {
+        position: relative; background: none; border: none;
+        color: var(--text); width: 40px; height: 40px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 17px; cursor: pointer; border-radius: 50%;
+        transition: background 0.18s, color 0.18s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mn-icon-btn:active { background: rgba(233,30,140,0.12); color: var(--cp); }
+      .mn-icon-btn .mn-badge {
+        position: absolute; top: 6px; right: 6px;
+        background: var(--cp); color: white;
+        font-size: 8px; font-weight: 700; font-family: var(--fm);
+        min-width: 14px; height: 14px; border-radius: 7px;
+        display: none; align-items: center; justify-content: center;
+        padding: 0 3px; border: 1.5px solid var(--dark);
+      }
+      .mn-icon-btn .mn-badge.show { display: flex; }
+
+      /* ── MN-CATS: barra de categorías horizontal ── */
+      #mn-cats {
+        display: flex;
+        position: fixed; top: 56px; left: 0; right: 0; z-index: 1090;
+        height: 46px;
+        background: rgba(10,10,10,0.9);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        overflow-x: auto; overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none; /* Firefox */
+        gap: 6px; padding: 0 12px; align-items: center;
+        white-space: nowrap;
+      }
+      body.light-mode #mn-cats {
+        background: rgba(248,248,252,0.93);
+        border-bottom-color: rgba(0,0,0,0.06);
+      }
+      #mn-cats::-webkit-scrollbar { display: none; }
+      .mn-cat {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 14px; border-radius: 20px; height: 30px;
+        font-family: var(--fm); font-size: 11px; font-weight: 700;
+        letter-spacing: 1px; text-transform: uppercase;
+        text-decoration: none; color: var(--muted);
+        border: 1px solid transparent;
+        background: rgba(255,255,255,0.05);
+        transition: all 0.18s; flex-shrink: 0;
+        scroll-snap-align: start;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body.light-mode .mn-cat {
+        color: #888; background: rgba(0,0,0,0.04);
+      }
+      .mn-cat.active, .mn-cat:active {
+        color: var(--cp); border-color: rgba(233,30,140,0.4);
+        background: rgba(233,30,140,0.1);
+      }
+      .mn-cat i { font-size: 12px; }
+
+      /* ── MN-NAV: bottom navigation flotante ── */
+      #mn-nav {
+        display: flex;
+        position: fixed; bottom: 12px; left: 16px; right: 16px; z-index: 1100;
+        height: 58px; border-radius: 18px;
+        background: rgba(17,17,17,0.92);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid rgba(233,30,140,0.2);
+        box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+        align-items: center; justify-content: space-around; padding: 0 8px;
+      }
+      body.light-mode #mn-nav {
+        background: rgba(255,255,255,0.92);
+        border-color: rgba(233,30,140,0.15);
+        box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+      }
+      .mn-nav-btn {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 3px; width: 64px; height: 48px; border: none; background: none;
+        color: var(--muted); font-size: 20px; cursor: pointer; border-radius: 12px;
+        transition: color 0.18s, background 0.18s;
+        -webkit-tap-highlight-color: transparent;
+        text-decoration: none;
+      }
+      .mn-nav-btn span {
+        font-family: var(--fm); font-size: 9px; font-weight: 700;
+        letter-spacing: 0.5px; text-transform: uppercase;
+      }
+      .mn-nav-btn.active, .mn-nav-btn:active { color: var(--cp); background: rgba(233,30,140,0.08); }
+      body.light-mode .mn-nav-btn { color: #aaa; }
+      body.light-mode .mn-nav-btn.active { color: var(--cp); }
+
+      /* Search central expandido */
+      #mn-search-overlay {
+        display: none;
+        position: fixed; top: 56px; left: 0; right: 0; z-index: 1200;
+        background: rgba(10,10,10,0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 12px 16px 16px;
+        border-bottom: 1px solid rgba(233,30,140,0.2);
+        animation: mnSearchIn 0.22s ease;
+      }
+      body.light-mode #mn-search-overlay {
+        background: rgba(250,250,252,0.98);
+        border-bottom-color: rgba(233,30,140,0.15);
+      }
+      #mn-search-overlay.open { display: block; }
+      @keyframes mnSearchIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      #mn-search-overlay .mn-search-wrap { position: relative; }
+      #mn-search-inp {
+        width: 100%; height: 44px;
+        background: rgba(255,255,255,0.07); border: 1px solid rgba(233,30,140,0.3);
+        border-radius: 22px; padding: 0 44px 0 18px;
+        color: var(--text); font-family: var(--fm); font-size: 14px;
+        letter-spacing: 0.5px; outline: none;
+        transition: border-color 0.2s;
+      }
+      body.light-mode #mn-search-inp {
+        background: rgba(0,0,0,0.04); color: #111; border-color: rgba(233,30,140,0.25);
+      }
+      #mn-search-inp:focus { border-color: var(--cp); }
+      #mn-search-inp::placeholder { color: var(--muted); }
+      #mn-search-close {
+        position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; padding: 4px;
+      }
+      #mn-search-sugg {
+        margin-top: 8px; border-radius: 12px;
+        overflow: hidden; background: rgba(20,20,20,0.9);
+        border: 1px solid rgba(255,255,255,0.06);
+        max-height: 240px; overflow-y: auto; display: none;
+      }
+      body.light-mode #mn-search-sugg { background: white; border-color: rgba(0,0,0,0.08); }
+      #mn-search-sugg.open { display: block; }
+      .mn-sugg-item {
+        display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+        color: var(--text); font-family: var(--fm); font-size: 13px; cursor: pointer;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: background 0.15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mn-sugg-item:last-child { border-bottom: none; }
+      .mn-sugg-item:active { background: rgba(233,30,140,0.1); color: var(--cp); }
+      body.light-mode .mn-sugg-item { color: #111; border-bottom-color: rgba(0,0,0,0.05); }
+      .mn-sugg-img {
+        width: 36px; height: 36px; border-radius: 8px; object-fit: cover;
+        background: rgba(255,255,255,0.05); flex-shrink: 0;
+      }
     }
   </style>
 </head>
@@ -691,6 +1009,76 @@
   <div class="chat-input-row"><input type="text" id="chatInp" placeholder="Escribe tu mensaje..." onkeydown="if(event.key==='Enter')sendChat()"><button class="chat-send-btn" onclick="sendChat()"><i class="bi bi-send-fill" style="font-size:13px"></i></button></div>
 </div>
 <% } %>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     PINTEREST MOBILE UI — solo visible en ≤767px
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<!-- MN-HEADER: barra superior flotante -->
+<header id="mn-header">
+  <a href="/" id="mn-logo"><%= sitio.nombre_tienda || 'MANTIZ' %></a>
+  <div class="mn-icons">
+    <% if (user) { %>
+    <!-- Notificaciones -->
+    <button class="mn-icon-btn" id="mn-notif-btn" title="Notificaciones" onclick="document.getElementById('notif-toggle').click()">
+      <i class="bi bi-bell-fill"></i>
+      <span class="mn-badge" id="mn-notif-badge"></span>
+    </button>
+    <!-- Mensajes -->
+    <button class="mn-icon-btn" id="mn-chat-btn" title="Mensajes" onclick="document.getElementById('chat-social-toggle').click()">
+      <i class="bi bi-chat-dots-fill"></i>
+      <span class="mn-badge" id="mn-chat-badge"></span>
+    </button>
+    <% } %>
+    <!-- Carrito -->
+    <button class="mn-icon-btn" title="Carrito" onclick="document.getElementById('cart-toggle').click()">
+      <i class="bi bi-bag-fill"></i>
+      <span class="mn-badge <%= carritoCount > 0 ? 'show' : '' %>" id="mn-cart-badge"><%= carritoCount > 0 ? carritoCount : '' %></span>
+    </button>
+  </div>
+</header>
+
+<!-- MN-CATS: barra de categorías horizontal -->
+<div id="mn-cats">
+  <a href="/productos"       class="mn-cat" data-path="/productos"><i class="bi bi-bag-fill"></i>Productos</a>
+  <a href="/comunidad"       class="mn-cat" data-path="/comunidad"><i class="bi bi-people-fill"></i>Comunidad</a>
+  <a href="/opiniones"       class="mn-cat" data-path="/opiniones"><i class="bi bi-star-fill"></i>Opiniones</a>
+  <a href="/perfil#tableros" class="mn-cat" data-path="/tableros"><i class="bi bi-grid-3x3-gap-fill"></i>Tableros</a>
+  <a href="/buscar?tipo=usuarios" class="mn-cat" data-path="/usuarios"><i class="bi bi-person-fill"></i>Usuarios</a>
+  <a href="/perfil#favoritos" class="mn-cat" data-path="/favoritos"><i class="bi bi-heart-fill"></i>Favoritos</a>
+  <a href="/tiendas"         class="mn-cat" data-path="/tiendas"><i class="bi bi-geo-alt-fill"></i>Sucursales</a>
+  <a href="/ayuda"           class="mn-cat" data-path="/ayuda"><i class="bi bi-question-circle-fill"></i>Ayuda</a>
+</div>
+
+<!-- MN-SEARCH-OVERLAY: búsqueda expandida -->
+<div id="mn-search-overlay">
+  <div class="mn-search-wrap">
+    <input type="text" id="mn-search-inp" placeholder="Buscar productos, usuarios..." autocomplete="off">
+    <button id="mn-search-close"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div id="mn-search-sugg"></div>
+</div>
+
+<!-- MN-NAV: bottom navigation flotante -->
+<nav id="mn-nav">
+  <a href="/" class="mn-nav-btn" id="mn-btn-home">
+    <i class="bi bi-house-fill"></i><span>Inicio</span>
+  </a>
+  <button class="mn-nav-btn" id="mn-btn-search" onclick="mnToggleSearch()">
+    <i class="bi bi-search"></i><span>Buscar</span>
+  </button>
+  <% if (user) { %>
+  <button class="mn-nav-btn" id="mn-btn-profile" onclick="mnToggleProfile()">
+    <img src="<%= user.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+user.foto_perfil : '/img/defaults/avatars/'+(user.foto_perfil_preset||'avatar1.png') %>"
+         width="28" height="28" style="border-radius:50%;border:2px solid var(--cp);object-fit:cover" onerror="this.src='/img/defaults/avatars/avatar1.png'">
+    <span>Perfil</span>
+  </button>
+  <% } else { %>
+  <a href="/auth/login" class="mn-nav-btn" id="mn-btn-profile">
+    <i class="bi bi-person-fill"></i><span>Ingresar</span>
+  </a>
+  <% } %>
+</nav>
 
 <main style="padding-top:64px;position:relative;z-index:1">
 
@@ -894,19 +1282,24 @@ function relTime(ts){
   if(diff<86400)return`hace ${Math.floor(diff/3600)}h`;return`hace ${Math.floor(diff/86400)}d`;
 }
 
-checkNotifCount();setInterval(checkNotifCount,30000);
+let mantizNotifInterval=setInterval(checkNotifCount,30000);
+checkNotifCount();
 
 // SSE tiempo real
-try{
-  const es=new EventSource('/chat/stream');
-  es.onmessage=e=>{
-    try{
-      const d=JSON.parse(e.data);
-      if(d.tipo==='mensaje'){const cb=document.getElementById('chat-badge');if(cb){const n=parseInt(cb.textContent)||0;cb.textContent=n+1>9?'9+':n+1;cb.classList.add('show');}}
-    }catch(er){}
-  };
-  es.onerror=()=>{es.close();};
-}catch(e){}
+let mantizSSE=null;
+function mantizConnectSSE(){
+  try{
+    mantizSSE=new EventSource('/chat/stream');
+    mantizSSE.onmessage=e=>{
+      try{
+        const d=JSON.parse(e.data);
+        if(d.tipo==='mensaje'){const cb=document.getElementById('chat-badge');if(cb){const n=parseInt(cb.textContent)||0;cb.textContent=n+1>9?'9+':n+1;cb.classList.add('show');}}
+      }catch(er){}
+    };
+    mantizSSE.onerror=()=>{mantizSSE.close();};
+  }catch(e){}
+}
+mantizConnectSSE();
 
 // ── CHAT SOCIAL ────────────────────────────────────────────────────────────────
 const chatSocialPanel=document.getElementById('chat-social-panel');
@@ -935,6 +1328,174 @@ async function cargarConversaciones(){
 }
 
 // ── PING TIEMPO (gamificación) ──────────────────────────────────────────────────
-setInterval(()=>{fetch('/gamificacion/ping-tiempo',{method:'POST'}).catch(()=>{});},60000);
+let mantizPingInterval=setInterval(()=>{fetch('/gamificacion/ping-tiempo',{method:'POST'}).catch(()=>{});},60000);
+
+// ── LIMPIEZA AL SALIR DE LA PÁGINA ────────────────────────────────────────────────
+// Si no se cierra la conexión SSE y los intervalos al navegar, pueden quedar
+// "zombies" (sobre todo con la caché atrás/adelante del navegador) que agotan
+// el límite de conexiones simultáneas hacia el mismo origen y producen una
+// sensación de carga infinita en navegaciones posteriores.
+function mantizCleanup(){
+  clearInterval(mantizNotifInterval);
+  clearInterval(mantizPingInterval);
+  if(mantizSSE){mantizSSE.close();mantizSSE=null;}
+}
+window.addEventListener('pagehide',mantizCleanup);
+window.addEventListener('beforeunload',mantizCleanup);
+// Si la página vuelve desde la caché atrás/adelante, reabrir SSE e intervalos
+window.addEventListener('pageshow',e=>{
+  if(e.persisted){
+    if(!mantizSSE||mantizSSE.readyState===EventSource.CLOSED)mantizConnectSSE();
+    mantizNotifInterval=setInterval(checkNotifCount,30000);
+    mantizPingInterval=setInterval(()=>{fetch('/gamificacion/ping-tiempo',{method:'POST'}).catch(()=>{});},60000);
+    checkNotifCount();
+  }
+});
 <% } %>
+
+// ── PINTEREST MOBILE UI ───────────────────────────────────────────────────
+// Solo se activa en pantallas ≤767px (matchMedia). En tablet/desktop es
+// letra muerta: los elementos mn-* tienen display:none por CSS y este bloque
+// no registra ningún listener que interfiera con la lógica desktop existente.
+(function(){
+  var MQ = window.matchMedia('(max-width:767px)');
+  if (!MQ.matches) return; // exit temprano en tablet/desktop
+
+  // ── Sincronizar badges con los originales del navbar ─────────────────
+  function syncBadges(){
+    var nb = document.getElementById('notif-badge');
+    var mnb = document.getElementById('mn-notif-badge');
+    if (nb && mnb) {
+      if (nb.classList.contains('show')) { mnb.textContent = nb.textContent; mnb.classList.add('show'); }
+      else { mnb.classList.remove('show'); }
+    }
+    var cb = document.getElementById('chat-badge');
+    var mcb = document.getElementById('mn-chat-badge');
+    if (cb && mcb) {
+      if (cb.classList.contains('show')) { mcb.textContent = cb.textContent; mcb.classList.add('show'); }
+      else { mcb.classList.remove('show'); }
+    }
+    var cc = document.getElementById('cart-count');
+    var mcc = document.getElementById('mn-cart-badge');
+    if (cc && mcc) {
+      if (cc.classList.contains('show')) { mcc.textContent = cc.textContent; mcc.classList.add('show'); }
+      else { mcc.classList.remove('show'); }
+    }
+  }
+  setInterval(syncBadges, 1500);
+  syncBadges();
+
+  // ── Marcar categoría activa según la URL actual ───────────────────────
+  var currentPath = window.location.pathname;
+  document.querySelectorAll('.mn-cat').forEach(function(a){
+    var p = a.getAttribute('data-path') || '';
+    if (p && currentPath.startsWith(p)) a.classList.add('active');
+    if (p === '/' && currentPath === '/') a.classList.add('active');
+  });
+
+  // ── Home button: marcar activo ────────────────────────────────────────
+  var homeBtn = document.getElementById('mn-btn-home');
+  if (homeBtn && (currentPath === '/' || currentPath === '')) homeBtn.classList.add('active');
+
+  // ── Cerrar overlay de búsqueda ────────────────────────────────────────
+  var searchOverlay = document.getElementById('mn-search-overlay');
+  var searchInp    = document.getElementById('mn-search-inp');
+  var searchSugg   = document.getElementById('mn-search-sugg');
+  var searchClose  = document.getElementById('mn-search-close');
+  if (searchClose) searchClose.addEventListener('click', function(){ mnCloseSearch(); });
+
+  // Cerrar al tocar fuera del overlay
+  document.addEventListener('touchstart', function(e){
+    if (searchOverlay && searchOverlay.classList.contains('open') && !searchOverlay.contains(e.target)){
+      var sb = document.getElementById('mn-btn-search');
+      if (sb && !sb.contains(e.target)) mnCloseSearch();
+    }
+  }, {passive:true});
+
+  // ── Búsqueda con debounce (reutiliza el endpoint /api/buscar existente) ─
+  var searchTimer;
+  if (searchInp) {
+    searchInp.addEventListener('input', function(){
+      clearTimeout(searchTimer);
+      var q = this.value.trim();
+      if (!q || q.length < 2) { if(searchSugg) searchSugg.classList.remove('open'); return; }
+      searchTimer = setTimeout(function(){
+        fetch('/api/buscar?q='+encodeURIComponent(q)+'&limite=6')
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if (!searchSugg) return;
+            var items = (data.productos||[]).concat(data.usuarios||[]).slice(0,7);
+            if (!items.length) { searchSugg.classList.remove('open'); return; }
+            searchSugg.innerHTML = items.map(function(it){
+              var img = it.imagen_principal ? '/uploads/'+it.imagen_principal
+                : it.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+it.foto_perfil
+                : '/img/defaults/avatars/'+(it.foto_perfil_preset||'avatar1.png');
+              var label = it.titulo || it.nombre_visible || it.username || '';
+              var href  = it.titulo ? '/productos/'+it.id : '/perfil/'+it.username;
+              return '<a class="mn-sugg-item" href="'+href+'">'
+                +'<img class="mn-sugg-img" src="'+img+'" onerror="this.src=\'/img/defaults/placeholder.png\'">'
+                +'<span>'+label+'</span></a>';
+            }).join('');
+            searchSugg.classList.add('open');
+          }).catch(function(){});
+      }, 280);
+    });
+    searchInp.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') {
+        window.location.href = '/buscar?q=' + encodeURIComponent(this.value.trim());
+      }
+    });
+  }
+
+  // ── Profile toggle: abre el user-dropdown existente ──────────────────
+  // (reutiliza exactamente la lógica desktop, no crea un nuevo menú)
+
+})(); // fin IIFE Pinterest Mobile
+
+// ── Funciones globales Mobile — fuera del IIFE para ser llamables desde onclick ──
+function mnToggleSearch(){
+  var o = document.getElementById('mn-search-overlay');
+  if (!o) return;
+  var opening = !o.classList.contains('open');
+  o.classList.toggle('open');
+  if (opening) {
+    var i = document.getElementById('mn-search-inp');
+    if (i) { i.value = ''; i.focus(); }
+    var sb = document.getElementById('mn-btn-search');
+    if (sb) sb.classList.add('active');
+  } else {
+    mnCloseSearch();
+  }
+}
+function mnCloseSearch(){
+  var o = document.getElementById('mn-search-overlay');
+  if (o) o.classList.remove('open');
+  var s = document.getElementById('mn-search-sugg');
+  if (s) s.classList.remove('open');
+  var sb = document.getElementById('mn-btn-search');
+  if (sb) sb.classList.remove('active');
+}
+function mnToggleProfile(){
+  var dd = document.getElementById('user-dd');
+  if (!dd) return;
+  if (!dd.style.position || dd.style.position === 'absolute') {
+    dd.style.cssText = [
+      'display:block','position:fixed','bottom:80px','right:16px',
+      'background:rgba(17,17,17,0.98)','backdrop-filter:blur(20px)',
+      'border:1px solid rgba(233,30,140,0.25)','min-width:200px',
+      'z-index:1200','border-radius:12px','overflow:hidden','box-shadow:0 8px 40px rgba(0,0,0,.6)'
+    ].join(';');
+  }
+  dd.classList.toggle('open');
+  var pb = document.getElementById('mn-btn-profile');
+  if (pb) pb.classList.toggle('active', dd.classList.contains('open'));
+}
+document.addEventListener('click', function(e){
+  var dd = document.getElementById('user-dd');
+  var pb = document.getElementById('mn-btn-profile');
+  if (dd && dd.classList.contains('open') && !dd.contains(e.target) && (!pb || !pb.contains(e.target))) {
+    dd.classList.remove('open');
+    if (pb) pb.classList.remove('active');
+  }
+});
 </script>

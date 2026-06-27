@@ -4,19 +4,49 @@
 .model-card { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:all .3s; }
 .model-card:hover { border-color:var(--cp); }
 .model-card.principal { border-color:var(--cp); box-shadow:0 0 0 2px rgba(233,30,140,.3); }
-.model-preview { height:180px; background:#0e0e0e; display:flex; align-items:center; justify-content:center; position:relative; font-size:40px; color:rgba(233,30,140,.3); }
+.model-preview { height:180px; background:#0e0e0e; position:relative; cursor:pointer; }
+.model-preview canvas { width:100%!important; height:100%!important; display:block; }
+.model-preview-loading { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(233,30,140,.4);background:#0e0e0e;z-index:2;transition:opacity .3s }
+.model-preview-loading.hidden { opacity:0; pointer-events:none; }
+.model-preview-expand { position:absolute;top:10px;right:10px;width:30px;height:30px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;z-index:3;opacity:0;transition:opacity .2s }
+.model-preview:hover .model-preview-expand { opacity:1; }
 .badge-pr { background:var(--cp); color:white; font-size:.6rem; padding:2px 8px; border-radius:4px; font-family:var(--fd); letter-spacing:1px; }
+
 /* Edit panel */
 .edit-panel { position:fixed;top:0;right:0;bottom:0;width:420px;background:var(--dark2);border-left:1px solid var(--border);z-index:1050;transform:translateX(100%);transition:transform .3s;overflow-y:auto;box-shadow:-8px 0 40px rgba(0,0,0,.5); }
 .edit-panel.open { transform:translateX(0); }
 .panel-overlay { position:fixed;inset:0;background:rgba(0,0,0,0);pointer-events:none;z-index:1040;transition:background .3s; }
 .panel-overlay.active { background:rgba(0,0,0,.5);pointer-events:all; }
+
+/* Live preview dentro del panel de edición/subida */
+.ep-preview-box { height:240px; background:#0a0a0a; border:1px solid var(--border); border-radius:8px; position:relative; overflow:hidden; margin-bottom:14px; }
+.ep-preview-box canvas { width:100%!important; height:100%!important; display:block; }
+.ep-preview-empty { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);text-align:center;padding:0 20px }
+.ep-preview-empty i { font-size:1.8rem;color:rgba(233,30,140,.3) }
+.ep-preview-loading { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(233,30,140,.6);background:rgba(10,10,10,.7);z-index:4 }
+.ep-view-btns { display:flex;gap:6px;margin-bottom:14px }
+.ep-view-btn { flex:1;padding:6px 4px;border:1px solid var(--border);background:var(--dark3);color:var(--muted);font-family:var(--fd);font-size:.58rem;letter-spacing:1px;cursor:pointer;border-radius:5px;transition:all .18s }
+.ep-view-btn:hover, .ep-view-btn.active { border-color:var(--cp);color:var(--cp);background:rgba(233,30,140,.08) }
+
+/* Visor fullscreen */
+#fullViewer { position:fixed;inset:0;z-index:3000;background:rgba(5,5,5,.97);display:none;align-items:center;justify-content:center;flex-direction:column }
+#fullViewer.open { display:flex }
+.fv-canvas-wrap { width:90vw;max-width:1000px;height:65vh;position:relative;background:#0a0a0a;border-radius:10px;overflow:hidden;border:1px solid rgba(233,30,140,.2) }
+.fv-canvas-wrap canvas { width:100%!important;height:100%!important;display:block }
+.fv-loading { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(233,30,140,.6);font-family:var(--fd);letter-spacing:2px;font-size:.8rem;z-index:4 }
+.fv-close { position:absolute;top:18px;right:24px;background:none;border:1px solid var(--border);color:var(--muted);width:38px;height:38px;border-radius:8px;cursor:pointer;font-size:18px;z-index:10 }
+.fv-close:hover { border-color:#ff4444;color:#ff4444 }
+.fv-controls { display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;justify-content:center }
+.fv-btn { padding:9px 20px;border:1px solid var(--border);background:var(--dark2);color:var(--muted);font-family:var(--fd);font-size:.62rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all .18s;display:flex;align-items:center;gap:6px }
+.fv-btn:hover, .fv-btn.active { border-color:var(--cp);color:var(--cp);background:rgba(233,30,140,.08) }
+.fv-title { font-family:var(--fd);font-size:.85rem;letter-spacing:2px;color:var(--text);margin-bottom:14px;text-align:center }
+.fv-hint { font-size:.65rem;color:var(--muted);margin-top:10px;text-align:center;letter-spacing:.5px }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
     <h4 style="font-family:var(--fd);font-size:.9rem;letter-spacing:2px;color:var(--cp)">MODELOS 3D</h4>
-    <p class="small text-muted mb-0">Gestiona los modelos del viewer de la página principal</p>
+    <p class="small text-muted mb-0">Gestiona los modelos del viewer de la página principal — vista previa en tiempo real</p>
   </div>
   <button class="btn btn-pm btn-sm" onclick="abrirSubir()">
     <i class="bi bi-cloud-upload me-1"></i> Subir Modelo
@@ -29,13 +59,20 @@
   <% modelos.forEach(function(m) { %>
   <div class="col-12 col-md-6 col-xl-4">
     <div class="model-card <%= m.es_principal ? 'principal' : '' %>">
-      <div class="model-preview">
-        <i class="bi bi-box-seam"></i>
-        <div style="position:absolute;top:10px;left:10px;display:flex;gap:6px">
+      <div class="model-preview" id="cardprev-<%= m.id %>"
+           data-model-url="/models/<%= m.archivo %>" data-escala="<%= m.escala || 1 %>" data-posy="<%= m.pos_y || 0 %>"
+           onclick="abrirVisorCompleto('<%= m.id %>','/models/<%= m.archivo %>',<%= m.escala||1 %>,<%= m.pos_y||0 %>,'<%= m.nombre.replace(/'/g,"\\'") %>')">
+        <div class="model-preview-loading" id="cardload-<%= m.id %>">
+          <i class="bi bi-box-seam" style="font-size:28px"></i>
+          <span style="font-family:var(--fm);font-size:.55rem;letter-spacing:1px">CARGANDO...</span>
+        </div>
+        <canvas id="cardcanvas-<%= m.id %>"></canvas>
+        <div class="model-preview-expand"><i class="bi bi-arrows-fullscreen"></i></div>
+        <div style="position:absolute;top:10px;left:10px;display:flex;gap:6px;z-index:3">
           <% if (m.es_principal) { %><span class="badge-pr">&#9733; ACTIVO EN INICIO</span><% } %>
           <span class="badge" style="background:<%= m.activo ? 'rgba(0,255,100,.15)' : 'rgba(90,90,122,.2)' %>;color:<%= m.activo ? '#00ff64' : 'var(--muted)' %>"><%= m.activo ? 'Activo' : 'Inactivo' %></span>
         </div>
-        <div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:.65rem;color:rgba(255,255,255,.4);font-family:var(--fd);letter-spacing:1px"><%= m.archivo %></div>
+        <div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:.6rem;color:rgba(255,255,255,.45);font-family:var(--fd);letter-spacing:1px;z-index:3;pointer-events:none"><%= m.archivo %></div>
       </div>
       <div class="p-3">
         <div style="font-weight:700;margin-bottom:4px"><%= m.nombre %></div>
@@ -49,7 +86,7 @@
             <button type="submit" class="btn btn-pm btn-sm"><i class="bi bi-star me-1"></i>Activar en inicio</button>
           </form>
           <% } %>
-          <button class="btn btn-om btn-sm" onclick="abrirEditar(<%= m.id %>,'<%= m.nombre.replace(/'/g,'`') %>',<%= m.producto_id||'null' %>,<%= m.activo %>,<%= m.escala||1 %>,<%= m.pos_y||0 %>)">
+          <button class="btn btn-om btn-sm" onclick="abrirEditar(<%= m.id %>,'<%= m.nombre.replace(/'/g,"\\'") %>',<%= m.producto_id||'null' %>,<%= m.activo %>,<%= m.escala||1 %>,<%= m.pos_y||0 %>,'<%= m.archivo %>')">
             <i class="bi bi-pencil me-1"></i>Editar
           </button>
           <form action="/admin/modelos/<%= m.id %>/eliminar" method="POST" class="d-inline" onsubmit="return confirm('Eliminar este modelo?')">
@@ -101,6 +138,28 @@
     <button onclick="cerrarPanel()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer" onmouseover="this.style.color='var(--cp)'" onmouseout="this.style.color='var(--muted)'">&#x2715;</button>
   </div>
   <div style="padding:20px">
+
+    <!-- ── Vista previa en vivo: se actualiza al instante al elegir un archivo,
+         antes incluso de subirlo (sin esperar al servidor) ── -->
+    <div class="ep-preview-box" id="epPreviewBox">
+      <div class="ep-preview-empty" id="epPreviewEmpty">
+        <i class="bi bi-box-seam"></i>
+        <span style="font-family:var(--fm);font-size:.65rem;letter-spacing:1px">Selecciona un archivo .glb para previsualizarlo aquí</span>
+      </div>
+      <div class="ep-preview-loading" id="epPreviewLoading" style="display:none">
+        <i class="bi bi-arrow-repeat" style="animation:spin3d 1s linear infinite;font-size:18px"></i>
+      </div>
+      <canvas id="epCanvas" style="display:none"></canvas>
+    </div>
+    <style>@keyframes spin3d{to{transform:rotate(360deg)}}</style>
+
+    <div class="ep-view-btns" id="epViewBtns" style="display:none">
+      <button type="button" class="ep-view-btn active" onclick="epSetView('front',this)"><i class="bi bi-square d-block mb-1"></i>FRONTAL</button>
+      <button type="button" class="ep-view-btn" onclick="epSetView('side',this)"><i class="bi bi-square-half d-block mb-1"></i>LATERAL</button>
+      <button type="button" class="ep-view-btn" onclick="epSetView('back',this)"><i class="bi bi-square d-block mb-1"></i>TRASERA</button>
+      <button type="button" class="ep-view-btn" onclick="epSetView('reset',this)"><i class="bi bi-arrow-counterclockwise d-block mb-1"></i>RESET</button>
+    </div>
+
     <form id="editForm" method="POST" enctype="multipart/form-data">
       <div class="mb-3">
         <label class="form-label">Nombre</label>
@@ -108,8 +167,8 @@
       </div>
       <div class="mb-3" id="ep-file-section">
         <label class="form-label">Archivo .glb / .gltf</label>
-        <input type="file" name="modelo" accept=".glb,.gltf" class="form-control">
-        <div class="form-text">Opcional: dejar vacío para mantener el actual. Max 50MB.</div>
+        <input type="file" name="modelo" id="ep-file-input" accept=".glb,.gltf" class="form-control" onchange="onModelFileChange(this)">
+        <div class="form-text">Opcional: dejar vacío para mantener el actual. Max 50MB. La vista previa de arriba se actualiza al instante.</div>
       </div>
       <div class="mb-3">
         <label class="form-label">Vincular a producto (info en el viewer)</label>
@@ -123,12 +182,12 @@
       <div class="row g-3 mb-3">
         <div class="col-6">
           <label class="form-label">Escala</label>
-          <input type="number" name="escala" id="ep-escala" class="form-control" step="0.1" min="0.1" max="10" value="1">
+          <input type="number" name="escala" id="ep-escala" class="form-control" step="0.1" min="0.1" max="10" value="1" oninput="epUpdateTransform()">
           <div class="form-text">1 = tamaño normal</div>
         </div>
         <div class="col-6">
           <label class="form-label">Posición Y</label>
-          <input type="number" name="pos_y" id="ep-posy" class="form-control" step="0.1" min="-5" max="5" value="0">
+          <input type="number" name="pos_y" id="ep-posy" class="form-control" step="0.1" min="-5" max="5" value="0" oninput="epUpdateTransform()">
           <div class="form-text">0 = centrado</div>
         </div>
       </div>
@@ -146,7 +205,336 @@
   </div>
 </div>
 
+<!-- VISOR FULLSCREEN -->
+<div id="fullViewer">
+  <button class="fv-close" onclick="cerrarVisorCompleto()"><i class="bi bi-x-lg"></i></button>
+  <div class="fv-title" id="fvTitle">MODELO 3D</div>
+  <div class="fv-canvas-wrap">
+    <div class="fv-loading" id="fvLoading">CARGANDO MODELO...</div>
+    <canvas id="fvCanvas"></canvas>
+  </div>
+  <div class="fv-controls">
+    <button class="fv-btn active" onclick="fvSetView('front',this)"><i class="bi bi-square"></i>FRONTAL</button>
+    <button class="fv-btn" onclick="fvSetView('side',this)"><i class="bi bi-square-half"></i>LATERAL</button>
+    <button class="fv-btn" onclick="fvSetView('back',this)"><i class="bi bi-square"></i>TRASERA</button>
+    <button class="fv-btn" onclick="fvSetView('three-quarter',this)"><i class="bi bi-box"></i>3/4</button>
+    <button class="fv-btn" onclick="fvZoom(0.8)"><i class="bi bi-zoom-in"></i>ZOOM +</button>
+    <button class="fv-btn" onclick="fvZoom(1.25)"><i class="bi bi-zoom-out"></i>ZOOM −</button>
+    <button class="fv-btn" onclick="fvToggleSpin(this)" id="fvSpinBtn"><i class="bi bi-arrow-repeat"></i>AUTO-ROTAR</button>
+  </div>
+  <div class="fv-hint">Arrastra para rotar manualmente · Scroll para zoom</div>
+</div>
+
 <script>
+// ════════════════════════════════════════════════════════════════════════
+// SISTEMA COMPARTIDO DE VISOR 3D (Three.js r0.128.0 — mismo CDN/versión que
+// el viewer público de la home, para mantener consistencia visual)
+// ════════════════════════════════════════════════════════════════════════
+var threeLibsPromise = null;
+function loadThreeLibs() {
+  if (threeLibsPromise) return threeLibsPromise;
+  threeLibsPromise = (async function() {
+    if (typeof THREE === 'undefined') {
+      await new Promise(function(res, rej) { var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    }
+    if (typeof THREE.GLTFLoader === 'undefined') {
+      await new Promise(function(res, rej) { var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    }
+    if (typeof THREE.OrbitControls === 'undefined') {
+      await new Promise(function(res, rej) { var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    }
+  })();
+  return threeLibsPromise;
+}
+
+// Crea un visor 3D reusable sobre un <canvas>. Devuelve un controller con
+// métodos para cambiar de vista, hacer zoom, activar auto-rotación y limpiar
+// recursos (importante: cada modelo cargado consume memoria GPU — hay que
+// liberar al cerrar tarjetas/paneles para no acumular memoria).
+function createModelViewer(canvas, opts) {
+  opts = opts || {};
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(opts.bg || 0x0a0a0a);
+  var w = canvas.clientWidth || 300, h = canvas.clientHeight || 200;
+  var camera = new THREE.PerspectiveCamera(45, w / h, 0.01, 1000);
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setSize(w, h, false);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, opts.maxPixelRatio || 1.5));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+  var dir = new THREE.DirectionalLight(0xffffff, 1.2); dir.position.set(5, 8, 5); scene.add(dir);
+  var pink = new THREE.PointLight(0xe91e8c, 1.1, 14); pink.position.set(-3, 2, 3); scene.add(pink);
+  var fill = new THREE.DirectionalLight(0xffffff, 0.35); fill.position.set(-5, -3, -5); scene.add(fill);
+
+  var controls = null;
+  if (opts.controls !== false) {
+    controls = new THREE.OrbitControls(camera, canvas);
+    controls.enableDamping = true; controls.dampingFactor = 0.08;
+    controls.enablePan = false;
+    controls.minDistance = 0.3; controls.maxDistance = 50;
+  }
+
+  var modelGroup = new THREE.Group();
+  scene.add(modelGroup);
+  var modelMesh = null, baseDist = 3, autoRotate = !!opts.autoRotate, disposed = false;
+
+  function frameModel() {
+    if (!modelMesh) return;
+    var box = new THREE.Box3().setFromObject(modelMesh);
+    var center = box.getCenter(new THREE.Vector3());
+    var size = box.getSize(new THREE.Vector3());
+    var maxDim = Math.max(size.x, size.y, size.z) || 1;
+    modelMesh.position.sub(center);
+    baseDist = maxDim * 2.1;
+    camera.position.set(0, maxDim * 0.15, baseDist);
+    camera.lookAt(0, 0, 0);
+    if (controls) { controls.target.set(0, 0, 0); controls.update(); }
+  }
+
+  function loadModel(url, onDone, onError) {
+    if (modelMesh) { modelGroup.remove(modelMesh); modelMesh = null; }
+    var loader = new THREE.GLTFLoader();
+    loader.load(url, function(gltf) {
+      if (disposed) return;
+      modelMesh = gltf.scene;
+      modelMesh.scale.setScalar(opts.escala || 1);
+      modelMesh.position.y += (opts.posY || 0);
+      modelGroup.add(modelMesh);
+      frameModel();
+      if (onDone) onDone();
+    }, undefined, function(err) { if (onError) onError(err); });
+  }
+
+  function setTransform(escala, posY) {
+    opts.escala = escala; opts.posY = posY;
+    if (modelMesh) {
+      modelMesh.scale.setScalar(escala || 1);
+      frameModel();
+      modelMesh.position.y += (posY || 0);
+    }
+  }
+
+  function setView(view) {
+    if (!modelMesh) return;
+    var d = baseDist;
+    var positions = {
+      front: [0, 0.15 * d, d],
+      side: [d, 0.15 * d, 0],
+      back: [0, 0.15 * d, -d],
+      'three-quarter': [d * 0.7, d * 0.4, d * 0.7],
+      reset: [0, 0.15 * d, d]
+    };
+    var p = positions[view] || positions.front;
+    camera.position.set(p[0], p[1], p[2]);
+    camera.lookAt(0, 0, 0);
+    if (controls) { controls.target.set(0, 0, 0); controls.update(); }
+  }
+
+  function zoom(factor) {
+    camera.position.multiplyScalar(factor);
+    if (controls) controls.update();
+  }
+
+  var rafId = null;
+  function animate() {
+    if (disposed) return;
+    rafId = requestAnimationFrame(animate);
+    if (autoRotate) modelGroup.rotation.y += 0.006;
+    if (controls) controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  function resize() {
+    var w2 = canvas.clientWidth, h2 = canvas.clientHeight;
+    if (!w2 || !h2) return;
+    camera.aspect = w2 / h2;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w2, h2, false);
+  }
+  var resizeObs = null;
+  if ('ResizeObserver' in window) {
+    resizeObs = new ResizeObserver(resize);
+    resizeObs.observe(canvas);
+  }
+
+  function dispose() {
+    disposed = true;
+    if (rafId) cancelAnimationFrame(rafId);
+    if (resizeObs) resizeObs.disconnect();
+    if (controls) controls.dispose();
+    scene.traverse(function(obj) {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach(function(m) { for (var k in m) { if (m[k] && m[k].isTexture) m[k].dispose(); } m.dispose && m.dispose(); });
+      }
+    });
+    renderer.dispose();
+  }
+
+  return {
+    loadModel: loadModel, setView: setView, zoom: zoom, setTransform: setTransform,
+    dispose: dispose, toggleAutoRotate: function(v) { autoRotate = (v !== undefined) ? v : !autoRotate; return autoRotate; }
+  };
+}
+
+// ── Tarjetas de la grilla: lazy-load con IntersectionObserver ──────────────
+// No cargamos los N modelos de golpe al entrar a la página (sería pesado);
+// solo se inicializa el visor Three.js de una tarjeta cuando entra al
+// viewport, y se libera memoria si vuelve a salir de pantalla.
+var cardViewers = {};
+function setupCardObserver() {
+  var cards = document.querySelectorAll('.model-preview[data-model-url]');
+  if (!('IntersectionObserver' in window)) {
+    // Fallback sin soporte: cargar todas directamente
+    cards.forEach(function(el) { initCardViewer(el); });
+    return;
+  }
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      var el = entry.target;
+      var id = el.id.replace('cardprev-', '');
+      if (entry.isIntersecting) {
+        if (!cardViewers[id]) initCardViewer(el);
+      }
+    });
+  }, { rootMargin: '100px' });
+  cards.forEach(function(el) { obs.observe(el); });
+}
+async function initCardViewer(el) {
+  var id = el.id.replace('cardprev-', '');
+  var url = el.dataset.modelUrl;
+  var escala = parseFloat(el.dataset.escala) || 1;
+  var posY = parseFloat(el.dataset.posy) || 0;
+  try {
+    await loadThreeLibs();
+    var canvas = document.getElementById('cardcanvas-' + id);
+    var viewer = createModelViewer(canvas, { escala: escala, posY: posY, autoRotate: true, controls: false, maxPixelRatio: 1.2 });
+    cardViewers[id] = viewer;
+    viewer.loadModel(url, function() {
+      canvas.style.display = 'block';
+      var loadEl = document.getElementById('cardload-' + id);
+      if (loadEl) loadEl.classList.add('hidden');
+    }, function() {
+      var loadEl = document.getElementById('cardload-' + id);
+      if (loadEl) loadEl.innerHTML = '<i class="bi bi-exclamation-triangle" style="font-size:24px;color:#ff6060"></i><span style="font-family:var(--fm);font-size:.55rem">ERROR AL CARGAR</span>';
+    });
+  } catch(e) { console.error('3D viewer error:', e); }
+}
+document.addEventListener('DOMContentLoaded', setupCardObserver);
+
+// ── Panel de edición: preview instantáneo al elegir archivo ────────────────
+var epViewer = null, epObjectUrl = null;
+async function onModelFileChange(input) {
+  if (!input.files || !input.files[0]) return;
+  if (epObjectUrl) URL.revokeObjectURL(epObjectUrl);
+  epObjectUrl = URL.createObjectURL(input.files[0]);
+  document.getElementById('epPreviewEmpty').style.display = 'none';
+  document.getElementById('epPreviewLoading').style.display = 'flex';
+  try {
+    await loadThreeLibs();
+    var canvas = document.getElementById('epCanvas');
+    if (epViewer) epViewer.dispose();
+    var escala = parseFloat(document.getElementById('ep-escala').value) || 1;
+    var posY = parseFloat(document.getElementById('ep-posy').value) || 0;
+    epViewer = createModelViewer(canvas, { escala: escala, posY: posY, autoRotate: false, controls: true });
+    epViewer.loadModel(epObjectUrl, function() {
+      document.getElementById('epPreviewLoading').style.display = 'none';
+      canvas.style.display = 'block';
+      document.getElementById('epViewBtns').style.display = 'flex';
+    }, function() {
+      document.getElementById('epPreviewLoading').innerHTML = '<span style="font-family:var(--fm);font-size:.65rem;color:#ff6060">No se pudo leer el archivo .glb/.gltf</span>';
+    });
+  } catch(e) { console.error(e); }
+}
+function epSetView(view, btn) {
+  if (epViewer) epViewer.setView(view);
+  document.querySelectorAll('#epViewBtns .ep-view-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+}
+function epUpdateTransform() {
+  if (!epViewer) return;
+  var escala = parseFloat(document.getElementById('ep-escala').value) || 1;
+  var posY = parseFloat(document.getElementById('ep-posy').value) || 0;
+  epViewer.setTransform(escala, posY);
+}
+// Si estamos editando un modelo existente (sin subir archivo nuevo), cargar
+// el modelo actual en el preview para que el admin vea de inmediato lo que
+// va a modificar (escala/posición) sin tener que adivinar.
+async function epLoadExisting(url) {
+  document.getElementById('epPreviewEmpty').style.display = 'none';
+  document.getElementById('epPreviewLoading').style.display = 'flex';
+  try {
+    await loadThreeLibs();
+    var canvas = document.getElementById('epCanvas');
+    if (epViewer) epViewer.dispose();
+    var escala = parseFloat(document.getElementById('ep-escala').value) || 1;
+    var posY = parseFloat(document.getElementById('ep-posy').value) || 0;
+    epViewer = createModelViewer(canvas, { escala: escala, posY: posY, autoRotate: false, controls: true });
+    epViewer.loadModel(url, function() {
+      document.getElementById('epPreviewLoading').style.display = 'none';
+      canvas.style.display = 'block';
+      document.getElementById('epViewBtns').style.display = 'flex';
+    }, function() {
+      document.getElementById('epPreviewLoading').style.display = 'none';
+    });
+  } catch(e) { console.error(e); }
+}
+
+function disposeEpPreview() {
+  if (epViewer) { epViewer.dispose(); epViewer = null; }
+  if (epObjectUrl) { URL.revokeObjectURL(epObjectUrl); epObjectUrl = null; }
+  document.getElementById('epCanvas').style.display = 'none';
+  document.getElementById('epPreviewEmpty').style.display = 'flex';
+  document.getElementById('epPreviewLoading').style.display = 'none';
+  document.getElementById('epViewBtns').style.display = 'none';
+  document.querySelectorAll('#epViewBtns .ep-view-btn').forEach(function(b, i) { b.classList.toggle('active', i === 0); });
+}
+
+// ── Visor fullscreen (clic en una tarjeta) ─────────────────────────────────
+var fvViewer = null, fvSpinning = false;
+async function abrirVisorCompleto(id, url, escala, posY, nombre) {
+  document.getElementById('fullViewer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('fvTitle').textContent = nombre || 'MODELO 3D';
+  document.getElementById('fvLoading').style.display = 'flex';
+  document.getElementById('fvLoading').textContent = 'CARGANDO MODELO...';
+  fvSpinning = false;
+  document.getElementById('fvSpinBtn').classList.remove('active');
+  try {
+    await loadThreeLibs();
+    var canvas = document.getElementById('fvCanvas');
+    if (fvViewer) fvViewer.dispose();
+    fvViewer = createModelViewer(canvas, { escala: escala, posY: posY, autoRotate: false, controls: true, maxPixelRatio: 2 });
+    fvViewer.loadModel(url, function() {
+      document.getElementById('fvLoading').style.display = 'none';
+    }, function() {
+      document.getElementById('fvLoading').textContent = 'ERROR AL CARGAR EL MODELO';
+    });
+  } catch(e) { console.error(e); document.getElementById('fvLoading').textContent = 'ERROR AL CARGAR THREE.JS'; }
+}
+function cerrarVisorCompleto() {
+  document.getElementById('fullViewer').classList.remove('open');
+  document.body.style.overflow = '';
+  if (fvViewer) { fvViewer.dispose(); fvViewer = null; }
+}
+function fvSetView(view, btn) {
+  if (fvViewer) fvViewer.setView(view);
+  document.querySelectorAll('.fv-controls .fv-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn && view !== undefined && btn.id !== 'fvSpinBtn') btn.classList.add('active');
+}
+function fvZoom(factor) { if (fvViewer) fvViewer.zoom(factor); }
+function fvToggleSpin(btn) {
+  fvSpinning = fvViewer ? fvViewer.toggleAutoRotate() : false;
+  btn.classList.toggle('active', fvSpinning);
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && document.getElementById('fullViewer').classList.contains('open')) cerrarVisorCompleto(); });
+
+// ── Panel lateral: abrir/cerrar (igual que antes, + limpieza del preview 3D) ──
 function abrirPanel() {
   document.getElementById('editPanel').classList.add('open');
   document.getElementById('panelOverlay').classList.add('active');
@@ -154,19 +542,22 @@ function abrirPanel() {
 function cerrarPanel() {
   document.getElementById('editPanel').classList.remove('open');
   document.getElementById('panelOverlay').classList.remove('active');
+  disposeEpPreview();
 }
 
 function abrirSubir() {
   document.getElementById('editPanelTitle').textContent = 'SUBIR NUEVO MODELO';
-  document.getElementById('epSubmitBtn').querySelector('span') && (document.getElementById('epSubmitBtn').innerHTML = '<i class="bi bi-cloud-upload me-2"></i>SUBIR MODELO');
+  document.getElementById('epSubmitBtn').innerHTML = '<i class="bi bi-cloud-upload me-2"></i>SUBIR MODELO';
   document.getElementById('editForm').action = '/admin/modelos/subir';
   document.getElementById('editForm').reset();
   document.getElementById('ep-file-section').querySelector('input').required = true;
+  disposeEpPreview();
   abrirPanel();
 }
 
-function abrirEditar(id, nombre, prodId, activo, escala, posY) {
+function abrirEditar(id, nombre, prodId, activo, escala, posY, archivo) {
   document.getElementById('editPanelTitle').textContent = 'EDITAR MODELO';
+  document.getElementById('epSubmitBtn').innerHTML = '<i class="bi bi-check-lg me-2"></i>GUARDAR';
   document.getElementById('editForm').action = '/admin/modelos/' + id + '/editar';
   document.getElementById('editForm').reset();
   document.getElementById('ep-nombre').value = nombre;
@@ -175,7 +566,9 @@ function abrirEditar(id, nombre, prodId, activo, escala, posY) {
   document.getElementById('ep-escala').value = escala || 1;
   document.getElementById('ep-posy').value = posY || 0;
   document.getElementById('ep-file-section').querySelector('input').required = false;
+  disposeEpPreview();
   abrirPanel();
+  if (archivo) epLoadExisting('/models/' + archivo);
 }
 </script>
 

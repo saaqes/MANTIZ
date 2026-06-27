@@ -228,7 +228,18 @@ router.get('/carrusel', isAdmin, async (req, res) => {
   const [carrusel] = await db.query('SELECT * FROM carrusel ORDER BY orden ASC');
   let carruselMarca = [];
   try { [carruselMarca] = await db.query('SELECT * FROM carrusel_marca ORDER BY orden ASC'); } catch(e) {}
-  res.render('admin/carrusel', { title: 'Admin - Carrusel', carrusel, slides: carrusel, carruselMarca, isAdmin: true });
+  // Listas para el selector de destino del botón CTA (Producto / Categoría)
+  let productosLista = [], categoriasLista = [];
+  try {
+    [productosLista] = await db.query('SELECT id, titulo FROM productos WHERE activo=1 ORDER BY titulo ASC LIMIT 200');
+  } catch(e) {}
+  try {
+    [categoriasLista] = await db.query('SELECT DISTINCT categoria FROM productos WHERE activo=1 AND categoria IS NOT NULL ORDER BY categoria ASC');
+  } catch(e) {}
+  res.render('admin/carrusel', {
+    title: 'Admin - Carrusel', carrusel, slides: carrusel, carruselMarca,
+    productosLista, categoriasLista, isAdmin: true
+  });
 });
 
 router.post('/carrusel/nuevo', isAdmin, (req, res, next) => {
@@ -248,21 +259,36 @@ router.post('/carrusel/nuevo', isAdmin, (req, res, next) => {
   if (!req.file) { req.flash('error', 'Imagen requerida'); return res.redirect('/admin/carrusel'); }
   try {
     const [[maxOrden]] = await db.query('SELECT COALESCE(MAX(orden),0) as m FROM carrusel');
-    const { content_type, mostrar_boton, boton_texto, countdown_fecha, url_destino } = req.body;
+    const {
+      content_type, mostrar_boton, boton_texto, countdown_fecha,
+      boton_url, destino_tipo, destino_valor, animacion, posicion_texto
+    } = req.body;
     // Build safe INSERT based on available columns
     try {
       await db.query(
-        'INSERT INTO carrusel (imagen, titulo, subtitulo, orden, activo, content_type, mostrar_boton, boton_texto, countdown_fecha) VALUES (?,?,?,?,?,?,?,?,?)',
+        `INSERT INTO carrusel
+           (imagen, titulo, subtitulo, orden, activo, content_type, mostrar_boton, boton_texto,
+            countdown_fecha, boton_url, destino_tipo, destino_valor, animacion, posicion_texto)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [req.file.filename, titulo||'', subtitulo||'', maxOrden.m + 1, activo ? 1 : 0,
          content_type||'texto', mostrar_boton!=='0'?1:0, boton_texto||'EXPLORAR',
-         countdown_fecha||null]
+         countdown_fecha||null, boton_url||'/productos', destino_tipo||'url',
+         destino_valor||null, animacion||'fade-in', posicion_texto||'centro']
       );
     } catch(e2) {
-      // Fallback without new columns if they don't exist yet
-      await db.query(
-        'INSERT INTO carrusel (imagen, titulo, subtitulo, orden, activo) VALUES (?,?,?,?,?)',
-        [req.file.filename, titulo||'', subtitulo||'', maxOrden.m + 1, activo ? 1 : 0]
-      );
+      // Fallback sin las columnas nuevas si la migración 005 aún no corrió
+      try {
+        await db.query(
+          'INSERT INTO carrusel (imagen, titulo, subtitulo, orden, activo, content_type, mostrar_boton, boton_texto, countdown_fecha) VALUES (?,?,?,?,?,?,?,?,?)',
+          [req.file.filename, titulo||'', subtitulo||'', maxOrden.m + 1, activo ? 1 : 0,
+           content_type||'texto', mostrar_boton!=='0'?1:0, boton_texto||'EXPLORAR', countdown_fecha||null]
+        );
+      } catch(e3) {
+        await db.query(
+          'INSERT INTO carrusel (imagen, titulo, subtitulo, orden, activo) VALUES (?,?,?,?,?)',
+          [req.file.filename, titulo||'', subtitulo||'', maxOrden.m + 1, activo ? 1 : 0]
+        );
+      }
     }
     req.flash('success', 'Banner agregado');
   } catch(e) {
@@ -461,7 +487,10 @@ router.post('/carrusel/:id/editar', isAdmin, (req, res, next) => {
     next();
   });
 }, async (req, res) => {
-  const { titulo, subtitulo, orden, activo, content_type, mostrar_boton, boton_texto, countdown_fecha } = req.body;
+  const {
+    titulo, subtitulo, orden, activo, content_type, mostrar_boton, boton_texto, countdown_fecha,
+    boton_url, destino_tipo, destino_valor, animacion, posicion_texto
+  } = req.body;
   try {
     const updates = {
       titulo: titulo||'', subtitulo: subtitulo||'',
@@ -475,10 +504,23 @@ router.post('/carrusel/:id/editar', isAdmin, (req, res, next) => {
       updates.mostrar_boton = mostrar_boton !== '0' ? 1 : 0;
       updates.boton_texto = boton_texto || 'EXPLORAR';
       updates.countdown_fecha = countdown_fecha || null;
+      updates.boton_url = boton_url || '/productos';
+      updates.destino_tipo = destino_tipo || 'url';
+      updates.destino_valor = destino_valor || null;
+      updates.animacion = animacion || 'fade-in';
+      updates.posicion_texto = posicion_texto || 'centro';
     } catch(e) {}
 
     const setCols = Object.keys(updates).map(k => k+'=?').join(',');
-    await db.query('UPDATE carrusel SET '+setCols+' WHERE id=?', [...Object.values(updates), req.params.id]);
+    try {
+      await db.query('UPDATE carrusel SET '+setCols+' WHERE id=?', [...Object.values(updates), req.params.id]);
+    } catch(e2) {
+      // Fallback: la migración 005 podría no haber corrido aún (columnas nuevas no existen)
+      delete updates.boton_url; delete updates.destino_tipo; delete updates.destino_valor;
+      delete updates.animacion; delete updates.posicion_texto;
+      const setCols2 = Object.keys(updates).map(k => k+'=?').join(',');
+      await db.query('UPDATE carrusel SET '+setCols2+' WHERE id=?', [...Object.values(updates), req.params.id]);
+    }
     req.flash('success', 'Slide actualizado');
   } catch(e) {
     req.flash('error', 'Error: '+e.message);

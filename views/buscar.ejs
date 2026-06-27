@@ -5,7 +5,7 @@
 .btab { padding:10px 20px; border:none; border-bottom:3px solid transparent; color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; text-decoration:none; white-space:nowrap; transition:all 0.2s; display:inline-block; }
 .btab:hover { color:var(--white); }
 .btab.on { color:var(--pink); border-bottom-color:var(--pink); }
-.sortlink { padding:4px 14px; border:1px solid rgba(255,255,255,0.2); color:var(--white); text-decoration:none; font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1.5px; transition:all 0.2s; }
+.sortlink { padding:4px 14px; border:1px solid var(--faint-3); color:var(--white); text-decoration:none; font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1.5px; transition:all 0.2s; }
 .sortlink:hover,.sortlink.on { border-color:var(--pink); color:var(--pink); }
 @media(max-width:1024px){.bgrid{grid-template-columns:repeat(3,1fr)!important}}
 @media(max-width:768px){.bgrid{grid-template-columns:repeat(2,1fr)!important} #buscar-page{padding:20px}}
@@ -97,8 +97,8 @@
         ? '/uploads/profiles/'+u.foto_perfil
         : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png');
     %>
-    <a href="/u/<%= u.username %>" style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:16px 20px;text-decoration:none;transition:border-color 0.2s;position:relative" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="position:absolute;inset:0;border:1px solid rgba(255,255,255,0.08);filter:url(#gb);pointer-events:none"></div>
+    <a href="/u/<%= u.username %>" style="display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);padding:16px 20px;text-decoration:none;transition:border-color 0.2s;position:relative" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="position:absolute;inset:0;border:1px solid var(--faint-1);filter:url(#gb);pointer-events:none"></div>
       <img src="<%= av %>" width="52" height="52"
            style="border-radius:50%;object-fit:cover;border:2px solid var(--pink);flex-shrink:0"
            onerror="this.src='/img/defaults/avatars/avatar1.png'">
@@ -106,7 +106,7 @@
         <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--white)"><%= u.nombre_visible %></div>
         <div style="font-size:12px;color:var(--gray);letter-spacing:1px">@<%= u.username %></div>
         <% if (u.bio) { %>
-        <div style="font-size:12px;color:rgba(240,240,240,0.6);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= u.bio.substring(0,60) %></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= u.bio.substring(0,60) %></div>
         <% } %>
       </div>
       <div style="display:flex;gap:16px;text-align:center;flex-shrink:0">

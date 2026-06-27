@@ -18,7 +18,7 @@
   <!-- Dynamic hero content driven by slide config -->
   <div id="hero-center" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;z-index:5;pointer-events:none;padding:0 40px">
     <!-- Slide titulo (Bebas Neue, large) -->
-    <h1 id="hero-title" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,9vw,110px);letter-spacing:10px;line-height:1.05;color:white;animation:heroIn 1s ease forwards;opacity:0;text-shadow:0 2px 40px rgba(0,0,0,0.7);margin:0;max-width:900px"></h1>
+    <h1 id="hero-title" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,9vw,110px);letter-spacing:10px;line-height:1.05;color:white;opacity:0;text-shadow:0 2px 40px rgba(0,0,0,0.7);margin:0;max-width:900px"></h1>
     <!-- Slide subtitulo -->
     <p id="hero-subtitle" style="font-family:'Rajdhani',sans-serif;font-size:clamp(14px,2vw,20px);letter-spacing:3px;color:rgba(255,255,255,0.85);margin:0;max-width:600px;display:none;text-shadow:0 1px 12px rgba(0,0,0,0.8)"></p>
     <!-- Countdown -->
@@ -27,7 +27,7 @@
     </div>
     <!-- CTA button -->
     <div id="hero-btn" style="pointer-events:all;margin-top:8px">
-      <button id="hero-cta-btn" style="background:transparent;border:3px solid var(--pink);color:var(--pink);padding:12px 52px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:7px;cursor:pointer;transition:all 0.3s;filter:url(#gb)" onmouseover="this.style.color='white';this.style.background='rgba(233,30,140,0.2)'" onmouseout="this.style.color='var(--pink)';this.style.background='transparent'" onclick="window.location='/productos'">EXPLORAR</button>
+      <button id="hero-cta-btn" style="background:transparent;border:3px solid var(--pink);color:var(--pink);padding:12px 52px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:7px;cursor:pointer;transition:all 0.3s;filter:url(#gb)" onmouseover="this.style.color='white';this.style.background='rgba(233,30,140,0.2)'" onmouseout="this.style.color='var(--pink)';this.style.background='transparent'">EXPLORAR</button>
     </div>
   </div>
 
@@ -211,7 +211,24 @@
 
 <style>
 .tribal-div{text-align:center;margin:12px 0 40px;opacity:0.8;background-image:url("data:image/svg+xml,%3Csvg width='300' height='24' viewBox='0 0 300 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='12' x2='120' y2='12' stroke='rgba(233,30,140,0.4)' stroke-width='1'/%3E%3Cpath d='M130 12 L140 4 L150 12 L140 20 Z' fill='%23e91e8c' opacity='0.6'/%3E%3Cpath d='M150 12 L160 4 L170 12 L160 20 Z' fill='%23e91e8c'/%3E%3Cpath d='M170 12 L180 4 L190 12 L180 20 Z' fill='%23e91e8c' opacity='0.6'/%3E%3Cline x1='200' y1='12' x2='300' y2='12' stroke='rgba(233,30,140,0.4)' stroke-width='1'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;height:24px}
-@keyframes heroIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+/* ── Sistema de animaciones del hero (configurable desde el editor de banners) ── */
+@keyframes hanim-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes hanim-fade-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes hanim-fade-left{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes hanim-fade-right{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes hanim-zoom-in{from{opacity:0;transform:scale(0.82)}to{opacity:1;transform:scale(1)}}
+@keyframes hanim-zoom-out{from{opacity:0;transform:scale(1.18)}to{opacity:1;transform:scale(1)}}
+@keyframes hanim-scale{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
+@keyframes hanim-slide{from{opacity:0;transform:translateX(-70px)}to{opacity:1;transform:translateX(0)}}
+.hanim-fade-in{animation:hanim-fade-in .9s ease forwards}
+.hanim-fade-up{animation:hanim-fade-up .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-fade-left{animation:hanim-fade-left .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-fade-right{animation:hanim-fade-right .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-zoom-in{animation:hanim-zoom-in .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-zoom-out{animation:hanim-zoom-out .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-scale{animation:hanim-scale .7s cubic-bezier(.34,1.56,.64,1) forwards}
+.hanim-slide{animation:hanim-slide .8s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-ninguna{opacity:1;animation:none}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(9px)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:1024px){.viewer-row-grid{grid-template-columns:1fr!important}.rec-sub-grid{grid-template-columns:repeat(4,1fr)!important}}
@@ -224,11 +241,34 @@
 setInterval(function(){fetch('/stats/ping',{method:'POST'}).catch(function(){});},30000);
 
 // Slide config data from server
-var slideConfigs = <%- JSON.stringify((carrusel||[]).map(function(s){ return { content_type: s.content_type||'texto', mostrar_boton: s.mostrar_boton!==0 && s.mostrar_boton!=='0', boton_texto: s.boton_texto||'EXPLORAR', countdown_fecha: s.countdown_fecha||null, titulo: s.titulo||'', subtitulo: s.subtitulo||'' }; })) %>;
+var slideConfigs = <%- JSON.stringify((carrusel||[]).map(function(s){
+  return {
+    content_type: s.content_type||'texto',
+    mostrar_boton: s.mostrar_boton!==0 && s.mostrar_boton!=='0',
+    boton_texto: s.boton_texto||'EXPLORAR',
+    boton_url: s.boton_url||'/productos',
+    countdown_fecha: s.countdown_fecha||null,
+    titulo: s.titulo||'',
+    subtitulo: s.subtitulo||'',
+    animacion: s.animacion||'fade-in',
+    posicion_texto: s.posicion_texto||'centro'
+  };
+})) %>;
 var countdownInterval = null;
+var HANIM_CLASSES = ['hanim-fade-in','hanim-fade-up','hanim-fade-left','hanim-fade-right','hanim-zoom-in','hanim-zoom-out','hanim-scale','hanim-slide','hanim-ninguna'];
+
+// Reinicia una animación CSS forzando reflow (necesario porque las clases ya
+// aplicadas no se "reproducen" de nuevo solo con remove+add sin un reflow).
+function replayAnim(el, animClass) {
+  HANIM_CLASSES.forEach(function(c){ el.classList.remove(c); });
+  el.style.opacity = '0';
+  void el.offsetWidth; // fuerza reflow
+  el.classList.add(animClass);
+}
 
 function applySlideConfig(idx) {
-  var cfg = slideConfigs[idx] || { content_type:'texto', mostrar_boton:true, boton_texto:'EXPLORAR', titulo:'', subtitulo:'' };
+  var cfg = slideConfigs[idx] || { content_type:'texto', mostrar_boton:true, boton_texto:'EXPLORAR', boton_url:'/productos', titulo:'', subtitulo:'', animacion:'fade-in', posicion_texto:'centro' };
+  var heroCenter = document.getElementById('hero-center');
   var titleEl = document.getElementById('hero-title');
   var subEl = document.getElementById('hero-subtitle');
   var cdEl = document.getElementById('hero-countdown');
@@ -239,11 +279,26 @@ function applySlideConfig(idx) {
   var showCd = cfg.content_type === 'cronometro' || cfg.content_type === 'texto_cronometro';
   var showNada = cfg.content_type === 'nada';
 
-  // Title: show slide titulo if text mode
+  // Posición del texto: izquierda / centro / derecha
+  if (heroCenter) {
+    var posMap = { izquierda: { align:'flex-start', text:'left', pad:'0 40px 0 60px' },
+                   centro:    { align:'center',     text:'center', pad:'0 40px' },
+                   derecha:   { align:'flex-end',   text:'right', pad:'0 60px 0 40px' } };
+    var pos = posMap[cfg.posicion_texto] || posMap.centro;
+    heroCenter.style.alignItems = pos.align;
+    heroCenter.style.textAlign = pos.text;
+  }
+
+  // Title: show slide titulo if text mode (con animación configurable)
   if (titleEl) {
     titleEl.textContent = cfg.titulo || '';
-    titleEl.style.display = (showText && cfg.titulo) ? 'block' : 'none';
-    titleEl.style.opacity = '1'; // override animation for dynamic updates
+    var showTitle = showText && cfg.titulo;
+    titleEl.style.display = showTitle ? 'block' : 'none';
+    if (showTitle) {
+      var animClass = 'hanim-' + (cfg.animacion || 'fade-in');
+      if (HANIM_CLASSES.indexOf(animClass) === -1) animClass = 'hanim-fade-in';
+      replayAnim(titleEl, animClass);
+    }
   }
   if (subEl) {
     subEl.textContent = cfg.subtitulo || '';
@@ -251,7 +306,11 @@ function applySlideConfig(idx) {
   }
   if (cdEl) { cdEl.style.display = showCd ? 'block' : 'none'; }
   if (btnEl) { btnEl.style.display = cfg.mostrar_boton ? 'block' : 'none'; }
-  if (ctaBtn && cfg.boton_texto) ctaBtn.textContent = cfg.boton_texto;
+  if (ctaBtn) {
+    if (cfg.boton_texto) ctaBtn.textContent = cfg.boton_texto;
+    // Destino dinámico del botón (antes quedaba fijo a /productos sin importar lo configurado)
+    ctaBtn.onclick = function(){ window.location.href = cfg.boton_url || '/productos'; };
+  }
 
   // Countdown
   if (countdownInterval) clearInterval(countdownInterval);
@@ -275,7 +334,13 @@ applySlideConfig(0);
 
 // HERO CAROUSEL
 var hSlides=document.querySelectorAll('.hslide'),hDots=document.querySelectorAll('.cdot'),hCur=0;
-function goSlide(n){if(hSlides.length<=1)return;hSlides[hCur].style.opacity='0';if(hDots[hCur])hDots[hCur].style.background='rgba(255,255,255,0.3)';hCur=(n+hSlides.length)%hSlides.length;hSlides[hCur].style.opacity='1';if(hDots[hCur])hDots[hCur].style.background='var(--pink)';}
+function goSlide(n){
+  if(hSlides.length<=1)return;
+  hSlides[hCur].style.opacity='0';if(hDots[hCur])hDots[hCur].style.background='rgba(255,255,255,0.3)';
+  hCur=(n+hSlides.length)%hSlides.length;
+  hSlides[hCur].style.opacity='1';if(hDots[hCur])hDots[hCur].style.background='var(--pink)';
+  applySlideConfig(hCur); // antes: el texto/botón/cronómetro se quedaban congelados en el slide 1 para siempre
+}
 hDots.forEach(function(d){d.addEventListener('click',function(){goSlide(parseInt(d.dataset.idx));});});
 if(hSlides.length>1)setInterval(function(){goSlide(hCur+1);},4800);
 
@@ -309,6 +374,11 @@ var modelContainer=document.getElementById('model-container');
 var isZoomed=false,mouseInside=false;
 
 function setOverlayVisible(v){if(!infoOverlay)return;infoOverlay.style.opacity=v?'1':'0';}
+
+// Salvavidas: si por cualquier motivo (red lenta, error no controlado dentro
+// de THREE/GLTFLoader, CDN bloqueado, etc.) el visor 3D nunca termina de
+// resolver, este overlay no debe quedar visible para siempre.
+if(modelLoading){setTimeout(function(){modelLoading.style.display='none';},12000);}
 
 if(modelContainer){
   modelContainer.addEventListener('mouseenter',function(){mouseInside=true;if(!isZoomed)setOverlayVisible(true);});
@@ -387,7 +457,11 @@ async function initThree(){
   threeLoaded=true;
 }
 
-window.addEventListener('load',function(){initThree().catch(function(e){console.log('3D init failed:',e);if(modelLoading)modelLoading.style.display='none';});});
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',function(){initThree().catch(function(e){console.log('3D init failed:',e);if(modelLoading)modelLoading.style.display='none';});});
+}else{
+  initThree().catch(function(e){console.log('3D init failed:',e);if(modelLoading)modelLoading.style.display='none';});
+}
 
 // QUICK ADD
 var pendProd=null,selSz=null;

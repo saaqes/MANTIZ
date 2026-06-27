@@ -2,10 +2,10 @@
 
 <style>
 #productos-page { padding:60px 40px 80px; max-width:1400px; margin:0 auto; }
-.ftag { padding:5px 16px; border:2px solid rgba(255,255,255,0.2); color:var(--white); text-decoration:none; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; transition:all 0.2s; filter:url(#gb); display:inline-block; }
+.ftag { padding:5px 16px; border:2px solid var(--faint-3); color:var(--white); text-decoration:none; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; transition:all 0.2s; filter:url(#gb); display:inline-block; }
 .ftag:hover { border-color:var(--pink); color:var(--pink); }
 .ftag.on { border-color:var(--pink); color:var(--pink); background:rgba(233,30,140,0.1); }
-.sort-sel { background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--white); padding:8px 14px; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:1px; cursor:pointer; outline:none; }
+.sort-sel { background:var(--card); border:1px solid var(--border); color:var(--white); padding:8px 14px; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:1px; cursor:pointer; outline:none; }
 .pgrid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
 @media(max-width:1200px){.pgrid4{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:900px){.pgrid4{grid-template-columns:repeat(2,1fr)}}
@@ -87,7 +87,7 @@
 <!-- SIZE MODAL -->
 <div id="size-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
   <div style="background:var(--card-bg);max-width:400px;width:90%;padding:32px;position:relative">
-    <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
+    <div style="position:absolute;inset:0;border:3px solid var(--faint-3);filter:url(#gb);pointer-events:none;z-index:10"></div>
     <button onclick="closeSzModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;z-index:20">&#x2715;</button>
     <div id="sz-name" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--pink);margin-bottom:8px"></div>
     <div id="sz-price" style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);margin-bottom:20px"></div>
@@ -108,7 +108,7 @@ async function quickAdd(id,name,price,img){
       document.getElementById('sz-price').textContent='$'+parseFloat(price).toLocaleString('es-CO');
       var h='';
       d.tallas.forEach(function(t){
-        h+='<button onclick="selSzBtn(this,\''+t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid rgba(255,255,255,0.3);background:none;color:var(--white);font-family:Rajdhani,sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';
+        h+='<button onclick="selSzBtn(this,\''+t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid var(--faint-3);background:none;color:var(--white);font-family:Rajdhani,sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';
       });
       document.getElementById('sz-btns').innerHTML=h;
       pendProd={id:id,name:name,price:price,img:img};selSz=null;
@@ -118,7 +118,7 @@ async function quickAdd(id,name,price,img){
 }
 function selSzBtn(btn,t){
   if(btn.dataset.stock==='0')return;
-  document.querySelectorAll('.sz-b').forEach(function(b){b.style.background='none';b.style.borderColor='rgba(255,255,255,0.3)';b.style.color='var(--white)';});
+  document.querySelectorAll('.sz-b').forEach(function(b){b.style.background='none';b.style.borderColor='var(--faint-3)';b.style.color='var(--white)';});
   btn.style.background='var(--pink)';btn.style.borderColor='var(--pink)';selSz=t;
 }
 function closeSzModal(){var m=document.getElementById('size-modal');m.style.opacity='0';m.style.pointerEvents='none';pendProd=null;selSz=null;}

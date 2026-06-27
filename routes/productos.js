@@ -3,30 +3,61 @@ const router = express.Router();
 const db = require('../config/database');
 const { isAuthenticated } = require('../middleware/auth');
 
-// LISTA DE PRODUCTOS
+// LISTA DE PRODUCTOS — con paginación server-side
 router.get('/', async (req, res) => {
-  const cat = req.query.categoria || '';
-  const orden = req.query.orden || 'nuevo';
+  const cat      = req.query.categoria || '';
+  const orden    = req.query.orden     || 'nuevo';
   const precioMin = parseFloat(req.query.precio_min) || 0;
-  const precioMax = parseFloat(req.query.precio_max) || 99999;
+  const precioMax = parseFloat(req.query.precio_max) || 999999;
+  const page      = Math.max(1, parseInt(req.query.page) || 1);
+  const PER_PAGE  = 24;
+  const offset    = (page - 1) * PER_PAGE;
 
   try {
-    let sql = 'SELECT * FROM productos WHERE activo = 1 AND COALESCE(precio_descuento,precio) >= ? AND COALESCE(precio_descuento,precio) <= ?';
-    const params = [precioMin, precioMax];
-    if (cat) { sql += ' AND categoria = ?'; params.push(cat); }
-    if (orden === 'precio_asc') sql += ' ORDER BY COALESCE(precio_descuento,precio) ASC';
-    else if (orden === 'precio_desc') sql += ' ORDER BY COALESCE(precio_descuento,precio) DESC';
-    else if (orden === 'populares') sql += ' ORDER BY total_likes DESC';
-    else if (orden === 'calificacion') sql += ' ORDER BY calificacion_promedio DESC';
-    else sql += ' ORDER BY creado_en DESC';
+    let where  = 'activo = 1 AND COALESCE(precio_descuento,precio) >= ? AND COALESCE(precio_descuento,precio) <= ?';
+    const wParams = [precioMin, precioMax];
+    if (cat) { where += ' AND categoria = ?'; wParams.push(cat); }
 
-    const [productos] = await db.query(sql, params);
-    const [categorias] = await db.query('SELECT DISTINCT categoria FROM productos WHERE activo=1 AND categoria IS NOT NULL');
+    let orderBy = 'creado_en DESC';
+    if (orden === 'precio_asc')   orderBy = 'COALESCE(precio_descuento,precio) ASC';
+    else if (orden === 'precio_desc') orderBy = 'COALESCE(precio_descuento,precio) DESC';
+    else if (orden === 'populares')   orderBy = 'total_likes DESC';
+    else if (orden === 'calificacion') orderBy = 'calificacion_promedio DESC';
 
-    res.render('productos/lista', { title: 'Productos', productos, categorias, cat, orden, precioMin, precioMax });
+    // Queries en paralelo: productos de la página + total para paginación + categorías
+    const [prodResult, countResult, catResult] = await Promise.all([
+      db.query(
+        `SELECT id, titulo, precio, precio_descuento, imagen_principal, categoria,
+                total_likes, calificacion_promedio,
+                COALESCE(precio_descuento,precio) AS precio_final
+         FROM productos WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+        [...wParams, PER_PAGE, offset]
+      ),
+      db.query(`SELECT COUNT(*) AS total FROM productos WHERE ${where}`, wParams),
+      db.query('SELECT DISTINCT categoria FROM productos WHERE activo=1 AND categoria IS NOT NULL ORDER BY categoria')
+    ]);
+
+    const productos  = prodResult[0]  || [];
+    const total      = (countResult[0][0] || {}).total || 0;
+    const categorias = catResult[0]   || [];
+    const totalPages = Math.ceil(total / PER_PAGE);
+
+    // SEO: título/descripción específicos por categoría filtrada
+    const pageTitle = cat ? `${cat} — Productos` : 'Productos';
+    const metaDescription = cat
+      ? `Compra ${cat.toLowerCase()} en MANTIZ. ${total} producto${total===1?'':'s'} disponible${total===1?'':'s'} con envío a toda Colombia.`
+      : `Explora todo el catálogo MANTIZ: moda urbana, streetwear Y2K y piezas exclusivas. ${total} productos disponibles.`;
+
+    res.render('productos/lista', {
+      title: pageTitle, productos, categorias, cat, orden,
+      precioMin, precioMax, page, totalPages, total, metaDescription
+    });
   } catch(e) {
-    console.error(e);
-    res.render('productos/lista', { title: 'Productos', productos: [], categorias: [], cat, orden, precioMin:0, precioMax:99999 });
+    console.error('[productos]', e.message);
+    res.render('productos/lista', {
+      title: 'Productos', productos: [], categorias: [], cat, orden,
+      precioMin: 0, precioMax: 999999, page: 1, totalPages: 1, total: 0
+    });
   }
 });
 
@@ -121,10 +152,56 @@ router.get('/:id', async (req, res) => {
 
     await db.query('UPDATE productos SET total_visitas = total_visitas + 1 WHERE id = ?', [producto.id]).catch(() => {});
 
+    // Modelo 3D: primero buscar el específico del producto, luego el principal activo
+    let modelo3d = null;
+    try {
+      const [[mEspecifico]] = await db.query(
+        'SELECT id, nombre, archivo, escala, pos_y FROM modelos_3d WHERE producto_id = ? AND activo = 1 LIMIT 1',
+        [producto.id]
+      );
+      if (mEspecifico) {
+        modelo3d = mEspecifico;
+      } else {
+        const [[mPrincipal]] = await db.query(
+          'SELECT id, nombre, archivo, escala, pos_y FROM modelos_3d WHERE es_principal = 1 AND activo = 1 LIMIT 1'
+        );
+        if (mPrincipal) modelo3d = mPrincipal;
+      }
+    } catch(e) { /* tabla puede no existir en instalaciones antiguas */ }
+
+    // ── SEO: descripción + imagen + JSON-LD Product específicos de este producto ──
+    // Sin esto, compartir un link de producto en WhatsApp/redes mostraba el
+    // título/imagen genéricos del sitio en vez de los del producto real.
+    const metaDescription = (producto.descripcion || '').replace(/\s+/g, ' ').trim().slice(0, 155)
+      || `${producto.titulo} — disponible en MANTIZ desde $${parseFloat(producto.precio).toLocaleString('es-CO')}`;
+    const ogImage = producto.imagen_principal ? `/uploads/products/${producto.imagen_principal}` : undefined;
+    const precioFinal = parseFloat(producto.precio_descuento || producto.precio);
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: producto.titulo,
+      description: metaDescription,
+      image: ogImage ? `${res.locals.baseUrl}${ogImage}` : undefined,
+      sku: String(producto.id),
+      category: producto.categoria || undefined,
+      aggregateRating: (producto.calificacion_promedio && producto.total_calificaciones)
+        ? { '@type': 'AggregateRating', ratingValue: String(producto.calificacion_promedio), reviewCount: String(producto.total_calificaciones) }
+        : undefined,
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'COP',
+        price: String(precioFinal),
+        availability: tallas.some(t => t.stock > 0) || tallas.length === 0
+          ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        url: res.locals.canonicalUrl
+      }
+    };
+
     res.render('productos/detalle', {
       title: producto.titulo,
       producto, tallas, imagenes, comentarios, relacionados, masVendidos,
-      distCalif, userLiked, userComento
+      distCalif, userLiked, userComento, modelo3d,
+      metaDescription, ogImage, ogType: 'product', ogPrice: precioFinal, jsonLd
     });
   } catch(e) {
     console.error(e);

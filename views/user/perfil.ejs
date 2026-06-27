@@ -43,7 +43,7 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
     <div style="flex:1;min-width:200px;padding-bottom:8px">
       <div style="font-family:'Permanent Marker',cursive;font-size:28px;color:var(--pink)"><%= usuario.nombre_visible %></div>
       <div style="font-size:13px;color:var(--gray);letter-spacing:1.5px;margin-top:2px">@<%= usuario.username %></div>
-      <% if (usuario.bio) { %><div style="font-size:13px;color:rgba(240,240,240,0.7);margin-top:6px;max-width:400px"><%= usuario.bio %></div><% } %>
+      <% if (usuario.bio) { %><div style="font-size:13px;color:var(--muted);margin-top:6px;max-width:400px"><%= usuario.bio %></div><% } %>
     </div>
     <div style="display:flex;gap:8px;padding-bottom:12px;flex-wrap:wrap">
       <div style="text-align:center;padding:8px 16px;border:1px solid var(--border);min-width:70px">
@@ -77,8 +77,8 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
 
   <!-- PANEL: INFO -->
   <div id="panel-info" style="display:none;padding:32px 40px">
-    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:28px;position:relative;max-width:600px">
-      <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.15);filter:url(#gb);pointer-events:none"></div>
+    <div style="background:var(--card);border:1px solid var(--border);padding:28px;position:relative;max-width:600px">
+      <div style="position:absolute;inset:0;border:2px solid var(--faint-2);filter:url(#gb);pointer-events:none"></div>
       <form action="/perfil/actualizar" method="POST">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
           <div><label class="mantiz-label">Nombre visible</label><input type="text" name="nombre_visible" class="mantiz-input" value="<%= usuario.nombre_visible %>" required></div>
@@ -93,7 +93,7 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
         <% if (direcciones && direcciones.length > 0) { %>
           <% direcciones.forEach(function(d) { %>
           <%
-            var dirBorder = d.predeterminada ? '#e91e8c' : 'rgba(255,255,255,0.1)';
+            var dirBorder = d.predeterminada ? '#e91e8c' : 'var(--faint-2)';
           %>
           <div style="border:1px solid <%= dirBorder %>;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
             <div>
@@ -103,7 +103,7 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
               <div style="font-size:11px;color:var(--gray);margin-top:2px"><%= d.direccion %>, <%= d.ciudad %></div>
             </div>
             <form action="/perfil/direccion/eliminar/<%= d.id %>" method="POST">
-              <button type="submit" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:16px" onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">&#x2715;</button>
+              <button type="submit" style="background:none;border:none;color:var(--faint-3);cursor:pointer;font-size:16px" onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='var(--faint-3)'">&#x2715;</button>
             </form>
           </div>
           <% }) %>
@@ -161,7 +161,7 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
             var tbColor = t.color_portada || '#e91e8c';
             var tbNombre = t.nombre;
           %>
-          <div class="tablero-card" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);overflow:hidden;transition:all 0.3s;position:relative"
+          <div class="tablero-card" style="background:var(--card);border:1px solid var(--border);overflow:hidden;transition:all 0.3s;position:relative"
                onmouseover="this.querySelector('.tb-cover').style.opacity='0.9'" onmouseout="this.querySelector('.tb-cover').style.opacity='0.75'">
             <div class="tb-cover" style="height:90px;background:<%= tbColor %>;opacity:0.75;cursor:pointer;transition:opacity 0.2s"
                  data-tb-id="<%= t.id %>" data-tb-nombre="<%= t.nombre %>"></div>
@@ -178,12 +178,12 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
                         onclick="toggleTbMenu(<%= t.id %>,event)">⋮</button>
                 <div id="tb-menu-<%= t.id %>" style="display:none;position:absolute;right:0;top:28px;background:rgba(17,17,17,0.98);border:1px solid var(--border);min-width:140px;z-index:100">
                   <button data-tb-id="<%= t.id %>" data-tb-nombre="<%= t.nombre %>" class="tb-btn-ver"
-                          style="display:block;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--white);padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left"
+                          style="display:block;width:100%;background:none;border:none;border-bottom:1px solid var(--faint-1);color:var(--white);padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left"
                           onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--white)'">
                     <i class="bi bi-eye me-2"></i>VER PINES
                   </button>
                   <button data-tb-id="<%= t.id %>" data-tb-nombre="<%= t.nombre %>" data-tb-priv="<%= t.privacidad %>" data-tb-color="<%= tbColor %>" class="tb-btn-edit"
-                          style="display:block;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--white);padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left"
+                          style="display:block;width:100%;background:none;border:none;border-bottom:1px solid var(--faint-1);color:var(--white);padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left"
                           onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--white)'">
                     <i class="bi bi-pencil me-2"></i>EDITAR
                   </button>
@@ -228,7 +228,7 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
         var stMap = {pendiente:'#ffc800',confirmado:'#00c8ff',en_transito:'#60a5fa',entregado:'#00ff64',cancelado:'#ff6060'};
         var stColor = stMap[p.estado] || '#888888';
       %>
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div style="background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px">PEDIDO #<%= String(p.id).padStart(5,'0') %></div>
           <div style="font-size:11px;color:var(--gray);margin-top:2px"><%= new Date(p.creado_en).toLocaleDateString('es-CO') %></div>
@@ -251,30 +251,30 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
   <!-- PANEL: CONFIGURACION -->
   <div id="panel-configuracion" style="display:none;padding:32px 40px">
     <div style="max-width:700px;display:grid;grid-template-columns:1fr 1fr;gap:20px" class="cfg-grid">
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
-        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+      <div style="background:var(--card);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid var(--faint-2);filter:url(#gb);pointer-events:none"></div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:16px">PREFERENCIAS</div>
         <div style="display:flex;flex-direction:column;gap:14px">
           <div><label class="mantiz-label">Color de acento</label>
             <input type="color" id="cfg-color" value="<%= cfgColor %>" style="width:100%;height:40px;background:transparent;border:1px solid var(--border);padding:3px;cursor:pointer"></div>
           <div><label class="mantiz-label">Tema</label>
-            <select id="cfg-tema" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+            <select id="cfg-tema" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
               <option value="oscuro" <%= cfgTema==='oscuro'?'selected':'' %>>Oscuro</option>
               <option value="claro" <%= cfgTema==='claro'?'selected':'' %>>Claro</option>
             </select></div>
           <div><label class="mantiz-label">Pais</label>
-            <select id="cfg-pais" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+            <select id="cfg-pais" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
               <% ['Colombia','Mexico','Argentina','Chile','Peru','Venezuela','Ecuador','USA'].forEach(function(pais){ %>
               <option value="<%= pais %>" <%= cfgPais===pais?'selected':'' %>><%= pais %></option>
               <% }) %>
             </select></div>
           <div><label class="mantiz-label">Idioma</label>
-            <select id="cfg-idioma" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+            <select id="cfg-idioma" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
               <option value="es" <%= cfgIdioma==='es'?'selected':'' %>>Espanol</option>
               <option value="en" <%= cfgIdioma==='en'?'selected':'' %>>English</option>
             </select></div>
           <div><label class="mantiz-label">Metodo de pago preferido</label>
-            <select id="cfg-pago" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+            <select id="cfg-pago" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
               <% ['tarjeta','nequi','daviplata','transferencia','contraentrega'].forEach(function(mp){ %>
               <option value="<%= mp %>" <%= cfgPago===mp?'selected':'' %>><%= mp.charAt(0).toUpperCase()+mp.slice(1) %></option>
               <% }) %>
@@ -285,12 +285,12 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
           </div>
         </div>
       </div>
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
-        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+      <div style="background:var(--card);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid var(--faint-2);filter:url(#gb);pointer-events:none"></div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">FONDO DEL PERFIL</div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <div><label class="mantiz-label">Tipo</label>
-            <select id="cfg-fondo-tipo" onchange="updateFondoPreview()" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+            <select id="cfg-fondo-tipo" onchange="updateFondoPreview()" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
               <option value="color" <%= cfgFondoTipo==='color'?'selected':'' %>>Color solido</option>
               <option value="gradiente" <%= cfgFondoTipo==='gradiente'?'selected':'' %>>Gradiente</option>
             </select></div>
@@ -312,13 +312,13 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
   <div id="panel-avatar" style="display:none;padding:32px 40px">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="ap-grid">
       <!-- Avatar -->
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
-        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+      <div style="background:var(--card);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid var(--faint-2);filter:url(#gb);pointer-events:none"></div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">FOTO DE PERFIL</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
           <% avsList.forEach(function(av) { %>
           <%
-            var avBorder = (usuario.foto_perfil_preset === av) ? '#e91e8c' : 'rgba(255,255,255,0.2)';
+            var avBorder = (usuario.foto_perfil_preset === av) ? '#e91e8c' : 'var(--faint-3)';
           %>
           <form action="/perfil/avatar/preset" method="POST">
             <input type="hidden" name="preset" value="<%= av %>">
@@ -335,13 +335,13 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
       </div>
 
       <!-- Banner -->
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
-        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+      <div style="background:var(--card);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid var(--faint-2);filter:url(#gb);pointer-events:none"></div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">BANNER</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
           <% bansList.forEach(function(bn) { %>
           <%
-            var bnBorder = (usuario.banner_preset === bn) ? '#e91e8c' : 'rgba(255,255,255,0.2)';
+            var bnBorder = (usuario.banner_preset === bn) ? '#e91e8c' : 'var(--faint-3)';
           %>
           <form action="/perfil/banner/preset" method="POST">
             <input type="hidden" name="preset" value="<%= bn %>">
@@ -358,26 +358,26 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
       </div>
 
       <!-- Widgets -->
-      <div style="grid-column:1/-1;background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:24px;position:relative">
-        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+      <div style="grid-column:1/-1;background:var(--card);border:1px solid var(--border);padding:24px;position:relative">
+        <div style="position:absolute;inset:0;border:2px solid var(--faint-2);filter:url(#gb);pointer-events:none"></div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink);margin-bottom:14px">WIDGETS (max 3)</div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px" id="widgets-list">
           <% if (widgets && widgets.length > 0) { widgets.forEach(function(w) { %>
-          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;min-width:200px;position:relative">
+          <div style="background:var(--card);border:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;min-width:200px;position:relative">
             <% if (w.imagen_url) { %><img src="<%= w.imagen_url %>" width="44" height="44" style="object-fit:cover;border-radius:6px" onerror="this.style.display='none'"><% } %>
             <div>
               <div style="font-size:11px;color:var(--pink);letter-spacing:1px;font-family:'Bebas Neue',sans-serif"><%= w.tipo.toUpperCase() %></div>
               <div style="font-size:13px;font-weight:600"><%= w.titulo %></div>
               <% if (w.subtitulo) { %><div style="font-size:11px;color:var(--gray)"><%= w.subtitulo %></div><% } %>
             </div>
-            <button onclick="eliminarWidget(<%= w.id %>,this)" style="position:absolute;top:6px;right:6px;background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:12px" onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">&#x2715;</button>
+            <button onclick="eliminarWidget(<%= w.id %>,this)" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--faint-3);cursor:pointer;font-size:12px" onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='var(--faint-3)'">&#x2715;</button>
           </div>
           <% }) } %>
         </div>
         <div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:end">
           <div>
             <label class="mantiz-label">Tipo</label>
-            <select id="wg-tipo" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:13px;outline:none">
+            <select id="wg-tipo" style="background:var(--card);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:13px;outline:none">
               <option value="juego">Juego</option>
               <option value="musica">Musica</option>
               <option value="pelicula">Pelicula</option>
@@ -398,8 +398,8 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
 
   <!-- PANEL: SEGURIDAD -->
   <div id="panel-seguridad" style="display:none;padding:32px 40px">
-    <div style="max-width:440px;background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:28px;position:relative">
-      <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.1);filter:url(#gb);pointer-events:none"></div>
+    <div style="max-width:440px;background:var(--card);border:1px solid var(--border);padding:28px;position:relative">
+      <div style="position:absolute;inset:0;border:2px solid var(--faint-2);filter:url(#gb);pointer-events:none"></div>
       <form action="/perfil/cambiar-password" method="POST">
         <div style="margin-bottom:16px"><label class="mantiz-label">Contrasena actual</label><input type="password" name="password_actual" class="mantiz-input" required></div>
         <div style="margin-bottom:16px"><label class="mantiz-label">Nueva contrasena</label><input type="password" name="password_nuevo" class="mantiz-input" required minlength="6"></div>
@@ -481,13 +481,13 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
 <!-- MODAL: Crear/Editar tablero (OUTSIDE all panels) -->
 <div id="modal-tablero" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:3000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
   <div style="background:var(--card-bg);max-width:440px;width:90%;padding:32px;position:relative">
-    <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
+    <div style="position:absolute;inset:0;border:3px solid var(--faint-3);filter:url(#gb);pointer-events:none;z-index:10"></div>
     <button onclick="cerrarModalTablero()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;z-index:20">&#x2715;</button>
     <div id="mt-titulo" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--pink);margin-bottom:20px">NUEVO TABLERO</div>
     <div style="display:flex;flex-direction:column;gap:14px">
       <div><label class="mantiz-label">Nombre</label><input type="text" id="mt-nombre" class="mantiz-input" placeholder="Mi tablero de moda..."></div>
       <div><label class="mantiz-label">Privacidad</label>
-        <select id="mt-privacidad" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
+        <select id="mt-privacidad" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
           <option value="privado">Privado</option>
           <option value="publico">Publico</option>
           <option value="grupal">Grupal</option>
@@ -603,7 +603,7 @@ async function cargarConexionesPerfil() {
     }
     lista.innerHTML = d.conexiones.map(function(c) {
       var cfg = PLAT_CFG[c.plataforma] || {icon:'bi-link',color:'#888',label:c.plataforma,base:null};
-      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--border)">'
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border)">'
         + '<i class="' + cfg.icon + '" style="font-size:20px;color:' + cfg.color + ';width:24px;text-align:center"></i>'
         + '<div style="flex:1"><div style="font-size:10px;color:var(--muted);letter-spacing:2px">' + cfg.label.toUpperCase() + '</div>'
         + '<div style="font-size:13px;font-weight:700">@' + c.username + '</div></div>'
@@ -663,7 +663,7 @@ async function cargarLogrosPerfil() {
     grid.innerHTML = dL.logros.map(function(l) {
       var desbloqueado = !!l.desbloqueado;
       var pct = l.umbral > 0 ? Math.min(100, Math.round(((l.progreso||0)/l.umbral)*100)) : 0;
-      return '<div style="padding:16px;background:rgba(255,255,255,0.03);border:1px solid '
+      return '<div style="padding:16px;background:var(--card);border:1px solid '
         + (desbloqueado ? 'rgba(255,215,0,0.3)' : 'var(--border)') + ';opacity:' + (desbloqueado?'1':'0.55') + '">'
         + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
         + '<span style="font-size:24px">' + (l.icono||'🏆') + '</span>'
@@ -671,7 +671,7 @@ async function cargarLogrosPerfil() {
         + '<div style="font-size:11px;color:var(--muted)">' + (l.descripcion||'') + '</div></div>'
         + (desbloqueado ? '<i class="bi bi-check-circle-fill ms-auto" style="color:#ffd700;font-size:16px"></i>' : '')
         + '</div>'
-        + '<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">'
+        + '<div style="height:3px;background:var(--faint-1);border-radius:2px;overflow:hidden">'
         + '<div style="height:100%;width:' + pct + '%;background:' + (desbloqueado?'#ffd700':'var(--pink)') + ';transition:width 1s ease"></div>'
         + '</div>'
         + '<div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:right">' + (l.progreso||0) + ' / ' + l.umbral + '</div>'
@@ -698,7 +698,7 @@ async function cargarAmigos() {
       pendSect.style.display = 'block';
       pendLista.innerHTML = dP.pendientes.map(function(p) {
         var av = p.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+p.foto_perfil : '/img/defaults/avatars/'+(p.foto_perfil_preset||'avatar1.png');
-        return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(233,30,140,0.2)">'
+        return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid rgba(233,30,140,0.2)">'
           + '<img src="' + av + '" width="40" height="40" style="border-radius:50%;object-fit:cover;border:2px solid var(--pink)" onerror="this.src=\'/img/defaults/avatars/avatar1.png\'">'
           + '<div style="flex:1"><div style="font-weight:700;font-size:13px">' + p.nombre_visible + '</div>'
           + '<div style="font-size:11px;color:var(--muted)">@' + p.username + '</div></div>'
@@ -717,7 +717,7 @@ async function cargarAmigos() {
     }
     grid.innerHTML = dA.amigos.map(function(a) {
       var av = a.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+a.foto_perfil : '/img/defaults/avatars/'+(a.foto_perfil_preset||'avatar1.png');
-      return '<a href="/u/' + a.username + '" style="text-decoration:none;color:var(--white);display:block;padding:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;transition:all 0.3s" onmouseover="this.style.borderColor=\'var(--pink)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'
+      return '<a href="/u/' + a.username + '" style="text-decoration:none;color:var(--white);display:block;padding:16px;background:var(--card);border:1px solid var(--border);text-align:center;transition:all 0.3s" onmouseover="this.style.borderColor=\'var(--pink)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'
         + '<img src="' + av + '" width="56" height="56" style="border-radius:50%;object-fit:cover;border:3px solid var(--border);margin-bottom:8px" onerror="this.src=\'/img/defaults/avatars/avatar1.png\'">'
         + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:13px;letter-spacing:1px">' + a.nombre_visible + '</div>'
         + '<div style="font-size:11px;color:var(--muted)">@' + a.username + '</div>'
@@ -819,11 +819,11 @@ async function abrirTablero(id, nombre) {
       var img = p.imagen_url || (p.imagen_principal ? '/uploads/products/'+p.imagen_principal : 'https://via.placeholder.com/400x400/111/888?text=PIN');
       var titulo = p.titulo || p.prod_titulo || 'Sin titulo';
       var precio = p.precio_descuento || p.precio;
-      return '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);overflow:hidden">'
+      return '<div style="background:var(--card);border:1px solid var(--border);overflow:hidden">'
         + (p.producto_id ? '<a href="/productos/'+p.producto_id+'" style="display:block;text-decoration:none">' : '<div>')
         + '<div style="aspect-ratio:1;overflow:hidden;background:#111"><img src="'+img+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'https://via.placeholder.com/400x400/111/888?text=PIN\'"></div>'
         + (p.producto_id ? '</a>' : '</div>')
-        + '<div style="padding:10px 12px"><div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f0f0f0">'+titulo+'</div>'
+        + '<div style="padding:10px 12px"><div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)">'+titulo+'</div>'
         + (precio ? '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:var(--pink);margin-top:2px">$'+parseFloat(precio).toLocaleString('es-CO')+'</div>' : '')
         + '<button data-tb="'+id+'" data-pin="'+p.id+'" class="pin-del-btn" style="width:100%;margin-top:8px;background:none;border:1px solid rgba(255,60,60,0.3);color:rgba(255,100,100,0.7);padding:5px;font-family:Bebas Neue,sans-serif;font-size:10px;letter-spacing:1.5px;cursor:pointer">QUITAR PIN</button>'
         + '</div></div>';
@@ -893,7 +893,7 @@ async function buscarWidget() {
     if (d.results && d.results.length > 0) {
       document.getElementById('wg-results').innerHTML = d.results.map(function(item) {
         var enc = encodeURIComponent(JSON.stringify(item));
-        return '<div onclick="agregarWidget(\''+enc+'\',\''+tipo+'\')" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;max-width:220px">'
+        return '<div onclick="agregarWidget(\''+enc+'\',\''+tipo+'\')" style="background:var(--card);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;max-width:220px">'
           + (item.imagen_url ? '<img src="'+item.imagen_url+'" width="36" height="36" style="object-fit:cover;border-radius:4px" onerror="this.style.display=\'none\'">' : '')
           + '<div><div style="font-size:13px;font-weight:600">'+item.titulo+'</div><div style="font-size:11px;color:var(--gray)">'+item.subtitulo+'</div></div></div>';
       }).join('');
