@@ -31,6 +31,10 @@
   <!-- Favicon: SVG inline con el color de marca actual, sin depender de ningún archivo subido -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='<%= encodeURIComponent(sitio.color_primario || '#e91e8c') %>'/><text x='50' y='68' font-family='Arial,sans-serif' font-size='58' font-weight='900' fill='white' text-anchor='middle'>M</text></svg>">
 
+  <!-- PWA: manifest + theme-color (instalación + notificaciones push) -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="<%= sitio.color_primario || '#e91e8c' %>">
+
   <!-- Open Graph -->
   <meta property="og:type" content="<%= pageOgType %>">
   <meta property="og:title" content="<%= pageTitle %>">
@@ -124,8 +128,16 @@
     /* ── NAVBAR ── */
     #navbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-      background: rgba(10,10,10,0.85); backdrop-filter: blur(10px);
-      height: 64px; transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+      background: rgba(8,8,12,0.32);
+      backdrop-filter: blur(16px) saturate(160%) brightness(0.92);
+      -webkit-backdrop-filter: blur(16px) saturate(160%) brightness(0.92);
+      border-bottom: 1px solid rgba(233,30,140,0.10);
+      height: 64px; transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), background 0.35s ease, backdrop-filter 0.35s ease;
+    }
+    #navbar:hover {
+      background: rgba(10,10,18,0.74);
+      backdrop-filter: blur(26px) saturate(200%) brightness(0.86);
+      -webkit-backdrop-filter: blur(26px) saturate(200%) brightness(0.86);
     }
     /* navbar border line removed */
     #navbar.hidden { transform: translateY(-100%); }
@@ -292,7 +304,7 @@
     .pc-img-wrap { position: relative; overflow: visible; }
     .pc-img-clip { overflow: hidden; position: relative; }
     .pc-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; transition: transform 0.5s; }
-    .pc-img-hover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s ease; }
+    .pc-img-hover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s ease; }
     .product-card:hover .pc-img-hover { opacity: 1; }
     .product-card:hover .pc-img { transform: scale(1.04); }
     .pc-add-btn {
@@ -655,6 +667,7 @@
       #navbar               { display: none !important; }
       #mobile-menu          { display: none !important; }
       .hamburger-btn        { display: none !important; }
+      .chat-fab             { display: none !important; } /* se solapa con la barra inferior #mn-nav */
     }
 
     /* ── Mobile header / cats / bottom-nav: ocultos en tablet+ ── */
@@ -909,11 +922,12 @@
       <div style="position:relative" id="user-wrap">
         <button class="user-btn" id="user-btn">
           <img src="<%= user.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+user.foto_perfil : '/img/defaults/avatars/'+(user.foto_perfil_preset||'avatar1.png') %>" width="28" height="28" style="object-fit:cover" onerror="this.src='/img/defaults/avatars/avatar1.png'">
-          <span><%= user.nombre_visible.split(' ')[0].toUpperCase() %></span>
+          <span><%= (user.nombre_visible||user.username||'U').split(' ')[0].toUpperCase() %></span>
           <i class="bi bi-chevron-down" style="font-size:10px;color:var(--gray)"></i>
         </button>
         <div class="user-dropdown" id="user-dd">
           <a href="/perfil"><i class="bi bi-person me-2" style="color:var(--pink)"></i>MI PERFIL</a>
+          <a href="/perfil#configuracion"><i class="bi bi-gear-fill me-2" style="color:var(--pink)"></i>CONFIGURACIÓN</a>
           <a href="/pedidos"><i class="bi bi-box-seam me-2" style="color:var(--pink)"></i>MIS PEDIDOS</a>
           <a href="/carrito"><i class="bi bi-bag me-2" style="color:var(--pink)"></i>MI CARRITO</a>
           <a href="/comunidad"><i class="bi bi-people-fill me-2" style="color:var(--pink)"></i>COMUNIDAD</a>
@@ -964,6 +978,7 @@
     <a href="/ayuda">AYUDA</a>
     <% if (user) { %>
     <a href="/perfil">MI PERFIL</a>
+    <a href="/perfil#configuracion">CONFIGURACIÓN</a>
     <a href="/pedidos">MIS PEDIDOS</a>
     <a href="/auth/logout" style="color:#ff6060">CERRAR SESIÓN</a>
     <% } else { %>
@@ -1000,14 +1015,14 @@
 <!-- TOAST -->
 <div id="toast">¡PRODUCTO AÑADIDO!</div>
 
-<!-- CHAT FAB -->
-<% if (typeof hideChatFab === 'undefined' || !hideChatFab) { %>
-<button class="chat-fab" onclick="toggleChat()" title="Asistente IA"><i class="bi bi-robot" id="chatFabIc"></i></button>
-<div class="chat-window" id="chatWin">
-  <div class="chat-header-bar"><span><i class="bi bi-robot me-2"></i>ASISTENTE MANTIZ</span><button onclick="toggleChat()" style="background:none;border:none;color:white;cursor:pointer;font-size:16px">✕</button></div>
-  <div class="chat-messages" id="chatMsgs"><div class="chat-msg bot">¡Hola! Soy el asistente de <strong>Mantiz</strong>. ¿En qué te ayudo?</div></div>
-  <div class="chat-input-row"><input type="text" id="chatInp" placeholder="Escribe tu mensaje..." onkeydown="if(event.key==='Enter')sendChat()"><button class="chat-send-btn" onclick="sendChat()"><i class="bi bi-send-fill" style="font-size:13px"></i></button></div>
-</div>
+<!-- CHAT SOPORTE (reemplaza al asistente IA, eliminado) -->
+<% if ((typeof hideChatFab === 'undefined' || !hideChatFab) && typeof user !== 'undefined' && user && user.rol !== 'admin') { %>
+<a href="/chat" class="chat-fab" title="Chat con soporte" style="display:flex;align-items:center;justify-content:center;text-decoration:none">
+  <i class="bi bi-headset"></i>
+  <% if (typeof chatNoLeidos !== 'undefined' && chatNoLeidos > 0) { %>
+  <span style="position:absolute;top:-4px;right:-4px;background:#ff3b6e;color:white;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--black)"><%= chatNoLeidos %></span>
+  <% } %>
+</a>
 <% } %>
 
 <!-- ══════════════════════════════════════════════════════════════════════
@@ -1105,8 +1120,11 @@
       <a href="/admin/comentarios" class="sl-link <%= title&&title.includes('Comentarios')?'active':'' %>"><i class="bi bi-chat-dots-fill" style="width:18px"></i>Comentarios</a>
       <div class="sl-section">Sistema</div>
       <a href="/admin/modelos" class="sl-link <%= title&&title.includes('Modelos')?'active':'' %>"><i class="bi bi-box-seam" style="width:18px"></i>Modelos 3D</a>
-      <a href="/admin/homepage" class="sl-link <%= title&&title.includes('Estructura')?'active':'' %>"><i class="bi bi-layout-three-columns" style="width:18px"></i>Estructura Inicio</a>
+      <!-- "Estructura Inicio" eliminado del panel admin (la ruta /admin/homepage sigue activa internamente para los endpoints de carrusel-marca que usa el editor de banners, pero ya no aparece en la navegación) -->
       <a href="/admin/configuracion" class="sl-link <%= title&&title.includes('Configuración')?'active':'' %>"><i class="bi bi-gear-fill" style="width:18px"></i>Configuración</a>
+      <a href="/admin/chat" class="sl-link <%= title&&title.includes('Chat')?'active':'' %>" style="position:relative"><i class="bi bi-headset" style="width:18px"></i>Chat Soporte
+        <span id="adminChatBadge" style="display:none;position:absolute;right:14px;top:50%;transform:translateY(-50%);background:var(--cp);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;align-items:center;justify-content:center">0</span>
+      </a>
       <div class="sl-section">Comunidad</div>
       <a href="/opiniones" class="sl-link"><i class="bi bi-bar-chart-fill" style="width:18px"></i>Encuestas</a>
       <a href="/comunidad" class="sl-link"><i class="bi bi-people-fill" style="width:18px"></i>Comunidad</a>
@@ -1116,7 +1134,7 @@
     <div class="sl-bottom">
       <a href="/perfil" class="sl-user">
         <img src="<%= user.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+user.foto_perfil : '/img/defaults/avatars/'+(user.foto_perfil_preset||'avatar1.png') %>" width="34" height="34" style="border-radius:50%;object-fit:cover;border:2px solid var(--pink)" onerror="this.src='/img/defaults/avatars/avatar1.png'">
-        <div><div class="sl-name"><%= user.nombre_visible.split(' ')[0] %></div><div class="sl-role">ADMINISTRADOR</div></div>
+        <div><div class="sl-name"><%= (user.nombre_visible||user.username||'Admin').split(' ')[0] %></div><div class="sl-role">ADMINISTRADOR</div></div>
         <a href="/auth/logout" style="color:var(--muted);margin-left:auto" title="Salir"><i class="bi bi-power"></i></a>
       </a>
     </div>
@@ -1182,11 +1200,7 @@ loadCartPanel();
 
 function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg||'¡PRODUCTO AÑADIDO!';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
-// CHAT
-let chatH=[],chatOpen2=false;
-function toggleChat(){chatOpen2=!chatOpen2;document.getElementById('chatWin')?.classList.toggle('active',chatOpen2);const ic=document.getElementById('chatFabIc');if(ic)ic.className=chatOpen2?'bi bi-x-lg':'bi bi-robot';if(chatOpen2)document.getElementById('chatInp')?.focus();}
-async function sendChat(){const inp=document.getElementById('chatInp');const msg=inp.value.trim();if(!msg)return;appendCM(msg,'user');inp.value='';const msgs=document.getElementById('chatMsgs');const el=document.createElement('div');el.className='chat-msg bot';el.id='cLoad';el.textContent='...';msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight;try{const r=await fetch('/ia/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mensaje:msg,historial:chatH})});const d=await r.json();document.getElementById('cLoad')?.remove();const resp=d.respuesta||'Sin respuesta.';appendCM(resp,'bot');chatH.push({rol:'user',contenido:msg},{rol:'assistant',contenido:resp});if(chatH.length>12)chatH=chatH.slice(-12);}catch(e){document.getElementById('cLoad')?.remove();appendCM('Error de conexión.','bot');}}
-function appendCM(text,role){const msgs=document.getElementById('chatMsgs');if(!msgs)return;const d=document.createElement('div');d.className=`chat-msg ${role}`;d.textContent=text;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;}
+// Chat IA eliminado — el chat de soporte ahora es un enlace directo a /chat
 
 // ADMIN CLOCK
 const cl=document.getElementById('adminClock');if(cl){const uc=()=>{const n=new Date();cl.textContent=n.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};uc();setInterval(uc,1000);}
@@ -1204,6 +1218,9 @@ function applyTheme(t){
     icon.className=t==='claro'?'bi bi-sun-fill':'bi bi-moon-stars-fill';
   }
   if(btn)btn.title=t==='claro'?'Cambiar a modo oscuro':'Cambiar a modo claro';
+  // Notificar a componentes que dependen del tema (ej. viewer 3D) para que
+  // se actualicen en vivo sin necesitar recargar la página.
+  window.dispatchEvent(new CustomEvent('mantiz-theme-change',{detail:{tema:t}}));
 }
 function toggleTheme(){
   const actual=localStorage.getItem('mantiz_tema')||'oscuro';
@@ -1213,6 +1230,13 @@ function toggleTheme(){
   fetch('/perfil/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tema_global:nuevo})}).catch(()=>{});
 }
 (function(){applyTheme(localStorage.getItem('mantiz_tema')||'oscuro');})();
+
+// ── PWA: registro del Service Worker (notificaciones push + base de instalación) ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(e){ console.warn('SW registro falló:', e); });
+  });
+}
 
 <% if (user) { %>
 // ── NOTIFICACIONES ─────────────────────────────────────────────────────────────
@@ -1479,8 +1503,11 @@ function mnToggleProfile(){
   var dd = document.getElementById('user-dd');
   if (!dd) return;
   if (!dd.style.position || dd.style.position === 'absolute') {
+    // Solo reposicionar (no fijar display aquí: eso lo controla la clase
+    // .open vía CSS — fijarlo inline anulaba permanentemente el toggle,
+    // dejando el menú atascado abierto en móvil tras el primer toque).
     dd.style.cssText = [
-      'display:block','position:fixed','bottom:80px','right:16px',
+      'position:fixed','bottom:80px','right:16px',
       'background:rgba(17,17,17,0.98)','backdrop-filter:blur(20px)',
       'border:1px solid rgba(233,30,140,0.25)','min-width:200px',
       'z-index:1200','border-radius:12px','overflow:hidden','box-shadow:0 8px 40px rgba(0,0,0,.6)'

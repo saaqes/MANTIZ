@@ -55,7 +55,7 @@
               </div>
               <div>
                 <label class="mantiz-label">Departamento</label>
-                <input type="text" name="departamento" class="mantiz-input" placeholder="Cundinamarca">
+                <input type="text" name="departamento" class="mantiz-input" placeholder="Cundinamarca" id="departamentoInput">
               </div>
               <div style="grid-column:1/-1">
                 <label class="mantiz-label">Dirección</label>
@@ -111,6 +111,30 @@
             </label>
             <% }) %>
           </div>
+
+          <!-- Cuentas guardadas (requisito: mostrar métodos guardados y permitir seleccionarlos) -->
+          <% if (metodosPago && metodosPago.length > 0) { %>
+          <div id="cuentasGuardadasWrap" style="margin-top:16px;display:none">
+            <div style="font-size:11px;color:var(--gray);letter-spacing:1px;margin-bottom:10px">CUENTAS GUARDADAS</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <% metodosPago.forEach(function(mp) { %>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">
+                <input type="radio" name="metodo_pago_guardado_id" value="<%= mp.id %>" style="accent-color:var(--pink)" <%= mp.predeterminado ? 'checked' : '' %>>
+                <i class="bi bi-bank2" style="color:var(--pink)"></i>
+                <span style="font-size:13px"><%= mp.banco %> · ****<%= (mp.numero_cuenta||'').slice(-4) %> · <%= mp.titular %></span>
+              </label>
+              <% }) %>
+            </div>
+          </div>
+          <script>
+            document.querySelectorAll('input[name="metodo_pago"]').forEach(function(r){
+              r.addEventListener('change', function(){
+                var wrap = document.getElementById('cuentasGuardadasWrap');
+                if (wrap) wrap.style.display = (this.value === 'transferencia') ? 'block' : 'none';
+              });
+            });
+          </script>
+          <% } %>
         </div>
 
         <!-- 3. NOTAS -->
@@ -202,15 +226,22 @@ function abrirMapa() {
     document.getElementById('coords-display').textContent = 'Lat: ' + lat + ' | Lng: ' + lng;
     if (pickerMarker) pickerMap.removeLayer(pickerMarker);
     pickerMarker = L.marker(e.latlng).addTo(pickerMap);
-    // Reverse geocode hint
-    fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json')
+    // Reverse geocode hint — addressdetails=1 para obtener ciudad/departamento estructurados
+    // (antes solo se rellenaba la dirección; ciudad y departamento quedaban vacíos siempre)
+    fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json&addressdetails=1')
       .then(function(r){ return r.json(); })
       .then(function(d){
         if (d.display_name) {
           var parts = d.display_name.split(',');
           var addr = parts.slice(0,3).join(',').trim();
-          if (!document.getElementById('direccionInput').value)
-            document.getElementById('direccionInput').value = addr;
+          document.getElementById('direccionInput').value = addr;
+        }
+        // Actualización automática de Ciudad y Departamento (antes faltaba por completo)
+        if (d.address) {
+          var ciudad = d.address.city || d.address.town || d.address.village || d.address.municipality || '';
+          var depto  = d.address.state || d.address.region || '';
+          if (ciudad) document.getElementById('ciudadInput').value = ciudad;
+          if (depto)  document.getElementById('departamentoInput').value = depto;
         }
       }).catch(function(){});
   });
