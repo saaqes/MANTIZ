@@ -109,6 +109,17 @@ router.post('/broadcast', isAdmin, async (req, res) => {
         [inserts]
       );
     }
+
+    // Disparar también notificaciones push reales (PWA) — no bloquea la
+    // respuesta HTTP; cada envío respeta la preferencia individual del
+    // usuario (notificaciones_push) y limpia suscripciones caducadas.
+    try {
+      const { enviarPushAUsuario } = require('./push');
+      usuarios.forEach(u => {
+        enviarPushAUsuario(u.id, { titulo, mensaje, url: enlace || '/' }).catch(() => {});
+      });
+    } catch(e) {}
+
     res.json({ success: true, enviadas: inserts.length });
   } catch (e) {
     res.status(500).json({ error: db.friendlyDbError(e) });

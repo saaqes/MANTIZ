@@ -202,8 +202,8 @@
       <span id="peTitle">NUEVO SLIDE</span>
     </div>
     <div class="pe-topbar-actions">
-      <button class="btn btn-pm btn-sm" onclick="document.getElementById('slideForm').requestSubmit()">
-        <i class="bi bi-check-lg me-1"></i><span id="submitBtnText">GUARDAR</span>
+      <button class="btn btn-pm" style="padding:8px 22px;font-size:.82rem;letter-spacing:2px;min-width:160px" onclick="document.getElementById('slideForm').requestSubmit()">
+        <i class="bi bi-floppy-fill me-2"></i><span id="submitBtnText">GUARDAR CAMBIOS</span>
       </button>
       <button class="pe-close-btn" onclick="cerrarEditor()" title="Cerrar (Esc)"><i class="bi bi-x-lg"></i></button>
     </div>
@@ -365,6 +365,19 @@
               <input type="checkbox" name="activo" id="f-activo" class="form-check-input" value="1" checked>
               <label class="form-check-label" style="font-size:.75rem" for="f-activo">Visible en el sitio</label>
             </div>
+          </div>
+        </div>
+
+        <!-- Botón de guardado al pie del sidebar — siempre visible sin tener que mirar la barra superior -->
+        <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+          <button type="button" onclick="document.getElementById('slideForm').requestSubmit()"
+                  style="width:100%;background:var(--cp);border:2px solid white;color:white;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .2s;filter:url(#gb)"
+                  onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <i class="bi bi-floppy-fill" style="font-size:1.1rem"></i>
+            GUARDAR CAMBIOS
+          </button>
+          <div style="font-size:.65rem;color:var(--muted);text-align:center;margin-top:8px;letter-spacing:1px">
+            También puedes presionar el botón de la barra superior
           </div>
         </div>
       </form>
@@ -704,8 +717,8 @@ function toggleSlide(form, id) {
       <i class="bi bi-images"></i><span id="emTitle">NUEVA IMAGEN DE MARCA</span>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-pm btn-sm" onclick="document.getElementById('emForm').requestSubmit()">
-        <i class="bi bi-check-lg me-1"></i>GUARDAR
+      <button class="btn btn-pm" style="padding:8px 22px;font-size:.82rem;letter-spacing:2px;min-width:160px" onclick="document.getElementById('emForm').requestSubmit()">
+        <i class="bi bi-floppy-fill me-2"></i>GUARDAR CAMBIOS
       </button>
       <button onclick="cerrarEditorMarca()" style="background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.25);color:#00c8ff;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">
         <i class="bi bi-x-lg"></i>
@@ -760,9 +773,19 @@ function toggleSlide(form, id) {
         </div>
 
         <div class="em-sec">◈ Visibilidad</div>
-        <div class="form-check">
+        <div class="form-check" style="margin-bottom:16px">
           <input type="checkbox" name="activo" id="emActivo" class="form-check-input" value="1" checked>
           <label class="form-check-label" style="font-size:.75rem" for="emActivo">Visible en el sitio</label>
+        </div>
+
+        <!-- Botón de guardado al pie del sidebar — siempre visible -->
+        <div style="border-top:1px solid var(--border);padding-top:16px">
+          <button type="button" onclick="document.getElementById('emForm').requestSubmit()"
+                  style="width:100%;background:var(--cp);border:2px solid white;color:white;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .2s;filter:url(#gb)"
+                  onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <i class="bi bi-floppy-fill" style="font-size:1.1rem"></i>
+            GUARDAR CAMBIOS
+          </button>
         </div>
       </form>
     </div>

@@ -21,6 +21,32 @@ router.get('/logros', isAuthenticated, async (req, res) => {
   } catch(e) { res.status(500).json({ error: db.friendlyDbError(e) }); }
 });
 
+// ─── GET logros recién desbloqueados, pendientes de mostrar el popup visual ──
+// (estilo "trofeo desbloqueado" de PlayStation — se consulta por polling)
+router.get('/logros/pendientes-popup', isAuthenticated, async (req, res) => {
+  try {
+    const [pendientes] = await db.query(
+      `SELECT l.id, l.clave, l.nombre, l.descripcion, l.icono
+       FROM usuario_logros ul JOIN logros l ON ul.logro_id = l.id
+       WHERE ul.usuario_id=? AND ul.desbloqueado=1 AND ul.popup_mostrado=0
+       ORDER BY ul.fecha_desbloqueo ASC LIMIT 5`,
+      [req.session.user.id]
+    );
+    res.json({ pendientes });
+  } catch(e) { res.json({ pendientes: [] }); }
+});
+
+// ─── POST marcar un logro como ya mostrado visualmente ───────────────────────
+router.post('/logros/:id/popup-visto', isAuthenticated, async (req, res) => {
+  try {
+    await db.query(
+      'UPDATE usuario_logros SET popup_mostrado=1 WHERE usuario_id=? AND logro_id=?',
+      [req.session.user.id, req.params.id]
+    );
+    res.json({ success: true });
+  } catch(e) { res.json({ success: false }); }
+});
+
 // ─── GET logros de un usuario público ────────────────────────────────────────
 router.get('/logros/:uid', async (req, res) => {
   try {

@@ -60,8 +60,17 @@ router.get('/checkout', isAuthenticated, async (req, res) => {
 
 // CHECKOUT - PROCESAR PEDIDO (pago simulado)
 router.post('/checkout', isAuthenticated, async (req, res) => {
-  const { direccion_id, nueva_direccion, metodo_pago, notas } = req.body;
+  const { direccion_id, nueva_direccion, metodo_pago, metodo_pago_guardado_id, notas } = req.body;
   const usuarioId = req.session.user.id;
+
+  // Si viene un método guardado, obtenemos su información para guardarla en el pedido
+  let metodoPagoFinal = metodo_pago || 'transferencia';
+  if (metodo_pago_guardado_id) {
+    try {
+      const [[mp]] = await db.query('SELECT banco, tipo_cuenta FROM metodos_pago_usuario WHERE id=? AND usuario_id=?', [metodo_pago_guardado_id, usuarioId]);
+      if (mp) metodoPagoFinal = mp.banco + ' (' + mp.tipo_cuenta + ')';
+    } catch(e) {}
+  }
   
   try {
     const [items] = await db.query(
@@ -123,7 +132,7 @@ router.post('/checkout', isAuthenticated, async (req, res) => {
     const [pedidoResult] = await db.query(
       `INSERT INTO pedidos (usuario_id, direccion_id, total, subtotal, costo_envio, metodo_pago, estado_pago, estado, numero_tracking, notas, fecha_estimada_entrega) 
        VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      [usuarioId, dirId || null, total, subtotal, envio, metodo_pago || 'tarjeta', 'pagado', 'confirmado', tracking, notas || '', fechaEntrega.toISOString().split('T')[0]]
+      [usuarioId, dirId || null, total, subtotal, envio, metodoPagoFinal, 'pagado', 'confirmado', tracking, notas || '', fechaEntrega.toISOString().split('T')[0]]
     );
     
     const pedidoId = pedidoResult.insertId;

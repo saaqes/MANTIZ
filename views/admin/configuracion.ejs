@@ -75,16 +75,17 @@
                placeholder="Ej: MANTIZ">
       </div>
       <div class="col-md-6">
-        <label class="form-label">Logo actual</label>
+        <label class="form-label">Logo / Ícono del sitio</label>
         <div class="d-flex align-items-center gap-3">
-          <% if (config.logo) { %>
-            <img src="/uploads/logos/<%= config.logo %>" class="logo-current" onerror="this.style.display='none'" alt="Logo">
+          <% if (config.logo && config.logo !== 'logo-default.png') { %>
+            <img id="logoPreviewImg" src="/uploads/logo/<%= config.logo %>" class="logo-current" onerror="this.style.display='none'" alt="Logo" style="width:60px;height:60px;object-fit:contain;background:#111;border-radius:8px;border:1px solid var(--border)">
           <% } else { %>
-            <div style="width:80px;height:60px;background:var(--dark3);border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.7rem">Sin logo</div>
+            <img id="logoPreviewImg" style="display:none;width:60px;height:60px;object-fit:contain;background:#111;border-radius:8px;border:1px solid var(--border)" alt="Logo">
+            <div id="logoPreviewEmpty" style="width:60px;height:60px;background:var(--dark3);border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.6rem;text-align:center">Sin logo</div>
           <% } %>
           <div class="flex-1">
-            <input type="file" name="logo" class="form-control form-control-sm" accept="image/*">
-            <div style="font-family:var(--fm);font-size:.6rem;color:var(--muted);margin-top:4px">PNG, SVG, JPG – Recomendado 200x60px</div>
+            <input type="file" name="logo_file" id="logoFileInput" class="form-control form-control-sm" accept="image/*" onchange="previewLogoFile(this)">
+            <div style="font-family:var(--fm);font-size:.6rem;color:var(--muted);margin-top:4px">PNG, SVG, JPG (máx. 2MB) — se usará como ícono del sitio (favicon) en la pestaña del navegador</div>
           </div>
         </div>
       </div>
@@ -371,6 +372,19 @@ window.addEventListener('DOMContentLoaded', () => {
 }); // cierre de window.addEventListener('DOMContentLoaded', ...) — antes faltaba, dejando el listener de submit anidado incorrectamente dentro de este callback
 
 // ── Interceptar submit: sincronizar métodos de pago + guardar redes vía AJAX, luego enviar el form normal ──
+function previewLogoFile(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = document.getElementById('logoPreviewImg');
+    var empty = document.getElementById('logoPreviewEmpty');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    if (empty) empty.style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
 document.getElementById('configForm').addEventListener('submit', async function(e){
   e.preventDefault();
 

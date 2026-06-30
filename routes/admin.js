@@ -497,11 +497,24 @@ router.get('/configuracion', isAdmin, async (req, res) => {
 
 router.post('/configuracion', isAdmin, uploadLogo.single('logo_file'), async (req, res) => {
   const updates = req.body;
+  // UPSERT real: antes esto era UPDATE-only, que silenciosamente NO guardaba
+  // nada en claves que nunca habían sido sembradas previamente (moneda,
+  // tienda_activa, banner_aviso, simbolo_moneda, etc. nunca tuvieron fila,
+  // así que el UPDATE afectaba 0 filas y el dato se perdía sin error visible).
   for (const [clave, valor] of Object.entries(updates)) {
-    await db.query('UPDATE configuracion_sitio SET valor=? WHERE clave=?', [valor, clave]).catch(() => {});
+    if (clave === 'redes') continue; // ese campo se maneja en /configuracion/redes
+    await db.query(
+      `INSERT INTO configuracion_sitio (clave, valor, tipo) VALUES (?,?,'texto')
+       ON DUPLICATE KEY UPDATE valor=VALUES(valor)`,
+      [clave, valor]
+    ).catch((e) => console.error('[config save]', clave, e.message));
   }
   if (req.file) {
-    await db.query('UPDATE configuracion_sitio SET valor=? WHERE clave="logo"', [req.file.filename]).catch(() => {});
+    await db.query(
+      `INSERT INTO configuracion_sitio (clave, valor, tipo) VALUES ('logo',?,'imagen')
+       ON DUPLICATE KEY UPDATE valor=VALUES(valor)`,
+      [req.file.filename]
+    ).catch((e) => console.error('[config save logo]', e.message));
   }
   req.flash('success', 'Configuracion guardada');
   res.redirect('/admin/configuracion');
