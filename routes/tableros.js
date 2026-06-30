@@ -70,6 +70,12 @@ router.post('/', isAuthenticated, async (req, res) => {
       'INSERT INTO tableros (usuario_id, nombre, descripcion, privacidad, color_portada) VALUES (?,?,?,?,?)',
       [req.session.user.id, nombre, descFinal, privacidad || 'privado', color_portada || '#e91e8c']
     );
+    // Logros: tablero_creativo (umbral 1) y arquitecto (umbral 5) avanzan juntos
+    try {
+      const { actualizarLogro } = require('./opiniones');
+      actualizarLogro(req.session.user.id, 'tablero_creativo', db);
+      actualizarLogro(req.session.user.id, 'arquitecto', db);
+    } catch(e) {}
     // ── Auto-publicar: si es público notificar a amigos ──
     if (privacidad === 'publico') {
       try {
@@ -161,6 +167,12 @@ router.post('/:id/pines', isAuthenticated, async (req, res) => {
       'INSERT INTO tablero_pines (tablero_id, producto_id, imagen_url, titulo, descripcion, url_externa, tipo) VALUES (?,?,?,?,?,?,?)',
       [req.params.id, producto_id||null, imagen_url||null, titulo||null, descripcion||null, url_externa||null, tipo||'producto']
     );
+    // Logros: primer_pin (umbral 1) y coleccionista (umbral 10) avanzan juntos
+    try {
+      const { actualizarLogro } = require('./opiniones');
+      actualizarLogro(req.session.user.id, 'primer_pin', db);
+      actualizarLogro(req.session.user.id, 'coleccionista', db);
+    } catch(e) {}
     res.json({ success: true, id: r.insertId });
   } catch (e) {
     res.status(500).json({ error: db.friendlyDbError(e) });

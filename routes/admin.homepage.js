@@ -128,11 +128,11 @@ router.post('/carrusel-marca/nuevo', isAdmin, uploadCarousel.single('imagen'), a
     return res.redirect('/admin/homepage');
   }
   try {
-    const { titulo, subtitulo } = req.body;
+    const { titulo, subtitulo, boton_texto, boton_url, color_acento } = req.body;
     const [[max]] = await db.query('SELECT COALESCE(MAX(orden),0) AS m FROM carrusel_marca');
     await db.query(
-      'INSERT INTO carrusel_marca (imagen, titulo, subtitulo, orden, activo) VALUES (?,?,?,?,1)',
-      [req.file.filename, titulo || '', subtitulo || '', (max.m || 0) + 1]
+      'INSERT INTO carrusel_marca (imagen, titulo, subtitulo, orden, activo, boton_texto, boton_url, color_acento) VALUES (?,?,?,?,1,?,?,?)',
+      [req.file.filename, titulo || '', subtitulo || '', (max.m || 0) + 1, boton_texto || null, boton_url || '/productos', color_acento || '#e91e8c']
     );
     req.flash('success', 'Imagen de marca agregada');
   } catch(e) {
@@ -142,13 +142,17 @@ router.post('/carrusel-marca/nuevo', isAdmin, uploadCarousel.single('imagen'), a
 });
 
 // POST: editar imagen de marca
-router.post('/carrusel-marca/:id/editar', isAdmin, async (req, res) => {
+router.post('/carrusel-marca/:id/editar', isAdmin, uploadCarousel.single('imagen'), async (req, res) => {
   try {
-    const { titulo, subtitulo, activo } = req.body;
-    await db.query(
-      'UPDATE carrusel_marca SET titulo=?, subtitulo=?, activo=? WHERE id=?',
-      [titulo || '', subtitulo || '', activo ? 1 : 0, req.params.id]
-    );
+    const { titulo, subtitulo, activo, boton_texto, boton_url, color_acento } = req.body;
+    const updates = {
+      titulo: titulo || '', subtitulo: subtitulo || '', activo: activo ? 1 : 0,
+      boton_texto: boton_texto || null, boton_url: boton_url || '/productos',
+      color_acento: color_acento || '#e91e8c'
+    };
+    if (req.file) updates.imagen = req.file.filename;
+    const setClause = Object.keys(updates).map(k => `${k}=?`).join(',');
+    await db.query(`UPDATE carrusel_marca SET ${setClause} WHERE id=?`, [...Object.values(updates), req.params.id]);
     req.flash('success', 'Imagen de marca actualizada');
   } catch(e) {
     req.flash('error', 'Error al editar: ' + e.message);

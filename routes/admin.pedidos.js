@@ -30,7 +30,8 @@ router.get('/', isAdmin, async (req, res) => {
 router.get('/:id', isAdmin, async (req, res) => {
   const [[pedido]] = await db.query(
     `SELECT p.*, u.nombre_visible, u.email,
-      d.direccion, d.ciudad, d.departamento, d.pais, d.nombre_destinatario, d.telefono as tel_envio
+      d.direccion, d.ciudad, d.departamento, d.pais, d.nombre_destinatario, d.telefono as tel_envio,
+      d.lat as entrega_lat, d.lng as entrega_lng
      FROM pedidos p 
      JOIN usuarios u ON p.usuario_id = u.id
      LEFT JOIN direcciones_entrega d ON p.direccion_id = d.id

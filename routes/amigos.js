@@ -58,6 +58,15 @@ router.post('/responder/:uid', isAuthenticated, async (req, res) => {
     const nuevoEstado = accion === 'aceptar' ? 'aceptada' : 'rechazada';
     await db.query('UPDATE amistades SET estado=?, actualizado_en=NOW() WHERE id=?', [nuevoEstado, amistad.id]);
 
+    // Logro: social_butterfly (umbral 3 amigos) — avanza para ambos usuarios
+    if (accion === 'aceptar') {
+      try {
+        const { actualizarLogro } = require('./opiniones');
+        actualizarLogro(solicitanteId, 'social_butterfly', db);
+        actualizarLogro(receptorId, 'social_butterfly', db);
+      } catch(e) {}
+    }
+
     if (accion === 'aceptar') {
       const [[receptor]] = await db.query('SELECT nombre_visible FROM usuarios WHERE id=?', [receptorId]);
       await db.query(

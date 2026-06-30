@@ -163,15 +163,17 @@ router.get('/productos/nuevo', isAdmin, (req, res) => {
 
 router.post('/productos/nuevo', isAdmin, uploadProduct.fields([
   { name: 'imagen_principal', maxCount: 1 },
+  { name: 'imagen_hover', maxCount: 1 },
   { name: 'imagenes_extra', maxCount: 8 }
 ]), async (req, res) => {
   const { titulo, descripcion, precio, precio_descuento, categoria, tags, en_inicio, activo, tallas, stocks } = req.body;
   try {
     const imgPrincipal = req.files?.imagen_principal?.[0]?.filename || null;
+    const imgHover = req.files?.imagen_hover?.[0]?.filename || null;
     const [result] = await db.query(
-      `INSERT INTO productos (titulo, descripcion, precio, precio_descuento, imagen_principal, categoria, tags, en_inicio, activo)
-       VALUES (?,?,?,?,?,?,?,?,?)`,
-      [titulo, descripcion, precio, precio_descuento || null, imgPrincipal, categoria, tags || '', en_inicio ? 1 : 0, activo ? 1 : 0]
+      `INSERT INTO productos (titulo, descripcion, precio, precio_descuento, imagen_principal, imagen_hover, categoria, tags, en_inicio, activo)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      [titulo, descripcion, precio, precio_descuento || null, imgPrincipal, imgHover, categoria, tags || '', en_inicio ? 1 : 0, activo ? 1 : 0]
     );
     const prodId = result.insertId;
     if (tallas && Array.isArray(tallas)) {
@@ -201,12 +203,14 @@ router.get('/productos/:id/editar', isAdmin, async (req, res) => {
 
 router.post('/productos/:id/editar', isAdmin, uploadProduct.fields([
   { name: 'imagen_principal', maxCount: 1 },
+  { name: 'imagen_hover', maxCount: 1 },
   { name: 'imagenes_extra', maxCount: 8 }
 ]), async (req, res) => {
   const { titulo, descripcion, precio, precio_descuento, categoria, tags, en_inicio, activo } = req.body;
   try {
     const updates = { titulo, descripcion, precio, precio_descuento: precio_descuento || null, categoria, tags: tags || '', en_inicio: en_inicio ? 1 : 0, activo: activo ? 1 : 0 };
     if (req.files?.imagen_principal?.[0]) updates.imagen_principal = req.files.imagen_principal[0].filename;
+    if (req.files?.imagen_hover?.[0]) updates.imagen_hover = req.files.imagen_hover[0].filename;
     const setClause = Object.keys(updates).map(k => `${k}=?`).join(',');
     await db.query(`UPDATE productos SET ${setClause} WHERE id=?`, [...Object.values(updates), req.params.id]);
     req.flash('success', 'Producto actualizado');
@@ -313,6 +317,43 @@ router.get('/usuarios', isAdmin, async (req, res) => {
      GROUP BY u.id ORDER BY u.creado_en DESC`
   );
   res.render('admin/usuarios', { title: 'Admin - Usuarios', usuarios, isAdmin: true });
+});
+
+// "Mostrar información" — panel con foto, banner, stats completas, fecha registro/último acceso, historial
+router.get('/usuarios/:id/info', isAdmin, async (req, res) => {
+  try {
+    const [[usuario]] = await db.query('SELECT * FROM usuarios WHERE id=?', [req.params.id]);
+    if (!usuario) return res.json({ success: false, error: 'Usuario no encontrado' });
+
+    const [[{ pedidos }]] = await db.query('SELECT COUNT(*) as pedidos FROM pedidos WHERE usuario_id=?', [req.params.id]);
+    const [[{ tableros }]] = await db.query('SELECT COUNT(*) as tableros FROM tableros WHERE usuario_id=?', [req.params.id]);
+    const [[{ guardados }]] = await db.query('SELECT COUNT(*) as guardados FROM producto_likes WHERE usuario_id=?', [req.params.id]);
+    let logros = 0;
+    try {
+      const [[r]] = await db.query('SELECT COUNT(*) as logros FROM usuario_logros WHERE usuario_id=? AND desbloqueado=1', [req.params.id]);
+      logros = r.logros;
+    } catch(e) {}
+
+    let ultimoAcceso = null;
+    try {
+      const [[r2]] = await db.query('SELECT MAX(inicio) as ultimo FROM sesiones_stats WHERE usuario_id=?', [req.params.id]);
+      ultimoAcceso = r2.ultimo;
+    } catch(e) {}
+
+    const [historial] = await db.query(
+      'SELECT id, total, estado, creado_en FROM pedidos WHERE usuario_id=? ORDER BY creado_en DESC LIMIT 5',
+      [req.params.id]
+    );
+
+    res.json({
+      success: true, usuario,
+      stats: { pedidos, tableros, guardados, logros },
+      ultimoAcceso, historial
+    });
+  } catch(e) {
+    console.error('[usuarios/info]', e.message);
+    res.json({ success: false, error: e.message });
+  }
 });
 
 router.post('/usuarios/:id/toggle', isAdmin, async (req, res) => {
@@ -449,7 +490,9 @@ router.post('/comentarios/:id/eliminar', isAdmin, async (req, res) => {
 // CONFIGURACION
 router.get('/configuracion', isAdmin, async (req, res) => {
   const [config] = await db.query('SELECT * FROM configuracion_sitio ORDER BY clave ASC');
-  res.render('admin/configuracion', { title: 'Admin - Configuracion', config, isAdmin: true });
+  let redesConfig = [];
+  try { [redesConfig] = await db.query('SELECT * FROM redes_sociales ORDER BY orden ASC'); } catch(e) {}
+  res.render('admin/configuracion', { title: 'Admin - Configuracion', config, redesConfig, isAdmin: true });
 });
 
 router.post('/configuracion', isAdmin, uploadLogo.single('logo_file'), async (req, res) => {
@@ -464,7 +507,39 @@ router.post('/configuracion', isAdmin, uploadLogo.single('logo_file'), async (re
   res.redirect('/admin/configuracion');
 });
 
-module.exports = router;
+// Sincroniza la lista completa de redes sociales (recibida desde el form vía AJAX
+// antes del submit principal). Estrategia simple: borrar todas las existentes que
+// no vinieron en el payload, actualizar las que sí (por id), insertar las nuevas.
+router.post('/configuracion/redes', isAdmin, async (req, res) => {
+  const redes = Array.isArray(req.body.redes) ? req.body.redes : [];
+  try {
+    const idsRecibidos = redes.filter(r => r.id).map(r => parseInt(r.id));
+    if (idsRecibidos.length > 0) {
+      await db.query(`DELETE FROM redes_sociales WHERE id NOT IN (${idsRecibidos.map(()=>'?').join(',')})`, idsRecibidos);
+    } else {
+      await db.query('DELETE FROM redes_sociales');
+    }
+    for (const r of redes) {
+      if (r.id) {
+        await db.query(
+          'UPDATE redes_sociales SET nombre=?, icono=?, url=?, color=?, visible=?, orden=? WHERE id=?',
+          [r.nombre, r.icono, r.url, r.color, r.visible ? 1 : 0, r.orden || 0, r.id]
+        );
+      } else {
+        await db.query(
+          'INSERT INTO redes_sociales (nombre, icono, url, color, visible, orden) VALUES (?,?,?,?,?,?)',
+          [r.nombre, r.icono, r.url, r.color, r.visible ? 1 : 0, r.orden || 0]
+        );
+      }
+    }
+    res.json({ success: true });
+  } catch (e) {
+    console.error('[configuracion/redes]', e.message);
+    res.json({ success: false, error: e.message });
+  }
+});
+
+
 
 // CARRUSEL toggle activo
 router.post('/carrusel/:id/toggle', isAdmin, async (req, res) => {
@@ -527,3 +602,5 @@ router.post('/carrusel/:id/editar', isAdmin, (req, res, next) => {
   }
   res.redirect('/admin/carrusel');
 });
+
+module.exports = router;

@@ -41,12 +41,16 @@ router.get('/checkout', isAuthenticated, async (req, res) => {
       'SELECT * FROM direcciones_entrega WHERE usuario_id = ? ORDER BY predeterminada DESC',
       [req.session.user.id]
     );
-    
+    let metodosPago = [];
+    try {
+      [metodosPago] = await db.query('SELECT * FROM metodos_pago_usuario WHERE usuario_id=? ORDER BY predeterminado DESC', [req.session.user.id]);
+    } catch(e) {}
+
     const subtotal = items.reduce((s, i) => s + (i.precio_final * i.cantidad), 0);
     const envio = 8.99;
     const total = subtotal + envio;
-    
-    res.render('pedidos/checkout', { title: 'Finalizar Compra', items, direcciones, subtotal, envio, total });
+
+    res.render('pedidos/checkout', { title: 'Finalizar Compra', items, direcciones, metodosPago, subtotal, envio, total });
   } catch(e) {
     console.error(e);
     req.flash('error', 'Error al cargar checkout');
@@ -123,6 +127,13 @@ router.post('/checkout', isAuthenticated, async (req, res) => {
     );
     
     const pedidoId = pedidoResult.insertId;
+
+    // Logros: primera_compra (umbral 1) y comprador_vip (umbral 5) avanzan juntos
+    try {
+      const { actualizarLogro } = require('./opiniones');
+      actualizarLogro(usuarioId, 'primera_compra', db);
+      actualizarLogro(usuarioId, 'comprador_vip', db);
+    } catch(e) {}
     
     // Insertar items
     for (const item of items) {

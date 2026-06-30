@@ -123,6 +123,11 @@ app.use(async (req, res, next) => {
     const cfg = {};
     config.forEach(c => cfg[c.clave] = c.valor);
     res.locals.sitio = cfg;
+    // Redes sociales para el footer (tabla redes_sociales, migración 007)
+    try {
+      const [redes] = await db.query('SELECT * FROM redes_sociales WHERE visible=1 ORDER BY orden ASC');
+      res.locals.redesSociales = redes;
+    } catch(e) { res.locals.redesSociales = []; }
     if (req.session.user) {
       const [[cart]] = await db.query('SELECT SUM(cantidad) as total FROM carrito WHERE usuario_id=?', [req.session.user.id]);
       res.locals.carritoCount = cart.total || 0;
@@ -150,7 +155,7 @@ app.use('/perfil', require('./routes/perfil'));
 app.use('/perfil/config', require('./routes/perfil_config'));
 app.use('/tableros', require('./routes/tableros'));
 app.use('/tiendas', require('./routes/tiendas'));
-app.use('/ia', require('./routes/ia'));
+// app.use('/ia', require('./routes/ia')); // Asistente IA eliminado por completo (botón, ventana, scripts y referencias)
 app.use('/admin', require('./routes/admin'));
 app.use('/admin/proveedores', require('./routes/admin.proveedores'));
 app.use('/admin/tiendas', require('./routes/admin.tiendas'));
@@ -158,6 +163,9 @@ app.use('/admin/pedidos', require('./routes/admin.pedidos'));
 app.use('/admin/modelos', require('./routes/admin.modelos'));
 app.use('/admin/homepage', require('./routes/admin.homepage'));
 app.use('/admin/notificaciones', require('./routes/notificaciones'));
+app.use('/chat',       require('./routes/chat'));        // chat de soporte usuario↔admin (nuevo)
+app.use('/admin/chat', require('./routes/admin.chat'));   // panel admin del chat de soporte (nuevo)
+app.use('/push', require('./routes/push'));                // notificaciones push reales (PWA, nuevo)
 
 // ── DIRECTORIO DE USUARIOS ────────────────────────────────────────────────────
 app.use('/usuarios', require('./routes/usuarios'));

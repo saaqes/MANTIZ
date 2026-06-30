@@ -27,9 +27,13 @@ router.get('/', isAuthenticated, async (req, res) => {
     );
     const [widgets] = await db.query('SELECT * FROM perfil_widgets WHERE usuario_id=? ORDER BY orden', [req.session.user.id]);
     const [[perfilConfig]] = await db.query('SELECT * FROM perfil_config WHERE usuario_id=?', [req.session.user.id]);
+    let metodosPago = [];
+    try {
+      [metodosPago] = await db.query('SELECT * FROM metodos_pago_usuario WHERE usuario_id=? ORDER BY predeterminado DESC, creado_en DESC', [req.session.user.id]);
+    } catch(e) {}
 
     res.render('user/perfil', {
-      title: 'Mi Perfil', usuario, direcciones, pedidos, favoritos, tableros, widgets,
+      title: 'Mi Perfil', usuario, direcciones, pedidos, favoritos, tableros, widgets, metodosPago,
       perfilConfig: perfilConfig || null,
       avataresPreset: AVATARES, bannersPreset: BANNERS
     });
@@ -177,6 +181,35 @@ router.post('/config', isAuthenticated, async (req, res) => {
     res.json({ success: true });
   } catch(e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// ── MÉTODOS DE PAGO (cuenta bancaria guardada) ────────────────────────────
+router.post('/metodos-pago', isAuthenticated, async (req, res) => {
+  const { banco, titular, numero_cuenta, tipo_cuenta, info_adicional } = req.body;
+  if (!banco || !titular || !numero_cuenta) {
+    return res.json({ success: false, error: 'Banco, titular y número de cuenta son obligatorios' });
+  }
+  try {
+    const [[{ total }]] = await db.query('SELECT COUNT(*) as total FROM metodos_pago_usuario WHERE usuario_id=?', [req.session.user.id]);
+    await db.query(
+      `INSERT INTO metodos_pago_usuario (usuario_id, tipo, banco, titular, numero_cuenta, tipo_cuenta, info_adicional, predeterminado)
+       VALUES (?,'cuenta_bancaria',?,?,?,?,?,?)`,
+      [req.session.user.id, banco, titular, numero_cuenta, tipo_cuenta || 'ahorros', info_adicional || '', total === 0 ? 1 : 0]
+    );
+    res.json({ success: true });
+  } catch(e) {
+    console.error('[metodos-pago]', e.message);
+    res.json({ success: false, error: e.message });
+  }
+});
+
+router.delete('/metodos-pago/:id', isAuthenticated, async (req, res) => {
+  try {
+    await db.query('DELETE FROM metodos_pago_usuario WHERE id=? AND usuario_id=?', [req.params.id, req.session.user.id]);
+    res.json({ success: true });
+  } catch(e) {
+    res.json({ success: false, error: e.message });
   }
 });
 
