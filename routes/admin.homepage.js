@@ -52,7 +52,7 @@ router.post('/guardar', isAdmin, async (req, res) => {
   } catch(e) {
     req.flash('error', 'Error al guardar: ' + e.message);
   }
-  res.redirect('/admin/homepage');
+  res.redirect('/admin/carrusel');
 });
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -63,7 +63,7 @@ router.post('/guardar', isAdmin, async (req, res) => {
 router.post('/carrusel/nuevo', isAdmin, uploadCarousel.single('imagen'), async (req, res) => {
   if (!req.file) {
     req.flash('error', 'Debes seleccionar una imagen');
-    return res.redirect('/admin/homepage');
+    return res.redirect('/admin/carrusel');
   }
   try {
     const { titulo, subtitulo } = req.body;
@@ -76,7 +76,7 @@ router.post('/carrusel/nuevo', isAdmin, uploadCarousel.single('imagen'), async (
   } catch(e) {
     req.flash('error', 'Error al guardar slide: ' + e.message);
   }
-  res.redirect('/admin/homepage');
+  res.redirect('/admin/carrusel');
 });
 
 // POST: editar slide del hero
@@ -91,7 +91,7 @@ router.post('/carrusel/:id/editar', isAdmin, async (req, res) => {
   } catch(e) {
     req.flash('error', 'Error al editar slide: ' + e.message);
   }
-  res.redirect('/admin/homepage');
+  res.redirect('/admin/carrusel');
 });
 
 // POST: toggle visibilidad slide del hero (responde JSON para fetch)
@@ -114,7 +114,7 @@ router.post('/carrusel/:id/eliminar', isAdmin, async (req, res) => {
   } catch(e) {
     req.flash('error', 'Error al eliminar: ' + e.message);
   }
-  res.redirect('/admin/homepage');
+  res.redirect('/admin/carrusel');
 });
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -125,7 +125,7 @@ router.post('/carrusel/:id/eliminar', isAdmin, async (req, res) => {
 router.post('/carrusel-marca/nuevo', isAdmin, uploadCarousel.single('imagen'), async (req, res) => {
   if (!req.file) {
     req.flash('error', 'Debes seleccionar una imagen');
-    return res.redirect('/admin/homepage');
+    return res.redirect('/admin/carrusel');
   }
   try {
     const { titulo, subtitulo, boton_texto, boton_url, color_acento } = req.body;
@@ -138,7 +138,7 @@ router.post('/carrusel-marca/nuevo', isAdmin, uploadCarousel.single('imagen'), a
   } catch(e) {
     req.flash('error', 'Error: ' + e.message);
   }
-  res.redirect('/admin/homepage');
+  res.redirect('/admin/carrusel');
 });
 
 // POST: editar imagen de marca
@@ -157,7 +157,7 @@ router.post('/carrusel-marca/:id/editar', isAdmin, uploadCarousel.single('imagen
   } catch(e) {
     req.flash('error', 'Error al editar: ' + e.message);
   }
-  res.redirect('/admin/homepage');
+  res.redirect('/admin/carrusel');
 });
 
 // POST: toggle visibilidad imagen de marca (responde JSON para fetch)
@@ -180,7 +180,7 @@ router.post('/carrusel-marca/:id/eliminar', isAdmin, async (req, res) => {
   } catch(e) {
     req.flash('error', 'Error al eliminar: ' + e.message);
   }
-  res.redirect('/admin/homepage');
+  res.redirect('/admin/carrusel');
 });
 
 module.exports = router;

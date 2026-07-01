@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
     const [cfgResult, carrusel, marcaResult] = await Promise.all([
       db.query('SELECT clave, valor FROM homepage_config').catch(() => [[]]),
       fetchCarruselSafe(),
-      db.query('SELECT id,imagen FROM carrusel_marca WHERE activo=1 ORDER BY orden ASC').catch(() => [[]])
+      db.query('SELECT id,imagen,titulo,subtitulo,boton_texto,boton_url,color_acento FROM carrusel_marca WHERE activo=1 ORDER BY orden ASC').catch(() => [[]])
     ]);
 
     const cfgRows = cfgResult[0] || [];
