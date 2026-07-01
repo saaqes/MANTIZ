@@ -1,7 +1,7 @@
 {
-  "name": "MANTIZ — Moda Urbana",
+  "name": "MANTIZ",
   "short_name": "MANTIZ",
-  "description": "Tienda de moda urbana y streetwear con probador virtual y modelos 3D",
+  "description": "Moda urbana y streetwear",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
