@@ -28,8 +28,13 @@
   <link rel="canonical" href="<%= pageCanonical %>">
   <% if (pageNoindex) { %><meta name="robots" content="noindex, nofollow"><% } else { %><meta name="robots" content="index, follow"><% } %>
 
-  <!-- Favicon: SVG inline con el color de marca actual, sin depender de ningún archivo subido -->
+  <!-- Favicon: usa el logo subido desde /admin/configuracion si existe; si no, SVG inline con el color de marca actual -->
+  <% if (sitio.logo && sitio.logo !== 'logo-default.png') { %>
+  <link rel="icon" type="image/<%= sitio.logo.split('.').pop()==='svg'?'svg+xml':(sitio.logo.split('.').pop()==='png'?'png':'x-icon') %>" href="/uploads/logo/<%= sitio.logo %>">
+  <link rel="apple-touch-icon" href="/uploads/logo/<%= sitio.logo %>">
+  <% } else { %>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='<%= encodeURIComponent(sitio.color_primario || '#e91e8c') %>'/><text x='50' y='68' font-family='Arial,sans-serif' font-size='58' font-weight='900' fill='white' text-anchor='middle'>M</text></svg>">
+  <% } %>
 
   <!-- PWA: manifest + theme-color (instalación + notificaciones push) -->
   <link rel="manifest" href="/manifest.json">
@@ -141,20 +146,19 @@
     }
     /* navbar border line removed */
     #navbar.hidden { transform: translateY(-100%); }
+
+    /* ── Banner de aviso (carrusel infinito debajo del navbar) ── */
+    @keyframes avisoScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    #aviso-bar { transition:top 0.4s cubic-bezier(0.4,0,0.2,1); }
+    .aviso-track:hover { animation-play-state:paused; }
+    @media(max-width:767px){ #aviso-bar{ top:56px !important; height:26px; } .aviso-track span{ font-size:11px; padding:0 28px; } }
     #navbar.scrolled { background: rgba(10,10,10,0.92) !important; backdrop-filter: blur(20px) saturate(180%) !important; }
-    .nav-inner {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      align-items: center;
-      height: 64px;
-      padding: 0 clamp(12px, 2.5vw, 32px);
-      gap: clamp(8px, 1.5vw, 16px);
-    }
-    .nav-left { display: flex; gap: clamp(10px, 1.8vw, 28px); flex: 1; min-width: 0; overflow: hidden; }
+    .nav-inner { display: flex; align-items: center; height: 64px; padding: 0 32px; gap: 16px; }
+    .nav-left { display: flex; gap: 28px; flex: 1; }
     .nav-left a {
       color: var(--white); text-decoration: none; font-family: 'Rajdhani', sans-serif;
-      font-weight: 600; font-size: clamp(10px, 1.1vw, 13px); letter-spacing: clamp(1px, 0.25vw, 2px); text-transform: uppercase;
-      transition: color 0.2s; position: relative; white-space: nowrap; flex-shrink: 0;
+      font-weight: 600; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+      transition: color 0.2s; position: relative;
     }
     .nav-left a::after {
       content: ''; position: absolute; bottom: -4px; left: 0;
@@ -163,12 +167,12 @@
     .nav-left a:hover { color: var(--pink); }
     .nav-left a:hover::after { width: 100%; }
     .nav-logo {
-      font-family: 'Permanent Marker', cursive; font-size: clamp(22px, 2.8vw, 32px); color: var(--pink);
-      letter-spacing: 1px; text-decoration: none; position: static; transform: none;
-      text-shadow: 0 0 20px rgba(233,30,140,0.5); white-space: nowrap; justify-self: center;
-      padding: 0 clamp(8px, 1.5vw, 16px); z-index: 2; line-height: 1;
+      font-family: 'Permanent Marker', cursive; font-size: 32px; color: var(--pink);
+      letter-spacing: 1px; text-decoration: none; position: absolute;
+      left: 50%; transform: translateX(-50%);
+      text-shadow: 0 0 20px rgba(233,30,140,0.5);
     }
-    .nav-right { display: flex; align-items: center; gap: clamp(8px, 1.2vw, 16px); flex: 1; justify-content: flex-end; min-width: 0; }
+    .nav-right { display: flex; align-items: center; gap: 16px; flex: 1; justify-content: flex-end; }
     .nav-btn {
       background: none; border: none; color: var(--white); cursor: pointer;
       font-size: 18px; padding: 6px; transition: color 0.2s, transform 0.2s; position: relative; line-height: 1;
@@ -309,9 +313,9 @@
     }
     .pc-label-text { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 3px; color: white; }
     .pc-img-wrap { position: relative; overflow: visible; }
-    .pc-img-clip { overflow: hidden; position: relative; }
-    .pc-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; transition: transform 0.5s; }
-    .pc-img-hover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s ease; }
+    .pc-img-clip { overflow: hidden; position: relative; display: block; }
+    .pc-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; transition: transform 0.5s; position: relative; z-index: 0; }
+    .pc-img-hover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.45s ease; z-index: 1; pointer-events: none; display: block; }
     .product-card:hover .pc-img-hover { opacity: 1; }
     .product-card:hover .pc-img { transform: scale(1.04); }
     .pc-add-btn {
@@ -333,33 +337,6 @@
       letter-spacing: 2px; font-weight: lighter; text-align: center; color: var(--pink); margin-bottom: 16px;
     }
     .tribal-divider { text-align: center; margin: 16px 0 40px; opacity: 0.8; }
-    .tribal-separator {
-      display: flex; align-items: center; justify-content: center;
-      width: min(920px, 96vw); margin: 24px auto 40px; line-height: 0;
-    }
-    .tribal-separator img {
-      width: 100%; height: auto; max-height: clamp(56px, 11vw, 100px);
-      object-fit: contain; display: block;
-    }
-    .tribal-sep-dark { mix-blend-mode: screen; opacity: 0.96; }
-    body.light-mode .tribal-sep-dark { display: none; }
-    .tribal-sep-light { mix-blend-mode: multiply; opacity: 0.94; }
-    body:not(.light-mode) .tribal-sep-light { display: none; }
-    /* Galería hover — imágenes apiladas al pasar el cursor */
-    .pc-gallery-clip {
-      position: relative; overflow: hidden; aspect-ratio: 3/4; cursor: ew-resize;
-    }
-    .pc-gallery-clip .pc-gallery-img,
-    .pc-gallery-clip .pc-img {
-      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-      transition: opacity 0.18s ease; opacity: 0; pointer-events: none;
-    }
-    .pc-gallery-clip .pc-gallery-img.is-active { opacity: 1; z-index: 2; }
-    .pc-gallery-clip.is-scrubbing .pc-gallery-img { transition: opacity 0.08s ease; }
-    .pc-gallery-clip:not(.is-scrubbing) .pc-gallery-img.is-active:first-of-type,
-    .pc-gallery-clip .pc-gallery-img:first-child.is-active { opacity: 1; }
-    .product-card:hover .pc-gallery-clip:not(.is-scrubbing) .pc-gallery-img.is-active { transform: none; }
-    .product-card:hover .pc-gallery-clip { transform: scale(1.03); transition: transform 0.4s ease; }
 
     /* FORMS */
     .mantiz-input {
@@ -397,6 +374,36 @@
       transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); pointer-events: none; filter: url(#gb);
     }
     #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── TROFEO ESTILO PLAYSTATION (notificación de logro desbloqueado) ── */
+    #trophy-popup-wrap { position: fixed; top: 70px; right: 16px; z-index: 99998; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .trophy-popup {
+      display: flex; align-items: center; gap: 12px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      border: 1px solid rgba(255,215,0,.4);
+      border-left: 4px solid #ffd700;
+      border-radius: 6px;
+      padding: 10px 18px 10px 14px;
+      min-width: 280px; max-width: 340px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.6), 0 0 20px rgba(255,215,0,.15);
+      transform: translateX(120%); opacity: 0;
+      transition: transform .5s cubic-bezier(.16,1,.3,1), opacity .4s ease;
+      pointer-events: all;
+    }
+    .trophy-popup.show { transform: translateX(0); opacity: 1; }
+    .trophy-popup.hide { transform: translateX(120%); opacity: 0; }
+    .trophy-icon {
+      width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #ffe97a, #ffd700 55%, #b8860b 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; box-shadow: 0 0 14px rgba(255,215,0,.5), inset 0 1px 2px rgba(255,255,255,.6);
+      animation: trophyPulse 1.6s ease-in-out infinite;
+    }
+    @keyframes trophyPulse { 0%,100%{ box-shadow:0 0 14px rgba(255,215,0,.5), inset 0 1px 2px rgba(255,255,255,.6); } 50%{ box-shadow:0 0 22px rgba(255,215,0,.85), inset 0 1px 2px rgba(255,255,255,.6); } }
+    .trophy-text { flex:1; min-width:0; }
+    .trophy-label { font-family:'Bebas Neue',sans-serif; font-size:10px; letter-spacing:3px; color:#ffd700; text-transform:uppercase; }
+    .trophy-name { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:1px; }
+    @media(max-width:480px){ #trophy-popup-wrap{ left:12px; right:12px; top:64px; } .trophy-popup{ max-width:none; min-width:0; width:100%; } }
 
     /* CHAT FAB */
     .chat-fab {
@@ -684,13 +691,6 @@
     /* ═══════════════════════════════════════════════════════════════════════
        RESPONSIVE — existente (tablet + desktop se mantiene intacto)
        ═══════════════════════════════════════════════════════════════════════ */
-    @media (max-width: 1100px) {
-      .nav-left a:nth-child(n+5) { display: none; }
-    }
-    @media (max-width: 900px) {
-      .nav-left a:nth-child(n+4) { display: none; }
-      .nav-logo { font-size: clamp(20px, 4vw, 26px); }
-    }
     @media (max-width: 768px) {
       .admin-sidebar { transform: translateX(-100%); } .admin-sidebar.open { transform: translateX(0); }
       .admin-content { margin-left: 0; } .sidebar-toggle-btn { display: block; }
@@ -926,7 +926,7 @@
     <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
     <div class="nav-left">
       <a href="/">INICIO</a>
-      <a href="/productos">TIENDA</a>
+      <a href="/productos">PRODUCTOS</a>
       <a href="/comunidad">COMUNIDAD</a>
       <a href="/opiniones">OPINIONES</a>
       <a href="/tiendas">TIENDAS</a>
@@ -983,6 +983,24 @@
   </div>
 </nav>
 
+<!-- ── BANNER DE AVISO (carrusel infinito debajo del navbar) ──────────────── -->
+<% if (sitio && sitio.banner_aviso) { %>
+<div id="aviso-bar" style="
+  position:fixed; top:64px; left:0; right:0; z-index:998;
+  background:rgba(233,30,140,0.60); overflow:hidden; height:28px;
+  transition:top 0.4s cubic-bezier(0.4,0,0.2,1);
+  display:flex; align-items:center;
+">
+  <div class="aviso-track" style="display:flex; align-items:center; white-space:nowrap; animation:avisoScroll 22s linear infinite;">
+    <% var _aviso = sitio.banner_aviso; %>
+    <% for(var _i=0;_i<8;_i++){ %>
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;color:white;padding:0 40px"><%= _aviso %></span>
+    <span style="color:rgba(255,255,255,.35);padding:0 2px">◆</span>
+    <% } %>
+  </div>
+</div>
+<% } %>
+
 <!-- PANEL NOTIFICACIONES -->
 <div class="notif-panel" id="notif-panel">
   <div class="notif-ph">
@@ -1012,7 +1030,7 @@
 <div id="mobile-menu">
   <div class="mobile-menu-inner">
     <a href="/">INICIO</a>
-    <a href="/productos">TIENDA</a>
+    <a href="/productos">PRODUCTOS</a>
     <a href="/comunidad">COMUNIDAD</a>
     <a href="/opiniones">OPINIONES</a>
     <a href="/tiendas">TIENDAS</a>
@@ -1055,6 +1073,11 @@
 
 <!-- TOAST -->
 <div id="toast">¡PRODUCTO AÑADIDO!</div>
+
+<!-- Trofeos estilo PlayStation (logros desbloqueados) -->
+<% if (typeof user !== 'undefined' && user) { %>
+<div id="trophy-popup-wrap"></div>
+<% } %>
 
 <!-- CHAT SOPORTE (reemplaza al asistente IA, eliminado) -->
 <% if ((typeof hideChatFab === 'undefined' || !hideChatFab) && typeof user !== 'undefined' && user && user.rol !== 'admin') { %>
@@ -1200,8 +1223,14 @@
 
 <script>
 // NAVBAR SCROLL
-let lastY=0;const navEl=document.getElementById('navbar');
-if(navEl){window.addEventListener('scroll',()=>{const y=window.scrollY;if(y>lastY&&y>100)navEl.classList.add('hidden');else navEl.classList.remove('hidden');lastY=y;});}
+let lastY=0;const navEl=document.getElementById('navbar');const avisoBar=document.getElementById('aviso-bar');
+if(navEl){window.addEventListener('scroll',()=>{
+  const y=window.scrollY; const hide=y>lastY&&y>100;
+  navEl.classList.toggle('hidden',hide);
+  // Aviso: sube a top:0 cuando el navbar desaparece, vuelve a top:64px cuando el navbar reaparece
+  if(avisoBar) avisoBar.style.top = hide ? '0px' : '64px';
+  lastY=y;
+});}
 
 // HAMBURGER
 const hBtn=document.getElementById('hamburger-btn'),mMenu=document.getElementById('mobile-menu');
@@ -1231,8 +1260,8 @@ async function loadCartPanel(){
   try{const r=await fetch('/carrito/panel');const d=await r.json();
     if(!d.items||!d.items.length){iEl.innerHTML='<div class="cart-empty-msg">TU CARRITO ESTÁ VACÍO</div>';if(tEl)tEl.textContent='$0';if(cEl){cEl.textContent='0';cEl.classList.remove('show');}return;}
     const total=d.items.reduce((s,i)=>s+(i.precio*i.cantidad),0);
-    iEl.innerHTML=d.items.map(i=>`<div class="cart-pitem"><img src="/uploads/products/${i.imagen_principal}" alt="${i.titulo}" onerror="this.src='https://via.placeholder.com/56x56/111/888?text=?'" style="width:56px;height:56px;object-fit:cover"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.titulo}</div>${i.talla?`<div style="font-size:11px;color:var(--pink)">Talla: ${i.talla}</div>`:''}<div style="font-size:11px;color:var(--gray)">x${i.cantidad}</div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--pink);flex-shrink:0">$${(i.precio*i.cantidad).toLocaleString('es-CO')}</div></div>`).join('');
-    if(tEl)tEl.textContent='$'+total.toLocaleString('es-CO');
+    iEl.innerHTML=d.items.map(i=>`<div class="cart-pitem"><img src="/uploads/products/${i.imagen_principal}" alt="${i.titulo}" onerror="this.src='https://via.placeholder.com/56x56/111/888?text=?'" style="width:56px;height:56px;object-fit:cover"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.titulo}</div>${i.talla?`<div style="font-size:11px;color:var(--pink)">Talla: ${i.talla}</div>`:''}<div style="font-size:11px;color:var(--gray)">x${i.cantidad}</div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--pink);flex-shrink:0"><%= sitio.simbolo_moneda||'COP' %> ${(i.precio*i.cantidad).toLocaleString('es-CO')}</div></div>`).join('');
+    if(tEl)tEl.textContent='<%= sitio.simbolo_moneda||"COP" %> '+total.toLocaleString('es-CO');
     const qty=d.items.reduce((s,i)=>s+i.cantidad,0);
     if(cEl){cEl.textContent=qty;cEl.classList.toggle('show',qty>0);}
   }catch(e){}
@@ -1280,6 +1309,55 @@ if ('serviceWorker' in navigator) {
 }
 
 <% if (user) { %>
+// ── TROFEOS ESTILO PLAYSTATION (logros desbloqueados) ──────────────────────────
+(function(){
+  var cola = [];
+  var mostrando = false;
+
+  function mostrarSiguienteTrofeo(){
+    if (mostrando || cola.length === 0) return;
+    mostrando = true;
+    var logro = cola.shift();
+    var wrap = document.getElementById('trophy-popup-wrap');
+    if (!wrap) { mostrando = false; return; }
+
+    var el = document.createElement('div');
+    el.className = 'trophy-popup';
+    el.innerHTML =
+      '<div class="trophy-icon">' + (logro.icono || '🏆') + '</div>' +
+      '<div class="trophy-text">' +
+        '<div class="trophy-label">Logro Desbloqueado</div>' +
+        '<div class="trophy-name">' + logro.nombre.replace(/</g,'&lt;') + '</div>' +
+      '</div>';
+    wrap.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+
+    // Marcar como visto en el servidor (no se vuelve a mostrar)
+    fetch('/gamificacion/logros/' + logro.id + '/popup-visto', { method: 'POST' }).catch(function(){});
+
+    setTimeout(function(){
+      el.classList.remove('show'); el.classList.add('hide');
+      setTimeout(function(){
+        el.remove();
+        mostrando = false;
+        mostrarSiguienteTrofeo();
+      }, 550);
+    }, 4500);
+  }
+
+  function revisarTrofeosPendientes(){
+    fetch('/gamificacion/logros/pendientes-popup').then(function(r){ return r.json(); }).then(function(d){
+      if (d.pendientes && d.pendientes.length) {
+        d.pendientes.forEach(function(l){ cola.push(l); });
+        mostrarSiguienteTrofeo();
+      }
+    }).catch(function(){});
+  }
+
+  revisarTrofeosPendientes();
+  setInterval(revisarTrofeosPendientes, 7000);
+})();
+
 // ── NOTIFICACIONES ─────────────────────────────────────────────────────────────
 let notifOpen=false;
 const notifPanel=document.getElementById('notif-panel');

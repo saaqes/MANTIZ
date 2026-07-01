@@ -15,7 +15,15 @@
 
 <div id="productos-page">
   <h1 class="section-title">TIENDA</h1>
-  <%- include('../partials/tribal-separator') %>
+  <div style="text-align:center;margin:10px 0 36px;opacity:0.7">
+    <svg width="300" height="22" viewBox="0 0 300 22" fill="none">
+      <line x1="0" y1="11" x2="118" y2="11" stroke="rgba(233,30,140,0.4)" stroke-width="1"/>
+      <path d="M128 11 L138 4 L148 11 L138 18 Z" fill="var(--pink)" opacity="0.6"/>
+      <path d="M148 11 L158 4 L168 11 L158 18 Z" fill="var(--pink)"/>
+      <path d="M168 11 L178 4 L188 11 L178 18 Z" fill="var(--pink)" opacity="0.6"/>
+      <line x1="198" y1="11" x2="300" y2="11" stroke="rgba(233,30,140,0.4)" stroke-width="1"/>
+    </svg>
+  </div>
 
   <!-- Filter bar -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;flex-wrap:wrap;gap:14px">
@@ -49,18 +57,17 @@
       <a href="/productos" class="btn-grunge" style="display:inline-flex;margin-top:20px">VER TODO</a>
     </div>
     <% } %>
-    <% productos.forEach(function(p) {
-      var gUrls = (p.galeria || [p.imagen_principal]).filter(Boolean).map(function(g){ return '/uploads/products/' + g; });
-    %>
+    <% productos.forEach(function(p) { %>
     <div class="product-card" onclick="window.location='/productos/<%= p.id %>'">
       <div class="pc-label">
         <span class="pc-label-text"><%= p.titulo.substring(0,16) %></span>
         <% if (p.precio_descuento) { %><span class="badge-oferta">-<%= Math.round((1-p.precio_descuento/p.precio)*100) %>%</span><% } %>
       </div>
       <div class="pc-img-wrap">
-        <div class="pc-img-clip pc-gallery-clip" data-gallery='<%- JSON.stringify(gUrls) %>'>
-          <img class="pc-img" src="<%= gUrls[0] %>" alt="<%= p.titulo %>"
+        <div class="pc-img-clip">
+          <img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>"
                onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%>
         </div>
         <button class="pc-add-btn"
                 onclick="event.stopPropagation();quickAdd(<%= p.id %>,'<%= p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39)) %>',<%= p.precio_descuento||p.precio %>,'<%= p.imagen_principal %>')">+</button>

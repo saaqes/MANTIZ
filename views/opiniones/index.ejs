@@ -3,6 +3,7 @@
 <style>
 /* ── HERO ── */
 .op-hero { text-align:center; padding:64px 24px 40px; position:relative; }
+.op-hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 70% 60% at 50% 0%, rgba(233,30,140,.12), transparent); pointer-events:none; }
 .op-tag { font-family:'Bebas Neue',sans-serif; font-size:10px; letter-spacing:5px; color:var(--pink); margin-bottom:10px; }
 .op-hero p { color:var(--muted); font-size:13px; letter-spacing:1.5px; max-width:500px; margin:12px auto 0; }
 
@@ -101,7 +102,9 @@
 <div class="op-hero">
   <div class="op-tag">COMUNIDAD · VOZ DE LOS CLIENTES</div>
   <h1 class="section-title">OPINIONES</h1>
-  <%- include('../partials/tribal-separator') %>
+  <div class="tribal-divider">
+    <svg width="200" height="16" viewBox="0 0 200 16"><path d="M0,8 L80,8 L90,2 L100,14 L110,2 L120,8 L200,8" fill="none" stroke="rgba(233,30,140,0.6)" stroke-width="1.5"/></svg>
+  </div>
   <p>Vota en nuestras encuestas y ayúdanos a mejorar MANTIZ</p>
 </div>
 

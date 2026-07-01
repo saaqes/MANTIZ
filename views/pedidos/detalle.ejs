@@ -18,13 +18,106 @@
       var stMap = {pendiente:'#ffc800',confirmado:'#00c8ff',en_transito:'#60a5fa',entregado:'#00ff64',cancelado:'#ff6060'};
       var stColor = stMap[pedido.estado] || 'var(--gray)';
     %>
-    <div style="text-align:right">
+    <div style="text-align:right;display:flex;flex-direction:column;gap:8px;align-items:flex-end">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;padding:6px 18px;border:2px solid <%= stColor %>;color:<%= stColor %>;letter-spacing:2px;display:inline-block"><%= (pedido.estado||'').toUpperCase().replace('_',' ') %></div>
       <% if (pedido.numero_tracking) { %>
-      <div style="font-size:11px;color:var(--pink);margin-top:6px;letter-spacing:1px"><i class="bi bi-box-seam me-1"></i>Tracking: <%= pedido.numero_tracking %></div>
+      <div style="font-size:11px;color:var(--pink);letter-spacing:1px"><i class="bi bi-box-seam me-1"></i>Tracking: <%= pedido.numero_tracking %></div>
       <% } %>
+      <!-- Botón de recibo -->
+      <button onclick="verRecibo()" style="background:rgba(233,30,140,.1);border:1px solid rgba(233,30,140,.4);color:var(--pink);padding:7px 16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;display:flex;align-items:center;gap:7px;transition:all .2s" onmouseover="this.style.background='rgba(233,30,140,.22)'" onmouseout="this.style.background='rgba(233,30,140,.1)'">
+        <i class="bi bi-receipt"></i>VER RECIBO
+      </button>
     </div>
   </div>
+
+  <!-- MODAL RECIBO -->
+  <div id="recibo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;overflow-y:auto;padding:40px 16px">
+    <div id="recibo-contenido" style="max-width:520px;margin:0 auto;background:white;color:#111;padding:40px;font-family:'Arial',sans-serif;position:relative">
+      <button onclick="cerrarRecibo()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:22px;cursor:pointer;color:#999">✕</button>
+      <!-- Encabezado del recibo -->
+      <div style="text-align:center;border-bottom:2px solid #111;padding-bottom:20px;margin-bottom:20px">
+        <div style="font-family:'Arial Black',sans-serif;font-size:28px;letter-spacing:6px;color:#e91e8c">MANTIZ</div>
+        <div style="font-size:11px;letter-spacing:2px;color:#666;margin-top:4px">COMPROBANTE DE COMPRA</div>
+      </div>
+      <!-- Datos del pedido -->
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;color:#666">Pedido</span>
+        <strong style="font-size:12px">#<%= String(pedido.id).padStart(5,'0') %></strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;color:#666">Fecha</span>
+        <strong style="font-size:12px"><%= new Date(pedido.creado_en).toLocaleDateString('es-CO') %></strong>
+      </div>
+      <% if (pedido.numero_tracking) { %>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;color:#666">Tracking</span>
+        <strong style="font-size:12px"><%= pedido.numero_tracking %></strong>
+      </div>
+      <% } %>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;color:#666">Estado</span>
+        <strong style="font-size:12px;color:#e91e8c"><%= (pedido.estado||'').toUpperCase().replace('_',' ') %></strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px">
+        <span style="font-size:12px;color:#666">Método de pago</span>
+        <strong style="font-size:12px">
+          <%= pedido.metodo_pago && pedido.metodo_pago !== 'transferencia' ? pedido.metodo_pago : (pedido.metodo_pago||'—') %>
+        </strong>
+      </div>
+      <!-- Productos -->
+      <div style="border-top:1px solid #ddd;padding-top:16px;margin-bottom:16px">
+        <div style="font-size:11px;letter-spacing:2px;color:#666;margin-bottom:12px">PRODUCTOS</div>
+        <% if (items && items.length > 0) { items.forEach(function(item) { %>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
+          <span><%= item.titulo %><% if(item.talla){ %> <span style="color:#999;font-size:11px">(<%= item.talla %>)</span><% } %> × <%= item.cantidad %></span>
+          <strong><%= sitio.simbolo_moneda||'COP' %> <%= (parseFloat(item.precio)*item.cantidad).toLocaleString('es-CO') %></strong>
+        </div>
+        <% }) } %>
+      </div>
+      <!-- Totales -->
+      <div style="border-top:2px solid #111;padding-top:14px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px">
+          <span style="color:#666">Subtotal</span>
+          <span><%= sitio.simbolo_moneda||'COP' %> <%= parseFloat(pedido.subtotal||0).toLocaleString('es-CO') %></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px">
+          <span style="color:#666">Envío</span>
+          <span><%= parseFloat(pedido.costo_envio||0)===0 ? 'GRATIS' : (sitio.simbolo_moneda||'COP')+' '+parseFloat(pedido.costo_envio||0).toLocaleString('es-CO') %></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:bold">
+          <span>TOTAL</span>
+          <span style="color:#e91e8c"><%= sitio.simbolo_moneda||'COP' %> <%= parseFloat(pedido.total||0).toLocaleString('es-CO') %></span>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div style="text-align:center;margin-top:28px;padding-top:16px;border-top:1px solid #ddd;font-size:10px;color:#aaa;letter-spacing:1px">
+        Gracias por tu compra — <%= sitio.nombre_tienda||'MANTIZ' %> · <%= new Date().getFullYear() %>
+      </div>
+    </div>
+    <!-- Botones de acción FUERA del área de impresión -->
+    <div style="max-width:520px;margin:16px auto 0;display:flex;gap:12px">
+      <button onclick="window.print()" style="flex:1;background:var(--pink);border:none;color:white;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer"><i class="bi bi-printer me-2"></i>IMPRIMIR / GUARDAR PDF</button>
+      <button onclick="cerrarRecibo()" style="background:transparent;border:1px solid rgba(255,255,255,.3);color:white;padding:13px 20px;cursor:pointer;font-size:14px">✕</button>
+    </div>
+  </div>
+
+  <script>
+  function verRecibo(){ document.getElementById('recibo-modal').style.display='block'; document.body.style.overflow='hidden'; }
+  function cerrarRecibo(){ document.getElementById('recibo-modal').style.display='none'; document.body.style.overflow=''; }
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape')cerrarRecibo(); });
+  // Al imprimir: solo muestra #recibo-contenido
+  window.addEventListener('beforeprint',function(){ document.body.classList.add('printing-recibo'); });
+  window.addEventListener('afterprint',function(){ document.body.classList.remove('printing-recibo'); });
+  </script>
+  <style>
+  @media print{
+    body > *:not(#recibo-modal) { display:none!important; }
+    #recibo-modal { position:static!important; background:white!important; padding:0!important; }
+    #recibo-modal > div:last-child { display:none!important; }
+    #recibo-contenido { box-shadow:none!important; }
+    button[onclick="cerrarRecibo()"] { display:none!important; }
+  }
+  </style>
 
   <div style="display:grid;grid-template-columns:1fr 340px;gap:24px" class="pedido-det-grid">
     <!-- LEFT -->
