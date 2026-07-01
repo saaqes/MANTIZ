@@ -54,4 +54,59 @@ function friendlyDbError(e) {
 const promisePool = pool.promise();
 promisePool.friendlyDbError = friendlyDbError;
 promisePool.dbConfig = dbConfig;
+
+async function ensureCarruselMarcaSchema() {
+  try {
+    await promisePool.query(`
+      CREATE TABLE IF NOT EXISTS carrusel_marca (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        imagen VARCHAR(255) NOT NULL,
+        titulo VARCHAR(200) DEFAULT '',
+        subtitulo VARCHAR(300) DEFAULT '',
+        orden INT DEFAULT 0,
+        activo TINYINT(1) DEFAULT 1,
+        boton_texto VARCHAR(80) DEFAULT NULL,
+        boton_url VARCHAR(255) DEFAULT '/productos',
+        color_acento VARCHAR(20) DEFAULT '#e91e8c',
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    const alters = [
+      "ALTER TABLE carrusel_marca ADD COLUMN IF NOT EXISTS boton_texto VARCHAR(80) DEFAULT NULL",
+      "ALTER TABLE carrusel_marca ADD COLUMN IF NOT EXISTS boton_url VARCHAR(255) DEFAULT '/productos'",
+      "ALTER TABLE carrusel_marca ADD COLUMN IF NOT EXISTS color_acento VARCHAR(20) DEFAULT '#e91e8c'"
+    ];
+    for (const sql of alters) {
+      try { await promisePool.query(sql); } catch (e) { /* ok */ }
+    }
+  } catch (e) {
+    console.error('[DB] carrusel_marca schema:', e.message);
+  }
+}
+ensureCarruselMarcaSchema();
+
+// ── Recuperación de contraseña ───────────────────────────────────────────────
+// Guarda solo el HASH del token (no el token en texto plano) por seguridad.
+// expires_at define la validez del enlace (1 hora, se define en routes/auth.js).
+async function ensurePasswordResetsSchema() {
+  try {
+    await promisePool.query(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        usuario_id INT NOT NULL,
+        token_hash VARCHAR(64) NOT NULL,
+        expires_at DATETIME NOT NULL,
+        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_token_hash (token_hash),
+        INDEX idx_usuario_id (usuario_id),
+        CONSTRAINT fk_password_resets_usuario FOREIGN KEY (usuario_id)
+          REFERENCES usuarios(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+  } catch (e) {
+    console.error('[DB] password_resets schema:', e.message);
+  }
+}
+ensurePasswordResetsSchema();
+
 module.exports = promisePool;
