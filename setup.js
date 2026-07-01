@@ -1,48 +1,59 @@
 /**
- * setup.js — Inicializar la base de datos PostgreSQL en Neon
+ * MANTIZ - Setup: genera hashes y puede resetear la password del admin
  * 
- * Uso: node setup.js
- * 
- * Lee database.pg.sql y ejecuta todas las instrucciones DDL + seed data.
+ * Uso:
+ *   node setup.js                  → genera hash de Admin1234!
+ *   node setup.js MiPassword123    → genera hash de MiPassword123
+ *   node setup.js --reset          → resetea admin a Admin1234! en la DB
+ *   node setup.js --reset MiPass  → resetea admin a MiPass en la DB
  */
+
 require('dotenv').config();
-const { Pool } = require('pg');
-const fs = require('fs');
-const path = require('path');
+const bcrypt = require('bcryptjs');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+async function main() {
+  const args = process.argv.slice(2);
+  const doReset = args.includes('--reset');
+  const passArg = args.find(a => !a.startsWith('--'));
+  const targetPass = passArg || 'Admin1234!';
 
-async function setup() {
-  console.log('🚀 Iniciando setup de MANTIZ en PostgreSQL / Neon...');
-  const sql = fs.readFileSync(path.join(__dirname, 'database.pg.sql'), 'utf8');
-  
-  // Dividir en statements individuales (separados por ;)
-  const statements = sql
-    .split(/;\s*\n/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0 && !s.startsWith('--'));
+  console.log('\n=== MANTIZ Setup ===\n');
 
-  let ok = 0, errors = 0;
-  for (const stmt of statements) {
-    if (!stmt.trim()) continue;
-    try {
-      await pool.query(stmt);
-      ok++;
-    } catch (e) {
-      if (!e.message.includes('already exists') && !e.message.includes('duplicate')) {
-        console.error('❌', e.message.split('\n')[0].slice(0, 120));
-        errors++;
-      }
-    }
-  }
-  
-  await pool.end();
-  console.log(`✅ Setup completado: ${ok} OK, ${errors} errores`);
+  const hash = await bcrypt.hash(targetPass, 10);
+  const verify = await bcrypt.compare(targetPass, hash);
+
+  console.log('Password:   ', targetPass);
+  console.log('Hash:       ', hash);
+  console.log('Verificado: ', verify ? 'SI' : 'NO (ERROR!)');
   console.log('');
-  console.log('Admin: admin@mantiz.co / Admin1234!');
+  console.log('SQL para actualizar manualmente:');
+  console.log(`  UPDATE usuarios SET password='${hash}' WHERE email='admin@tienda.com';`);
+  console.log('');
+
+  if (doReset) {
+    try {
+      const db = require('./config/database');
+      const [result] = await db.query(
+        'UPDATE usuarios SET password = ? WHERE email = ?',
+        [hash, 'admin@tienda.com']
+      );
+      if (result.affectedRows > 0) {
+        console.log('Password del admin actualizada correctamente en la BD.');
+        console.log('Email: admin@tienda.com');
+        console.log('Pass:  ' + targetPass);
+      } else {
+        console.log('No se encontro el usuario admin@tienda.com en la BD.');
+        console.log('Asegurate de haber importado database.sql primero.');
+      }
+      process.exit(0);
+    } catch(e) {
+      console.error('Error conectando a la BD:', e.message);
+      console.log('Usa el SQL de arriba para actualizar manualmente.');
+      process.exit(1);
+    }
+  } else {
+    process.exit(0);
+  }
 }
 
-setup().catch(e => { console.error('Setup fatal:', e); process.exit(1); });
+main().catch(e => { console.error(e); process.exit(1); });
