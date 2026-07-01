@@ -1,0 +1,14 @@
+{
+  "name": "MANTIZ — Moda Urbana",
+  "short_name": "MANTIZ",
+  "description": "Tienda de moda urbana y streetwear con probador virtual y modelos 3D",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0a0a",
+  "theme_color": "#e91e8c",
+  "icons": [
+    { "src": "/img/icon-mantiz.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
