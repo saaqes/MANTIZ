@@ -78,16 +78,24 @@
         <label class="form-label">Logo / Ícono del sitio</label>
         <div class="d-flex align-items-center gap-3">
           <% if (config.logo && config.logo !== 'logo-default.png') { %>
-            <img id="logoPreviewImg" src="/uploads/logo/<%= config.logo %>" class="logo-current" onerror="this.style.display='none'" alt="Logo" style="width:60px;height:60px;object-fit:contain;background:#111;border-radius:8px;border:1px solid var(--border)">
+            <img id="logoPreviewImg" src="/uploads/logo/<%= config.logo %>" class="logo-current" onerror="this.style.display='none'" alt="Logo actual" style="max-height:60px;max-width:120px;object-fit:contain;border:1px solid var(--border);border-radius:6px;padding:6px;background:var(--dark3)">
           <% } else { %>
-            <img id="logoPreviewImg" style="display:none;width:60px;height:60px;object-fit:contain;background:#111;border-radius:8px;border:1px solid var(--border)" alt="Logo">
-            <div id="logoPreviewEmpty" style="width:60px;height:60px;background:var(--dark3);border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.6rem;text-align:center">Sin logo</div>
+            <img id="logoPreviewImg" style="display:none;max-height:60px;max-width:120px;object-fit:contain;border:1px solid var(--border);border-radius:6px;padding:6px;background:var(--dark3)" alt="">
+            <div id="logoPreviewEmpty" style="width:80px;height:60px;background:var(--dark3);border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.65rem;text-align:center">Sin logo</div>
           <% } %>
           <div class="flex-1">
-            <input type="file" name="logo_file" id="logoFileInput" class="form-control form-control-sm" accept="image/*" onchange="previewLogoFile(this)">
-            <div style="font-family:var(--fm);font-size:.6rem;color:var(--muted);margin-top:4px">PNG, SVG, JPG (máx. 2MB) — se usará como ícono del sitio (favicon) en la pestaña del navegador</div>
+            <input type="file" name="logo_file" id="logoFileInput" class="form-control form-control-sm" accept="image/*" onchange="previewLogoInstant(this)">
+            <div style="font-family:var(--fm);font-size:.6rem;color:var(--muted);margin-top:4px">PNG, SVG, JPG (máx. 2MB) · Se usa como ícono en la pestaña del navegador (favicon)</div>
           </div>
         </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Tagline / Eslogan</label>
+        <input type="text" name="tagline" class="form-control" value="<%= config.tagline||'' %>" placeholder="Ej: Moda que te define">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Email de contacto</label>
+        <input type="email" name="email_contacto" class="form-control" value="<%= config.email_contacto||'' %>" placeholder="contacto@tienda.com">
       </div>
     </div>
   </div>
@@ -169,9 +177,10 @@
       <div class="col-md-6">
         <label class="form-label">Moneda</label>
         <select name="moneda" class="form-select">
-          <option value="COP" selected>COP — Peso Colombiano</option>
+          <% ['MXN','USD','EUR','COP','ARS','PEN','CLP'].forEach(m=>{ %>
+            <option value="<%= m %>" <%= (config.moneda||'MXN')===m?'selected':'' %>><%= m %></option>
+          <% }) %>
         </select>
-        <input type="hidden" name="moneda" value="COP">
       </div>
       <div class="col-md-6">
         <label class="form-label">Símbolo moneda</label>
@@ -187,7 +196,7 @@
       </div>
       <div class="col-md-6">
         <label class="form-label">Costo de envío <span style="color:var(--muted);font-weight:400">(mostrado en el footer)</span></label>
-        <input type="number" name="costo_envio" class="form-control" value="<%= config.costo_envio||'20000' %>" min="0" step="0.01">
+        <input type="number" name="costo_envio" class="form-control" value="<%= config.costo_envio||'8.99' %>" min="0" step="0.01">
       </div>
       <div class="col-12">
         <label class="form-label">Aviso / Banner de alerta <span style="color:var(--muted);font-weight:400">(se muestra en el navbar)</span></label>
@@ -219,7 +228,7 @@
         <textarea name="footer_descripcion" class="form-control" rows="2" placeholder="Tu tienda de moda con estilo urbano..."><%= config.footer_descripcion||'' %></textarea>
       </div>
       <div class="col-md-6">
-        <label class="form-label">Email (pie de página)</label>
+        <label class="form-label">Email de contacto</label>
         <input type="email" name="footer_email" class="form-control" value="<%= config.footer_email||'' %>" placeholder="contacto@mantiz.com">
       </div>
       <div class="col-md-6">
@@ -278,7 +287,25 @@
   </div>
 
   <!-- SEO -->
-  </form>
+  <div class="config-section">
+    <div class="config-section-title"><i class="bi bi-search"></i>SEO & Metadatos</div>
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label">Meta descripción</label>
+        <textarea name="meta_descripcion" class="form-control" rows="2" placeholder="Descripción breve de tu tienda para buscadores..."><%= config.meta_descripcion||'' %></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Meta keywords</label>
+        <input type="text" name="meta_keywords" class="form-control" value="<%= config.meta_keywords||'' %>" placeholder="ropa, moda, tienda online">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Google Analytics ID</label>
+        <input type="text" name="google_analytics" class="form-control" value="<%= config.google_analytics||'' %>" placeholder="G-XXXXXXXXXX">
+      </div>
+    </div>
+  </div>
+
+</form>
 </div>
 
 <!-- Save bar -->
@@ -345,19 +372,6 @@ window.addEventListener('DOMContentLoaded', () => {
 }); // cierre de window.addEventListener('DOMContentLoaded', ...) — antes faltaba, dejando el listener de submit anidado incorrectamente dentro de este callback
 
 // ── Interceptar submit: sincronizar métodos de pago + guardar redes vía AJAX, luego enviar el form normal ──
-function previewLogoFile(input) {
-  if (!input.files || !input.files[0]) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var img = document.getElementById('logoPreviewImg');
-    var empty = document.getElementById('logoPreviewEmpty');
-    img.src = e.target.result;
-    img.style.display = 'block';
-    if (empty) empty.style.display = 'none';
-  };
-  reader.readAsDataURL(input.files[0]);
-}
-
 document.getElementById('configForm').addEventListener('submit', async function(e){
   e.preventDefault();
 
@@ -389,6 +403,19 @@ document.getElementById('configForm').addEventListener('submit', async function(
   // Ahora sí, enviar el resto del formulario normalmente
   e.target.submit();
 });
+
+// ── Preview instantáneo del logo antes de guardar ──────────────────────────
+function previewLogoInstant(input){
+  if(!input.files||!input.files[0]) return;
+  var r = new FileReader();
+  r.onload = function(e){
+    var img = document.getElementById('logoPreviewImg');
+    var ph  = document.getElementById('logoPreviewEmpty');
+    if(img){ img.src=e.target.result; img.style.display='block'; }
+    if(ph)  ph.style.display='none';
+  };
+  r.readAsDataURL(input.files[0]);
+}
 </script>
 
 <%- include('../partials/footer') %>

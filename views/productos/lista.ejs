@@ -11,18 +11,18 @@
 @media(max-width:900px){.pgrid4{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.pgrid4{grid-template-columns:1fr}}
 @media(max-width:768px){#productos-page{padding:40px 20px 60px}}
+/* tribal condicional */
+.tribal-img-dark{display:block;opacity:.5;width:100%;max-width:420px;margin:10px auto 0}
+.tribal-img-light{display:none;opacity:.42;width:100%;max-width:420px;margin:10px auto 0}
+body.light-mode .tribal-img-dark{display:none}
+body.light-mode .tribal-img-light{display:block}
 </style>
 
 <div id="productos-page">
-  <h1 class="section-title">TIENDA</h1>
-  <div style="text-align:center;margin:10px 0 36px;opacity:0.7">
-    <svg width="300" height="22" viewBox="0 0 300 22" fill="none">
-      <line x1="0" y1="11" x2="118" y2="11" stroke="rgba(233,30,140,0.4)" stroke-width="1"/>
-      <path d="M128 11 L138 4 L148 11 L138 18 Z" fill="var(--pink)" opacity="0.6"/>
-      <path d="M148 11 L158 4 L168 11 L158 18 Z" fill="var(--pink)"/>
-      <path d="M168 11 L178 4 L188 11 L178 18 Z" fill="var(--pink)" opacity="0.6"/>
-      <line x1="198" y1="11" x2="300" y2="11" stroke="rgba(233,30,140,0.4)" stroke-width="1"/>
-    </svg>
+  <h1 class="section-title">PRODUCTOS</h1>
+  <div style="text-align:center;margin:0 0 36px">
+    <img src="/img/tribal-blanco.png" class="tribal-img-dark" alt="">
+    <img src="/img/tribal-negro.png"  class="tribal-img-light" alt="">
   </div>
 
   <!-- Filter bar -->

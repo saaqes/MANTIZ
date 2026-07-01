@@ -72,37 +72,55 @@ async function geminiQuick(prompt) {
 }
 
 // ─── CHAT PAGE ───────────────────────────────────────────────────
+// Página completa del asistente IA, accesible en /ia (URL limpia)
+// y también en /ia/chat (compatibilidad con enlaces existentes).
+router.get('/', async (req, res) => {
+  res.render('ia/chat', { title: 'Asistente IA Mantiz' });
+});
+
 router.get('/chat', async (req, res) => {
   res.render('ia/chat', { title: 'Asistente IA Mantiz' });
 });
 
 // ─── CHAT API ────────────────────────────────────────────────────
 router.post('/chat', async (req, res) => {
-  const { mensaje, historial } = req.body;
+  const { mensaje, historial, modo } = req.body;
   if (!mensaje || !mensaje.trim()) return res.status(400).json({ error: 'Mensaje vacio' });
 
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return res.json({
-      respuesta: 'Hola! Soy el asistente de Mantiz. Para activar la IA gratuita, agrega tu GEMINI_API_KEY en el .env (obtenla gratis en aistudio.google.com/apikey). Sin costo, sin tarjeta!'
+      respuesta: 'Hola. Soy el asistente de MANTIZ. Para activar la IA gratuita, agrega tu GEMINI_API_KEY en el .env (obtenla gratis en aistudio.google.com/apikey).'
     });
   }
 
-  // Contexto de productos para el asistente
+  // Contexto de productos para el asistente.
+  // Se separan los más recientes (últimos 14 días, marcados NUEVO) del resto
+  // del catálogo, y se ordena todo por fecha de creación descendente, para
+  // que el bot siempre esté al tanto de cada producto recién añadido en
+  // lugar de quedarse solo con los primeros 20 registros de la tabla.
   let contextProductos = '';
   try {
     const [prods] = await db.query(
-      'SELECT titulo, categoria, precio, precio_descuento, descripcion FROM productos WHERE activo=1 LIMIT 20'
+      `SELECT titulo, categoria, precio, precio_descuento, descripcion,
+              (creado_en >= DATE_SUB(NOW(), INTERVAL 14 DAY)) AS es_nuevo
+       FROM productos WHERE activo=1
+       ORDER BY creado_en DESC
+       LIMIT 40`
     );
-    contextProductos = prods.map(p =>
-      `- ${p.titulo} (${p.categoria}): $${(p.precio_descuento || p.precio).toLocaleString('es-CO')}`
-    ).join('\n');
+    const nuevos = prods.filter(p => p.es_nuevo);
+    const resto  = prods.filter(p => !p.es_nuevo);
+    const fmt = p => `- ${p.titulo} (${p.categoria}): $${(p.precio_descuento || p.precio).toLocaleString('es-CO')}`;
+    const bloques = [];
+    if (nuevos.length) bloques.push('NUEVOS (recién añadidos):\n' + nuevos.map(fmt).join('\n'));
+    if (resto.length) bloques.push('Resto del catálogo:\n' + resto.map(fmt).join('\n'));
+    contextProductos = bloques.join('\n\n');
   } catch(e) {}
 
   const systemPrompt = `Eres el asistente virtual de Mantiz, tienda de ropa urbana moderna. Eres amable, directo y util.
 
-Productos disponibles:
+Productos disponibles (ordenados del mas reciente al mas antiguo; los marcados como NUEVOS se añadieron en los ultimos 14 dias, menciona con entusiasmo si preguntan por novedades):
 ${contextProductos || 'Catalogo cargando...'}
 
 Puedes ayudar con: recomendaciones de ropa, tallas, pedidos, envios ($8.99, 3-7 dias habiles), devoluciones (7 dias), pagos (tarjeta, Nequi, Daviplata, contraentrega).

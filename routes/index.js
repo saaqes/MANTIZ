@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
     const [cfgResult, carrusel, marcaResult] = await Promise.all([
       db.query('SELECT clave, valor FROM homepage_config').catch(() => [[]]),
       fetchCarruselSafe(),
-      db.query('SELECT id,imagen,titulo,subtitulo,boton_texto,boton_url,color_acento FROM carrusel_marca WHERE activo=1 ORDER BY orden ASC').catch(() => [[]])
+      db.query('SELECT id,imagen FROM carrusel_marca WHERE activo=1 ORDER BY orden ASC').catch(() => [[]])
     ]);
 
     const cfgRows = cfgResult[0] || [];
@@ -191,21 +191,53 @@ router.post('/stats/ping', async (req, res) => {
 // Autocomplete (products + users)
 router.get('/buscar/sugerencias', async (req, res) => {
   const q = (req.query.q || '').trim();
-  if (q.length < 2) return res.json([]);
+  if (q.length < 1) return res.json([]);
   try {
     const [prods] = await db.query(
-      `SELECT id, titulo as nombre, categoria as sub, 'producto' as tipo, imagen_principal as img
-       FROM productos WHERE (titulo LIKE ? OR categoria LIKE ?) AND activo=1 LIMIT 5`,
-      [`%${q}%`, `%${q}%`]
+      `SELECT id, titulo as nombre, categoria as sub, 'producto' as tipo,
+              imagen_principal as img,
+              COALESCE(precio_descuento, precio) as precio
+       FROM productos
+       WHERE (titulo LIKE ? OR categoria LIKE ? OR tags LIKE ?) AND activo=1
+       ORDER BY (titulo LIKE ?) DESC, total_likes DESC
+       LIMIT 8`,
+      [`%${q}%`, `%${q}%`, `%${q}%`, `${q}%`]
     );
     const [users] = await db.query(
       `SELECT id, nombre_visible as nombre, username as sub, 'usuario' as tipo,
-              CONCAT(IFNULL(foto_perfil_tipo,'preset'),'|',IFNULL(foto_perfil_preset,'avatar1.png'),'|',IFNULL(foto_perfil,'')) as img
+              CONCAT(IFNULL(foto_perfil_tipo,'preset'),'|',IFNULL(foto_perfil_preset,'avatar1.png'),'|',IFNULL(foto_perfil,'')) as img,
+              NULL as precio
        FROM usuarios WHERE (username LIKE ? OR nombre_visible LIKE ?) AND activo=1 LIMIT 3`,
       [`%${q}%`, `%${q}%`]
     );
     res.json([...prods, ...users]);
   } catch(e) { res.json([]); }
+});
+
+// API de búsqueda rápida (usada por el overlay de búsqueda móvil)
+router.get('/api/buscar', async (req, res) => {
+  const q = (req.query.q || '').trim();
+  const limite = Math.min(parseInt(req.query.limite) || 6, 20);
+  if (q.length < 2) return res.json({ productos: [], usuarios: [] });
+  try {
+    const [productos] = await db.query(
+      `SELECT id, titulo, categoria, precio, precio_descuento, imagen_principal
+       FROM productos
+       WHERE activo=1 AND (titulo LIKE ? OR descripcion LIKE ? OR categoria LIKE ? OR tags LIKE ?)
+       ORDER BY (titulo LIKE ?) DESC, total_likes DESC
+       LIMIT ?`,
+      [`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `${q}%`, limite]
+    );
+    const [usuarios] = await db.query(
+      `SELECT id, username, nombre_visible, foto_perfil, foto_perfil_tipo, foto_perfil_preset
+       FROM usuarios WHERE activo=1 AND (username LIKE ? OR nombre_visible LIKE ?) LIMIT ?`,
+      [`%${q}%`, `%${q}%`, Math.min(limite, 4)]
+    );
+    res.json({ productos, usuarios });
+  } catch (e) {
+    console.error(e);
+    res.json({ productos: [], usuarios: [] });
+  }
 });
 
 // Full search

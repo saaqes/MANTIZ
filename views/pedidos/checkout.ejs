@@ -94,89 +94,46 @@
           <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--pink);margin-bottom:20px">
             <i class="bi bi-credit-card-fill me-2"></i>MÉTODO DE PAGO
           </div>
-
-          <% if (metodosPago && metodosPago.length > 0) { %>
-          <%/* Usuario tiene métodos guardados: mostrar SOLO esos */%>
-          <div style="display:flex;flex-direction:column;gap:10px" id="metodosGuardadosLista">
-            <% metodosPago.forEach(function(mp, idx) { %>
-            <label style="display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--border);cursor:pointer;transition:border-color .2s;position:relative"
-                   onmouseover="this.style.borderColor='var(--pink)'" onmouseout="if(!this.querySelector('input').checked)this.style.borderColor='var(--border)'"
-                   id="mp-label-<%= mp.id %>">
-              <input type="radio" name="metodo_pago_guardado_id" value="<%= mp.id %>"
-                     style="accent-color:var(--pink);width:18px;height:18px;flex-shrink:0"
-                     <%= (mp.predeterminado || idx === 0) ? 'checked' : '' %>
-                     onchange="resaltarMetodoSeleccionado(<%= mp.id %>)">
-              <div style="width:36px;height:36px;background:rgba(233,30,140,.1);border:1px solid rgba(233,30,140,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                <i class="bi bi-bank2" style="color:var(--pink);font-size:16px"></i>
-              </div>
-              <div style="flex:1;min-width:0">
-                <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:var(--white)">
-                  <%= mp.banco %>
-                  <% if (mp.predeterminado) { %><span style="font-size:10px;color:var(--pink);font-weight:400;margin-left:6px;letter-spacing:1px">★ PREDETERMINADO</span><% } %>
-                </div>
-                <div style="font-size:12px;color:var(--gray);margin-top:2px">
-                  <%= mp.titular %> · <%= mp.tipo_cuenta %> · <% if(mp.numero_cuenta){ %>****<%= mp.numero_cuenta.slice(-4) %><% } else { %>****<% } %>
-                </div>
-              </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <% var metodos = [
+              ['tarjeta',      'bi-credit-card-fill',  'Tarjeta crédito/débito'],
+              ['nequi',        'bi-phone-fill',         'Nequi'],
+              ['daviplata',    'bi-phone-vibrate-fill', 'Daviplata'],
+              ['transferencia','bi-bank2',              'Transferencia bancaria'],
+              ['contraentrega','bi-truck',              'Contraentrega'],
+              ['paypal',       'bi-paypal',             'PayPal']
+            ]; %>
+            <% metodos.forEach(function(m) { %>
+            <label class="metodo-card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;position:relative" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">
+              <input type="radio" name="metodo_pago" value="<%= m[0] %>" style="accent-color:var(--pink);flex-shrink:0">
+              <i class="bi <%= m[1] %>" style="color:var(--pink);font-size:18px;flex-shrink:0"></i>
+              <span style="font-size:13px;letter-spacing:0.5px"><%= m[2] %></span>
             </label>
             <% }) %>
           </div>
 
-          <!-- Opción de añadir nuevo método sin salir del checkout -->
-          <div style="margin-top:14px">
-            <button type="button" onclick="toggleAddMetodo()" style="display:flex;align-items:center;gap:8px;background:none;border:1px dashed rgba(255,255,255,.2);color:var(--gray);padding:10px 16px;cursor:pointer;width:100%;font-size:13px;letter-spacing:1px;transition:border-color .2s" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='rgba(255,255,255,.2)'">
-              <i class="bi bi-plus-circle" style="color:var(--pink)"></i>
-              Añadir otro método de pago
-            </button>
-            <div id="addMetodoInline" style="display:none;margin-top:12px;padding:16px;border:1px solid var(--faint-2);background:rgba(255,255,255,.02)">
-              <div style="font-size:11px;color:var(--gray);letter-spacing:2px;margin-bottom:12px">NUEVO MÉTODO</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-                <div><label class="mantiz-label" style="font-size:11px">Banco</label><input type="text" id="ck-banco" class="mantiz-input" placeholder="Bancolombia" style="font-size:13px"></div>
-                <div><label class="mantiz-label" style="font-size:11px">Titular</label><input type="text" id="ck-titular" class="mantiz-input" placeholder="Nombre completo" style="font-size:13px"></div>
-                <div><label class="mantiz-label" style="font-size:11px">Nro. de cuenta</label><input type="text" id="ck-numero" class="mantiz-input" placeholder="000-000000-00" style="font-size:13px"></div>
-                <div><label class="mantiz-label" style="font-size:11px">Tipo</label>
-                  <select id="ck-tipo" class="mantiz-input" style="font-size:13px">
-                    <option value="ahorros">Ahorros</option>
-                    <option value="corriente">Corriente</option>
-                  </select>
-                </div>
-              </div>
-              <div style="display:flex;gap:8px">
-                <button type="button" onclick="guardarMetodoDesdeCheckout()" class="btn-grunge-fill" style="flex:1;padding:10px;font-size:13px">GUARDAR Y USAR</button>
-                <button type="button" onclick="toggleAddMetodo()" class="btn-grunge-w" style="padding:10px 16px;font-size:13px">CANCELAR</button>
-              </div>
-              <div id="ck-msg" style="font-size:12px;color:var(--gray);margin-top:8px;display:none"></div>
+          <!-- Cuentas guardadas (requisito: mostrar métodos guardados y permitir seleccionarlos) -->
+          <% if (metodosPago && metodosPago.length > 0) { %>
+          <div id="cuentasGuardadasWrap" style="margin-top:16px;display:none">
+            <div style="font-size:11px;color:var(--gray);letter-spacing:1px;margin-bottom:10px">CUENTAS GUARDADAS</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <% metodosPago.forEach(function(mp) { %>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer" onmouseover="this.style.borderColor='var(--pink)'" onmouseout="this.style.borderColor='var(--border)'">
+                <input type="radio" name="metodo_pago_guardado_id" value="<%= mp.id %>" style="accent-color:var(--pink)" <%= mp.predeterminado ? 'checked' : '' %>>
+                <i class="bi bi-bank2" style="color:var(--pink)"></i>
+                <span style="font-size:13px"><%= mp.banco %> · ****<%= (mp.numero_cuenta||'').slice(-4) %> · <%= mp.titular %></span>
+              </label>
+              <% }) %>
             </div>
           </div>
-
-          <% } else { %>
-          <%/* Sin métodos guardados: guiar al usuario a añadir uno */%>
-          <div style="text-align:center;padding:32px 20px;border:1px dashed rgba(255,255,255,.15);border-radius:4px">
-            <i class="bi bi-bank" style="font-size:2.2rem;color:rgba(233,30,140,.35)"></i>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gray);margin:12px 0 6px">SIN MÉTODOS DE PAGO GUARDADOS</div>
-            <div style="font-size:12px;color:var(--gray);margin-bottom:18px">Añade una cuenta bancaria desde tu perfil para usarla aquí</div>
-
-            <!-- Añadir desde el propio checkout sin salir -->
-            <div id="addMetodoInline" style="text-align:left;border-top:1px solid var(--faint-1);padding-top:16px">
-              <div style="font-size:11px;color:var(--gray);letter-spacing:2px;margin-bottom:12px">AÑADIR AHORA</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-                <div><label class="mantiz-label" style="font-size:11px">Banco</label><input type="text" id="ck-banco" class="mantiz-input" placeholder="Bancolombia" style="font-size:13px"></div>
-                <div><label class="mantiz-label" style="font-size:11px">Titular</label><input type="text" id="ck-titular" class="mantiz-input" placeholder="Nombre completo" style="font-size:13px"></div>
-                <div><label class="mantiz-label" style="font-size:11px">Nro. de cuenta</label><input type="text" id="ck-numero" class="mantiz-input" placeholder="000-000000-00" style="font-size:13px"></div>
-                <div><label class="mantiz-label" style="font-size:11px">Tipo</label>
-                  <select id="ck-tipo" class="mantiz-input" style="font-size:13px">
-                    <option value="ahorros">Ahorros</option>
-                    <option value="corriente">Corriente</option>
-                  </select>
-                </div>
-              </div>
-              <button type="button" onclick="guardarMetodoDesdeCheckout()" class="btn-grunge-fill" style="width:100%;padding:12px;font-size:13px">GUARDAR Y CONTINUAR</button>
-              <div id="ck-msg" style="font-size:12px;color:var(--gray);margin-top:8px;display:none"></div>
-              <div style="margin-top:10px;text-align:center">
-                <a href="/perfil#configuracion" style="font-size:11px;color:var(--gray);letter-spacing:1px">Ver todos mis métodos de pago →</a>
-              </div>
-            </div>
-          </div>
+          <script>
+            document.querySelectorAll('input[name="metodo_pago"]').forEach(function(r){
+              r.addEventListener('change', function(){
+                var wrap = document.getElementById('cuentasGuardadasWrap');
+                if (wrap) wrap.style.display = (this.value === 'transferencia') ? 'block' : 'none';
+              });
+            });
+          </script>
           <% } %>
         </div>
 
@@ -185,6 +142,18 @@
           <div style="position:absolute;inset:0;border:2px solid var(--faint-3);filter:url(#gb);pointer-events:none"></div>
           <label class="mantiz-label"><i class="bi bi-chat-left-text me-2"></i>Notas adicionales</label>
           <textarea name="notas" class="mantiz-input" rows="3" placeholder="Instrucciones especiales para tu pedido..."></textarea>
+        </div>
+
+        <!-- 4. CUPÓN DE DESCUENTO -->
+        <div style="background:var(--card);border:1px solid var(--border);padding:24px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid var(--faint-3);filter:url(#gb);pointer-events:none"></div>
+          <label class="mantiz-label"><i class="bi bi-ticket-perforated me-2"></i>Código de cupón</label>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input type="text" id="cupon-input" class="mantiz-input" placeholder="CUP-XXXXX-5PCT" style="flex:1;text-transform:uppercase">
+            <button type="button" onclick="aplicarCupon()" class="btn-grunge-w" style="padding:10px 20px;font-size:13px;letter-spacing:2px;white-space:nowrap">APLICAR</button>
+          </div>
+          <div id="cupon-msg" style="font-size:12px;margin-top:8px;display:none"></div>
+          <input type="hidden" name="cupon_codigo" id="cupon-codigo-hidden">
         </div>
       </div>
 
@@ -305,67 +274,29 @@ function confirmarUbicacion() {
   showToast('UBICACION GUARDADA');
 }
 
-// ── MÉTODOS DE PAGO ─────────────────────────────────────────────────────────
-
-// Resaltar visualmente el método seleccionado con borde rosa
-function resaltarMetodoSeleccionado(id) {
-  document.querySelectorAll('[id^="mp-label-"]').forEach(function(el) {
-    el.style.borderColor = 'var(--border)';
-  });
-  var lbl = document.getElementById('mp-label-' + id);
-  if (lbl) lbl.style.borderColor = 'var(--pink)';
-}
-
-// Inicializar resaltado del predeterminado al cargar
-(function(){
-  var checked = document.querySelector('input[name="metodo_pago_guardado_id"]:checked');
-  if (checked) {
-    var lbl = checked.closest('[id^="mp-label-"]');
-    if (lbl) lbl.style.borderColor = 'var(--pink)';
-  }
-})();
-
-// Toggle del formulario inline de añadir método
-function toggleAddMetodo() {
-  var wrap = document.getElementById('addMetodoInline');
-  if (!wrap) return;
-  wrap.style.display = (wrap.style.display === 'none' || !wrap.style.display) ? 'block' : 'none';
-  if (wrap.style.display === 'block') {
-    var banco = document.getElementById('ck-banco');
-    if (banco) banco.focus();
-  }
-}
-
-// Guardar nuevo método de pago desde el checkout y recargar con él seleccionado
-async function guardarMetodoDesdeCheckout() {
-  var banco   = (document.getElementById('ck-banco')   || {}).value || '';
-  var titular = (document.getElementById('ck-titular') || {}).value || '';
-  var numero  = (document.getElementById('ck-numero')  || {}).value || '';
-  var tipo    = (document.getElementById('ck-tipo')    || {}).value || 'ahorros';
-  var msg     = document.getElementById('ck-msg');
-
-  if (!banco || !titular || !numero) {
-    if (msg) { msg.textContent = 'Completa banco, titular y número de cuenta'; msg.style.display = 'block'; msg.style.color = '#ff6060'; }
-    return;
-  }
-  if (msg) { msg.textContent = 'Guardando...'; msg.style.display = 'block'; msg.style.color = 'var(--gray)'; }
-
+// ── CUPÓN DE DESCUENTO ────────────────────────────────────────────────────
+async function aplicarCupon() {
+  var inp = document.getElementById('cupon-input');
+  var msg = document.getElementById('cupon-msg');
+  var hidden = document.getElementById('cupon-codigo-hidden');
+  var codigo = (inp.value || '').trim().toUpperCase();
+  if (!codigo) { msg.textContent = 'Escribe un código de cupón'; msg.style.color = '#ff6060'; msg.style.display = 'block'; return; }
+  msg.textContent = 'Verificando...'; msg.style.color = 'var(--gray)'; msg.style.display = 'block';
   try {
-    var r = await fetch('/perfil/metodos-pago', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ banco, titular, numero_cuenta: numero, tipo_cuenta: tipo })
-    });
+    var r = await fetch('/perfil/cupones/aplicar', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ codigo }) });
     var d = await r.json();
     if (d.success) {
-      // Recargamos la misma página — el nuevo método ya vendrá seleccionado (es el más reciente)
-      location.reload();
+      hidden.value = d.codigo;
+      msg.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#00c8ff"></i> Cupón aplicado: <strong style="color:var(--pink)">' + d.descuento + '% de descuento</strong> en tu pedido';
+      msg.style.color = '#00c8ff'; showToast('CUPON APLICADO: -' + d.descuento + '%');
+    } else if (d.usado) {
+      msg.innerHTML = '<i class="bi bi-x-circle-fill" style="color:#ff6060"></i> Este cupón ya fue utilizado anteriormente.';
+      msg.style.color = '#ff6060';
     } else {
-      if (msg) { msg.textContent = d.error || 'Error al guardar'; msg.style.color = '#ff6060'; }
+      msg.textContent = d.error || 'Cupón no válido';
+      msg.style.color = '#ff6060';
     }
-  } catch(e) {
-    if (msg) { msg.textContent = 'Error de conexión'; msg.style.color = '#ff6060'; }
-  }
+  } catch(e) { msg.textContent = 'Error al verificar el cupón'; msg.style.color = '#ff6060'; }
 }
 </script>
 

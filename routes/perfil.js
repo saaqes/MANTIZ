@@ -213,4 +213,32 @@ router.delete('/metodos-pago/:id', isAuthenticated, async (req, res) => {
   }
 });
 
+// ── CUPONES ─────────────────────────────────────────────────────────────────
+router.get('/cupones', isAuthenticated, async (req, res) => {
+  try {
+    const [cupones] = await db.query(
+      'SELECT * FROM cupones_usuario WHERE usuario_id=? ORDER BY usado ASC, creado_en DESC',
+      [req.session.user.id]
+    );
+    res.json({ cupones });
+  } catch(e) {
+    res.json({ cupones: [] });
+  }
+});
+
+router.post('/cupones/aplicar', isAuthenticated, async (req, res) => {
+  const { codigo } = req.body;
+  try {
+    const [[cupon]] = await db.query(
+      'SELECT * FROM cupones_usuario WHERE codigo=? AND usuario_id=?',
+      [codigo, req.session.user.id]
+    );
+    if (!cupon) return res.json({ success: false, error: 'Cupón no encontrado' });
+    if (cupon.usado) return res.json({ success: false, error: 'Este cupón ya fue utilizado', usado: true });
+    res.json({ success: true, descuento: cupon.descuento, codigo: cupon.codigo });
+  } catch(e) {
+    res.json({ success: false, error: 'Error al verificar el cupón' });
+  }
+});
+
 module.exports = router;

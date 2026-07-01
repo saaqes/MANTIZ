@@ -2,55 +2,46 @@
 
 <style>
 /* ── HERO ── */
-.hero-wrap { position:relative; overflow:hidden; height:calc(100vh - 64px); min-height:400px; background:#050505; }
-@media(max-width:767px){ .hero-wrap{ height:calc(100vh - 56px); min-height:320px; } }
+.hero-wrap { position:relative; overflow:hidden; height:clamp(360px,58vw,620px); background:#050505; }
 .hslide { position:absolute; inset:0; transition:opacity 1.2s ease; opacity:0; }
 .hslide.active { opacity:1; }
 .hslide img { width:100%; height:100%; object-fit:cover; filter:brightness(.42); display:block; }
-/* ── Dots del carrusel: menos opacos, con hover claro ── */
 .hero-dots { position:absolute; bottom:26px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10; }
-.cdot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.18); cursor:pointer; border:1px solid rgba(255,255,255,.25); padding:0; transition:all .3s; }
-.cdot:hover { background:rgba(233,30,140,.45); border-color:var(--pink); transform:scale(1.2); }
-.cdot.active { background:var(--pink); border-color:var(--pink); }
-/* Scroll button */
-.scroll-down-btn { position:absolute; top:-22px; left:50%; transform:translateX(-50%); width:44px; height:44px; border:1.5px solid rgba(233,30,140,.6); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; background:rgba(0,0,0,.35); backdrop-filter:blur(6px); animation:scrollBounce 2s ease-in-out infinite; filter:url(#gb); transition:background .3s,border-color .3s; }
-.scroll-down-btn:hover { background:rgba(233,30,140,.3); border-color:var(--pink); }
+.cdot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.3); cursor:pointer; border:none; padding:0; transition:background .3s; }
+.cdot.active { background:var(--pink); }
+/* Scroll button entre hero y la siguiente sección — vive FUERA del hero
+   (que tiene overflow:hidden) en un wrapper de altura 0 justo en el borde,
+   para quedar exactamente a caballo entre banner y sección de productos. */
+.scroll-down-btn { position:absolute; top:-22px; left:50%; transform:translateX(-50%); width:44px; height:44px; border:2px solid var(--pink); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; background:rgba(0,0,0,.5); backdrop-filter:blur(4px); animation:scrollBounce 1.8s ease-in-out infinite; filter:url(#gb); }
+.scroll-down-btn:hover { background:rgba(233,30,140,.35); }
 @keyframes scrollBounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
-@media(max-width:600px){ .scroll-down-btn{display:none} }
-/* ── SECCIONES / TÍTULOS GRAFFITI ── */
+@media(max-width:600px){ .scroll-down-btn{display:none} } /* en hero móvil hay menos espacio, no estorba */
+/* ── SECCIONES / TÍTULOS GRAFFITI (mismo lenguaje visual ya usado en /productos) ── */
 .home-section { padding:64px 40px; }
 .home-section-head { text-align:center; margin-bottom:36px; }
-/* ── Animación de carga progresiva de secciones (Intersection Observer) ── */
-.reveal { opacity:0; transform:translateY(32px); transition:opacity .65s cubic-bezier(.16,1,.3,1), transform .65s cubic-bezier(.16,1,.3,1); }
+.tribal-divider-svg { opacity:.7; margin-top:10px; }
+/* ── Separador tribal adaptativo (blanco modo oscuro, negro modo claro) ── */
+.tribal-img-dark { display:block; opacity:.55; width:100%; max-width:480px; margin:14px auto 0; filter:drop-shadow(0 0 8px rgba(233,30,140,.2)); }
+.tribal-img-light { display:none; opacity:.45; width:100%; max-width:480px; margin:14px auto 0; }
+body.light-mode .tribal-img-dark { display:none; }
+body.light-mode .tribal-img-light { display:block; }
+/* ── Animación de carga progresiva de secciones ── */
+.reveal { opacity:0; transform:translateY(28px); transition:opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1); }
 .reveal.visible { opacity:1; transform:none; }
-.reveal-left  { opacity:0; transform:translateX(-32px); transition:opacity .6s ease, transform .6s ease; }
-.reveal-right { opacity:0; transform:translateX(32px);  transition:opacity .6s ease, transform .6s ease; }
-.reveal-left.visible,.reveal-right.visible { opacity:1; transform:none; }
-.reveal-scale { opacity:0; transform:scale(.95); transition:opacity .5s ease, transform .5s ease; }
-.reveal-scale.visible { opacity:1; transform:none; }
-/* Delay escalonado para los hijos de una grilla */
-.pgrid4 .product-card:nth-child(1) { transition-delay:.05s }
-.pgrid4 .product-card:nth-child(2) { transition-delay:.12s }
-.pgrid4 .product-card:nth-child(3) { transition-delay:.19s }
-.pgrid4 .product-card:nth-child(4) { transition-delay:.26s }
-.pgrid4 .product-card:nth-child(5) { transition-delay:.33s }
-.pgrid4 .product-card:nth-child(6) { transition-delay:.40s }
-.pgrid4 .product-card:nth-child(7) { transition-delay:.47s }
-.pgrid4 .product-card:nth-child(8) { transition-delay:.54s }
-.lomas-grid .lomas-item:nth-child(1) { transition-delay:.05s }
-.lomas-grid .lomas-item:nth-child(2) { transition-delay:.12s }
-.lomas-grid .lomas-item:nth-child(3) { transition-delay:.19s }
-.lomas-grid .lomas-item:nth-child(4) { transition-delay:.26s }
-/* ── GRID 4 columnas ── */
+.lomas-item:nth-child(1).reveal { transition-delay:.04s }
+.lomas-item:nth-child(2).reveal { transition-delay:.1s }
+.lomas-item:nth-child(3).reveal { transition-delay:.16s }
+.lomas-item:nth-child(4).reveal { transition-delay:.22s }
+/* ── GRID centrado, mismas cards que /productos ── */
 .pgrid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; max-width:1400px; margin:0 auto; }
 @media(max-width:1200px){ .pgrid4{grid-template-columns:repeat(3,1fr)} }
 @media(max-width:900px){ .pgrid4{grid-template-columns:repeat(2,1fr)} }
 @media(max-width:600px){ .pgrid4{grid-template-columns:1fr} }
 @media(max-width:768px){ .home-section{padding:44px 20px} }
-/* ── VIEWER 3D + LO MÁS VISTO (layout original: 3D fijo a la izq, grid a la der) ── */
+/* ── VIEWER 3D + LO MÁS VISTO ── */
 .viewer-grid { display:grid; grid-template-columns:320px 1fr; gap:36px; align-items:start; max-width:1100px; margin:0 auto; }
 @media(max-width:900px){ .viewer-grid{grid-template-columns:1fr; max-width:480px} }
-#model-container { position:relative; background:#0e0e0e; border-radius:6px; overflow:hidden; aspect-ratio:1/1; width:100%; max-width:320px; margin:0 auto; border:2px solid rgba(233,30,140,.18); filter:url(#gb); cursor:pointer; }
+#model-container { position:relative; background:#0e0e0e; border-radius:4px; overflow:hidden; aspect-ratio:1; width:100%; max-width:320px; margin:0 auto; border:2px solid rgba(233,30,140,.18); filter:url(#gb); cursor:pointer; }
 #model-container canvas { display:block; width:100%!important; height:100%!important; }
 .viewer-hover-info { position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.55) 45%,transparent 75%); display:flex; flex-direction:column; justify-content:flex-end; padding:24px; opacity:0; transition:opacity .35s ease; pointer-events:none; }
 #model-container:hover .viewer-hover-info { opacity:1; }
@@ -59,26 +50,25 @@
 .vh-desc { font-size:12px; color:rgba(255,255,255,.75); line-height:1.5; margin-bottom:10px; max-height:54px; overflow:hidden; }
 .vh-tags { display:flex; gap:6px; flex-wrap:wrap; }
 .vh-tag { font-size:10px; letter-spacing:1px; color:var(--pink); border:1px solid rgba(233,30,140,.5); padding:2px 8px; border-radius:2px; }
-/* Grid 2×2 de productos "Lo más visto" */
-.lomas-grid { display:grid; grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(2,1fr); gap:14px; }
-.lomas-item { display:flex; flex-direction:column; text-decoration:none; border:1px solid var(--faint-2); background:var(--dark); transition:all .25s; position:relative; overflow:hidden; border-radius:4px; }
+.lomas-grid { display:grid; grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(2,1fr); gap:16px; }
+.lomas-item { display:flex; flex-direction:column; text-decoration:none; border:1px solid var(--faint-2); background:var(--dark); transition:all .25s; position:relative; overflow:hidden; }
 .lomas-item::before { content:''; position:absolute; inset:-2px; border:1px solid transparent; filter:url(#gb); pointer-events:none; transition:border-color .25s; z-index:2; }
-.lomas-item:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(233,30,140,.15); }
+.lomas-item:hover { transform:translateY(-3px); }
 .lomas-item:hover::before { border-color:var(--pink); }
-.lomas-img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; }
+.lomas-img { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; }
 .lomas-info { padding:10px 12px; }
-.lomas-name { font-size:12px; font-weight:600; color:var(--white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.lomas-price { font-family:'Bebas Neue',sans-serif; font-size:13px; color:var(--pink); letter-spacing:1px; }
-/* ── CARRUSEL SECUNDARIO — más alto ── */
+.lomas-name { font-size:12.5px; font-weight:600; color:var(--white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lomas-price { font-family:'Bebas Neue',sans-serif; font-size:14px; color:var(--pink); letter-spacing:1px; }
+/* ── CARRUSEL SECUNDARIO (horizontal, independiente del hero) ── */
 .marca-carousel-wrap { overflow:hidden; }
-.marca-carousel { position:relative; height:clamp(240px,32vw,420px); overflow:hidden; background:#0a0a0a; }
+.marca-carousel { position:relative; height:clamp(160px,22vw,280px); overflow:hidden; background:#0a0a0a; }
 .marca-slide { position:absolute; inset:0; opacity:0; transition:opacity 1s ease; }
 .marca-slide.active { opacity:1; }
 .marca-slide img { width:100%; height:100%; object-fit:cover; display:block; }
-.marca-slide-overlay { position:absolute; inset:0; background:linear-gradient(to bottom,rgba(0,0,0,.2),rgba(0,0,0,.72)); display:flex; align-items:center; justify-content:center; z-index:2; }
-.marca-slide-content { text-align:center; padding:0 40px; position:relative; z-index:3; }
-.marca-slide-content h3 { font-family:'Bebas Neue',sans-serif; font-size:clamp(22px,4.5vw,48px); letter-spacing:5px; color:white; margin:0; filter:url(#gb); text-shadow:0 2px 20px rgba(0,0,0,.9),0 0 40px rgba(0,0,0,.5); }
-.marca-slide-content p { font-family:'Rajdhani',sans-serif; font-size:clamp(12px,1.5vw,16px); letter-spacing:2px; color:rgba(255,255,255,.92); margin:8px 0 0; text-shadow:0 1px 8px rgba(0,0,0,.8); }
+.marca-slide-overlay { position:absolute; inset:0; background:linear-gradient(to bottom,rgba(0,0,0,.15),rgba(0,0,0,.55)); display:flex; align-items:center; justify-content:center; }
+.marca-slide-content { text-align:center; padding:0 24px; }
+.marca-slide-content h3 { font-family:'Bebas Neue',sans-serif; font-size:clamp(20px,4vw,40px); letter-spacing:5px; color:white; margin:0; filter:url(#gb); text-shadow:0 2px 16px rgba(0,0,0,.6); }
+.marca-slide-content p { font-family:'Rajdhani',sans-serif; font-size:clamp(11px,1.4vw,15px); letter-spacing:2px; color:rgba(255,255,255,.85); margin:6px 0 0; }
 .marca-arrow { position:absolute; top:50%; transform:translateY(-50%); width:34px; height:34px; background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.2); color:white; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:8; font-size:17px; transition:all .2s; }
 .marca-arrow:hover { background:rgba(233,30,140,.3); border-color:var(--pink); }
 .marca-arrow-left { left:14px; } .marca-arrow-right { right:14px; }
@@ -123,7 +113,7 @@
       <span id="cd-dias">00</span>D&nbsp;<span id="cd-horas">00</span>H&nbsp;<span id="cd-mins">00</span>M&nbsp;<span id="cd-segs">00</span>S
     </div>
     <div id="hero-btn" style="pointer-events:all;margin-top:6px;display:none">
-      <button id="hero-cta-btn" class="btn-grunge-fill" style="background:transparent;border-color:rgba(255,255,255,.55);backdrop-filter:blur(4px)">EXPLORAR</button>
+      <button id="hero-cta-btn" class="btn-grunge-fill">EXPLORAR</button>
     </div>
   </div>
 
@@ -134,9 +124,8 @@
 
 <!-- Botón circular: a caballo entre el hero y la sección de productos (hero tiene overflow:hidden, por eso vive fuera de él) -->
 <div style="position:relative;height:0;z-index:15">
-  <button class="scroll-down-btn" onclick="document.getElementById('home-next-section').scrollIntoView({behavior:'smooth'})" aria-label="Bajar" style="width:auto;height:auto;border-radius:0;border:none;background:transparent;padding:0;width:160px">
-    <img src="/img/tribal-blanco.png" class="tribal-dark-mode" style="width:160px;height:auto;opacity:.65;filter:drop-shadow(0 0 8px rgba(233,30,140,.3))" alt="">
-    <img src="/img/tribal-negro.png" class="tribal-light-mode" style="width:160px;height:auto;opacity:.55" alt="">
+  <button class="scroll-down-btn" onclick="document.getElementById('home-next-section').scrollIntoView({behavior:'smooth'})" aria-label="Bajar">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v10M3 7l5 5 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
 </div>
 
@@ -147,11 +136,8 @@
 <section class="home-section reveal">
   <div class="home-section-head">
     <h2 class="section-title">NUEVA COLECCIÓN</h2>
-    <!-- Imagen tribal: blanca en modo oscuro, negra en modo claro, más grande -->
-    <div style="margin:14px auto 0;max-width:480px;line-height:0">
-      <img src="/img/tribal-blanco.png" class="tribal-dark-mode" style="width:100%;height:auto;opacity:.55;filter:drop-shadow(0 0 10px rgba(233,30,140,.25))" alt="">
-      <img src="/img/tribal-negro.png"  class="tribal-light-mode" style="width:100%;height:auto;opacity:.45" alt="">
-    </div>
+    <img src="/img/tribal-blanco.png" class="tribal-img-dark" alt="">
+    <img src="/img/tribal-negro.png"  class="tribal-img-light" alt="">
   </div>
   <% if (productos && productos.length > 0) { %>
   <div class="pgrid4">
@@ -173,7 +159,7 @@
           <div class="pc-name"><%= p.titulo.substring(0,18) %></div>
           <div style="font-size:10px;color:var(--gray);letter-spacing:1px;margin-top:2px"><%= p.categoria %></div>
         </div>
-        <span class="pc-price"><%= sitio.simbolo_moneda||'COP' %> <%= parseFloat(p.precio_final||p.precio).toLocaleString('es-CO') %></span>
+        <span class="pc-price">$<%= parseFloat(p.precio_final||p.precio).toLocaleString('es-CO') %></span>
       </div>
     </div>
     <% }) %>
@@ -196,7 +182,7 @@
       <% if (viewer3d) { %>
       <div class="viewer-hover-info">
         <div class="vh-name"><%= viewer3d.titulo %></div>
-        <div class="vh-price"><%= sitio.simbolo_moneda||'COP' %> <%= parseFloat(viewer3d.precio_final||viewer3d.precio).toLocaleString('es-CO') %></div>
+        <div class="vh-price">$<%= parseFloat(viewer3d.precio_final||viewer3d.precio).toLocaleString('es-CO') %></div>
         <% if (viewer3d.descripcion) { %><div class="vh-desc"><%= viewer3d.descripcion.substring(0,140) %><% if(viewer3d.descripcion.length>140){ %>…<% } %></div><% } %>
         <% if (viewer3d.categoria || viewer3d.tags) { %>
         <div class="vh-tags">
@@ -209,7 +195,8 @@
     </div>
 
     <div>
-      <h2 class="section-title" style="font-size:clamp(20px,3vw,30px);margin-bottom:16px">LO MÁS VISTO</h2>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:4px;color:var(--pink);margin-bottom:6px;filter:url(#gb)">PREVIEW 3D INTERACTIVO</div>
+      <h2 class="section-title" style="font-size:clamp(22px,3.5vw,34px);margin-bottom:20px">LO MÁS VISTO</h2>
       <% if (recomendados && recomendados.length > 0) { %>
       <div class="lomas-grid">
         <% recomendados.slice(0,4).forEach(function(p) { %>
@@ -217,7 +204,7 @@
           <img class="lomas-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>" onerror="this.src='https://via.placeholder.com/200x200/111/888?text=?'">
           <div class="lomas-info">
             <div class="lomas-name"><%= p.titulo %></div>
-            <span class="lomas-price"><%= sitio.simbolo_moneda||'COP' %> <%= parseFloat(p.precio_final||p.precio).toLocaleString('es-CO') %></span>
+            <span class="lomas-price">$<%= parseFloat(p.precio_final||p.precio).toLocaleString('es-CO') %></span>
           </div>
         </a>
         <% }) %>
@@ -247,7 +234,7 @@
       </div>
       <div class="pc-info">
         <div class="pc-name"><%= p.titulo.substring(0,18) %></div>
-        <span class="pc-price"><%= sitio.simbolo_moneda||'COP' %> <%= parseFloat(p.precio_final||p.precio).toLocaleString('es-CO') %></span>
+        <span class="pc-price">$<%= parseFloat(p.precio_final||p.precio).toLocaleString('es-CO') %></span>
       </div>
     </div>
     <% }) %>
@@ -357,25 +344,12 @@ function goMarcaSlide(n){
 mDots.forEach(function(d){d.addEventListener('click',function(){goMarcaSlide(parseInt(d.dataset.idx));});});
 if(mSlides.length>1)setInterval(function(){goMarcaSlide(marcaCur+1);},5600);
 
-// ── Animación de carga progresiva (Intersection Observer) ─────────────────
+// ── Animación de carga progresiva ──────────────────────────────────────────
 (function(){
-  if (!('IntersectionObserver' in window)) {
-    // Fallback: mostrar todo sin animación en navegadores viejos
-    document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale').forEach(function(el){ el.classList.add('visible'); });
-    return;
-  }
-  var obs = new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        obs.unobserve(entry.target); // solo anima una vez
-      }
-    });
-  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-
-  document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale').forEach(function(el){
-    obs.observe(el);
-  });
+  var els=document.querySelectorAll('.reveal');
+  if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('visible');});return;}
+  var obs=new IntersectionObserver(function(entries){entries.forEach(function(en){if(en.isIntersecting){en.target.classList.add('visible');obs.unobserve(en.target);}});},{threshold:0.07,rootMargin:'0px 0px -32px 0px'});
+  els.forEach(function(e){obs.observe(e);});
 })();
 
 // ── CARRITO RÁPIDO (idéntico a /productos) ──────────────────────────────
@@ -386,7 +360,7 @@ async function quickAdd(id,name,price,img){
     var d=await r.json();
     if(d.tallas&&d.tallas.length>0){
       document.getElementById('sz-name').textContent=name;
-      document.getElementById('sz-price').textContent='<%= sitio.simbolo_moneda||"COP" %> '+parseFloat(price).toLocaleString('es-CO');
+      document.getElementById('sz-price').textContent='$'+parseFloat(price).toLocaleString('es-CO');
       var h='';
       d.tallas.forEach(function(t){
         h+='<button onclick="selSzBtn(this,\''+t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid var(--faint-3);background:none;color:var(--white);font-family:Rajdhani,sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';

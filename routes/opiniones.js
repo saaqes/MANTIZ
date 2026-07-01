@@ -160,9 +160,20 @@ async function actualizarLogro(userId, clave, db) {
     if (desbloqueado) {
       await db.query(
         'INSERT INTO notificaciones (usuario_id,tipo,titulo,mensaje,icono,color) VALUES (?,?,?,?,?,?)',
-        [userId, 'noticia', `¡Logro desbloqueado: ${logro.nombre}!`,
-         logro.descripcion, logro.icono || '🏆', '#ffd700']
+        [userId, 'noticia', `Logro desbloqueado: ${logro.nombre}`,
+         logro.descripcion, logro.icono || 'bi-trophy', '#ffd700']
       );
+      // Generar cupón de descuento automáticamente al desbloquear un logro
+      try {
+        const rand = Math.random();
+        const pct = rand < 0.70 ? 5 : rand < 0.90 ? 15 : 20;
+        const codigo = 'CUP-' + Math.random().toString(36).substr(2,5).toUpperCase() + '-' + pct + 'PCT';
+        await db.query(
+          `INSERT IGNORE INTO cupones_usuario (usuario_id, logro_id, codigo, descuento, descripcion)
+           VALUES (?,?,?,?,?)`,
+          [userId, logro.id, codigo, pct, `${pct}% de descuento en 1 producto — logro: ${logro.nombre}`]
+        );
+      } catch(cupErr) { /* tabla puede no existir aún — se ignora silenciosamente */ }
     }
   } catch(e) { console.error('Error logro:', e.message); }
 }
