@@ -1,0 +1,625 @@
+<%- include('../partials/header', {isAdmin: true}) %>
+
+<style>
+/* Sección cards drag & drop */
+.sec-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  transition: all .2s;
+  user-select: none;
+}
+.sec-drag-handle { cursor: grab; }
+.sec-drag-handle:active { cursor: grabbing; }
+.sec-card:hover { border-color: var(--cp); }
+.sec-card.dragging { opacity: .4; border-color: var(--cp); box-shadow: 0 0 0 2px rgba(233,30,140,.3); }
+
+/* Toggle switch */
+.sec-toggle {
+  width: 44px; height: 24px; border-radius: 12px;
+  border: none; cursor: pointer;
+  transition: background .25s; position: relative; flex-shrink: 0;
+}
+.sec-toggle.on  { background: var(--cp); }
+.sec-toggle.off { background: var(--faint-2); }
+.sec-toggle::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; top: 3px; transition: left .25s;
+}
+.sec-toggle.on::after  { left: 22px; }
+.sec-toggle.off::after { left: 3px; }
+
+/* Miniatura slides */
+.slide-thumb {
+  width: 110px; height: 62px; object-fit: cover;
+  border-radius: 6px; border: 1px solid var(--border); flex-shrink: 0;
+  background: #111;
+}
+
+/* ── MODALES CUSTOM (sin Bootstrap Modal, 100% propio) ── */
+.mc-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.82);
+  z-index: 1050;
+  align-items: center;
+  justify-content: center;
+}
+.mc-backdrop.open { display: flex; }
+.mc-dialog {
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.8);
+  animation: mcIn .2s ease;
+}
+@keyframes mcIn { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.mc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.mc-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem; letter-spacing: 2px; color: var(--cp);
+}
+.mc-close {
+  background: none; border: none;
+  color: var(--muted); font-size: 22px;
+  line-height: 1; cursor: pointer; padding: 0;
+  transition: color .2s;
+}
+.mc-close:hover { color: var(--white); }
+.mc-body   { padding: 20px; }
+.mc-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px;
+}
+
+/* Drag-over indicator */
+.drag-over { border-top: 2px solid var(--cp); }
+</style>
+
+<!-- ── PAGE HEADER ── -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:var(--cp)">ESTRUCTURA DEL INICIO</h4>
+    <p class="small text-muted mb-0">Configura qué secciones se muestran, su orden y contenido</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FILA PRINCIPAL: izquierda (config) | derecha (slides hero)
+     ══════════════════════════════════════════════════════════ -->
+<div class="row g-4">
+
+  <!-- ── COLUMNA IZQUIERDA ── -->
+  <div class="col-12 col-lg-6">
+
+    <!-- Card: Orden & toggles -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h6 style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:2px;color:var(--cp);margin-bottom:14px">
+          ORDEN DE SECCIONES
+        </h6>
+        <p class="small text-muted mb-3">Arrastra para reordenar. Activa/desactiva con el toggle.</p>
+
+        <form action="/admin/homepage/guardar" method="POST" id="formLayout">
+          <input type="hidden" name="seccion_orden" id="seccion_orden_input"
+                 value="<%= cfg.seccion_orden || 'hero,productos,bestsellers,carrusel_marca' %>">
+
+          <div id="secciones-list">
+            <%
+              var secOrden = (cfg.seccion_orden || 'hero,productos,bestsellers,carrusel_marca').split(',');
+              var secInfo = {
+                hero:           { label: 'Hero / Carrusel principal',  icon: 'bi-images',     key: 'mostrar_hero' },
+                productos:      { label: 'Grid de Productos',           icon: 'bi-grid-3x3',   key: 'mostrar_productos' },
+                bestsellers:    { label: 'Lo Más Vendido + Viewer 3D', icon: 'bi-box-seam',   key: 'mostrar_bestsellers' },
+                carrusel_marca: { label: 'Carrusel de Marca',           icon: 'bi-film',       key: 'mostrar_carrusel_marca' }
+              };
+            %>
+            <% secOrden.forEach(function(sec) {
+                 var info = secInfo[sec];
+                 if (!info) return;
+                 var isOn = cfg[info.key] !== '0';
+            %>
+            <div class="sec-card d-flex align-items-center gap-3" data-sec="<%= sec %>">
+              <i class="bi bi-grip-vertical text-muted sec-drag-handle" title="Arrastrar para reordenar"></i>
+              <i class="bi <%= info.icon %>" style="color:var(--cp);font-size:1.1rem;width:22px"></i>
+              <div class="flex-grow-1">
+                <div style="font-weight:600;font-size:.85rem"><%= info.label %></div>
+                <div class="small text-muted">clave: <code><%= sec %></code></div>
+              </div>
+              <button type="button"
+                      class="sec-toggle <%= isOn ? 'on' : 'off' %>"
+                      onclick="toggleSec(this,'<%= info.key %>')"
+                      title="<%= isOn ? 'Ocultar sección' : 'Mostrar sección' %>">
+              </button>
+              <input type="hidden" name="<%= info.key %>" id="hid-<%= info.key %>" value="<%= isOn ? '1' : '0' %>">
+            </div>
+            <% }) %>
+          </div><!-- /#secciones-list -->
+
+          <!-- Cantidades y título -->
+          <div class="row g-3 mt-3">
+            <div class="col-6">
+              <label class="form-label">Productos en inicio</label>
+              <input type="number" name="productos_cantidad" class="form-control"
+                     value="<%= cfg.productos_cantidad || 8 %>" min="2" max="12">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Bestsellers / Recomendados</label>
+              <input type="number" name="bestsellers_cantidad" class="form-control"
+                     value="<%= cfg.bestsellers_cantidad || 4 %>" min="2" max="8">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Título del carrusel de marca</label>
+              <input type="text" name="carrusel_marca_titulo" class="form-control"
+                     value="<%= cfg.carrusel_marca_titulo || 'NUEVA COLECCION' %>">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-pm w-100 mt-3">
+            <i class="bi bi-floppy me-2"></i>Guardar Configuración
+          </button>
+        </form>
+      </div>
+    </div><!-- /card orden -->
+
+    <!-- Card: Modelo 3D activo -->
+    <div class="card">
+      <div class="card-body">
+        <h6 style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:2px;color:var(--cp);margin-bottom:14px">
+          MODELO 3D ACTIVO EN INICIO
+        </h6>
+        <% if (modelos && modelos.length > 0) { %>
+        <div class="d-flex flex-column gap-2">
+          <% modelos.forEach(function(m) { %>
+          <div class="d-flex align-items-center gap-3 p-2 rounded"
+               style="border:1px solid <%= m.es_principal ? 'var(--cp)' : 'var(--border)' %>;background:<%= m.es_principal ? 'rgba(233,30,140,.07)' : 'transparent' %>">
+            <div class="d-flex align-items-center justify-content-center rounded"
+                 style="width:40px;height:40px;background:#0e0e0e;flex-shrink:0">
+              <i class="bi bi-box" style="color:var(--cp)"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div style="font-weight:600;font-size:.85rem"><%= m.nombre %></div>
+              <div class="small text-muted"><%= m.archivo %></div>
+            </div>
+            <% if (m.es_principal) { %>
+            <span style="background:var(--cp);color:white;font-size:.6rem;padding:2px 8px;border-radius:4px;letter-spacing:1px">ACTIVO</span>
+            <% } else { %>
+            <form action="/admin/modelos/<%= m.id %>/principal" method="POST" style="margin:0">
+              <input type="hidden" name="returnTo" value="/admin/homepage">
+              <button type="submit" class="btn btn-om btn-sm">Activar</button>
+            </form>
+            <% } %>
+          </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+        <div class="text-center py-3 text-muted small">
+          Sin modelos 3D. <a href="/admin/modelos" style="color:var(--cp)">Ir a Modelos 3D →</a>
+        </div>
+        <% } %>
+        <a href="/admin/modelos" class="btn btn-om btn-sm w-100 mt-3">
+          <i class="bi bi-box-seam me-1"></i>Gestionar todos los modelos
+        </a>
+      </div>
+    </div><!-- /card modelos 3D -->
+
+  </div><!-- /col izquierda -->
+
+  <!-- ── COLUMNA DERECHA: Slides del hero ── -->
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <div>
+            <h6 style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:2px;color:var(--cp);margin-bottom:2px">
+              SLIDES DEL HERO (CARRUSEL PRINCIPAL)
+            </h6>
+            <p class="small text-muted mb-3">Banners que aparecen en el hero del inicio.</p>
+          </div>
+          <button class="btn btn-pm btn-sm" onclick="mcOpen('mcNewSlide')">
+            <i class="bi bi-plus me-1"></i>Nuevo Slide
+          </button>
+        </div>
+
+        <div id="slides-list" style="display:flex;flex-direction:column;gap:10px">
+          <% if (carrusel && carrusel.length > 0) { %>
+            <% carrusel.forEach(function(s) { %>
+            <div class="d-flex align-items-center gap-3 p-2 rounded"
+                 style="border:1px solid var(--border);background:var(--card)">
+              <img src="/uploads/banners/<%= s.imagen %>" class="slide-thumb"
+                   alt="<%= s.titulo || 'slide' %>"
+                   onerror="this.style.opacity='.3'">
+              <div class="flex-grow-1 min-w-0">
+                <div style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  <%= s.titulo || '(sin título)' %>
+                </div>
+                <div class="small text-muted">Orden: <%= s.orden %></div>
+                <span class="badge mt-1"
+                      style="background:<%= s.activo ? 'rgba(0,255,100,.12)' : 'rgba(120,120,140,.2)' %>;
+                             color:<%= s.activo ? '#00ff64' : 'var(--muted)' %>">
+                  <%= s.activo ? 'Visible' : 'Oculto' %>
+                </span>
+              </div>
+              <div class="d-flex flex-column gap-1">
+                <!-- Editar -->
+                <button type="button" class="btn btn-om btn-sm btn-edit-slide"
+                        style="font-size:.65rem;padding:3px 8px"
+                        data-id="<%= s.id %>"
+                        data-titulo="<%- encodeURIComponent(s.titulo || '') %>"
+                        data-subtitulo="<%- encodeURIComponent(s.subtitulo || '') %>"
+                        data-activo="<%= s.activo ? 1 : 0 %>"
+                        title="Editar slide">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <!-- Toggle visibilidad -->
+                <form action="/admin/homepage/carrusel/<%= s.id %>/toggle" method="POST" style="margin:0"
+                      onsubmit="event.preventDefault();
+                                fetch(this.action,{method:'POST'})
+                                  .then(()=>location.reload())">
+                  <button type="submit" class="btn btn-sm w-100"
+                          style="font-size:.65rem;padding:3px 8px;border:1px solid var(--border);color:var(--muted);background:transparent"
+                          title="<%= s.activo ? 'Ocultar' : 'Mostrar' %>">
+                    <i class="bi bi-eye<%= s.activo ? '-slash' : '' %>"></i>
+                  </button>
+                </form>
+                <!-- Eliminar -->
+                <form action="/admin/homepage/carrusel/<%= s.id %>/eliminar" method="POST" style="margin:0"
+                      onsubmit="return confirm('¿Eliminar este slide?')">
+                  <button type="submit" class="btn btn-sm w-100"
+                          style="font-size:.65rem;padding:3px 8px;border:1px solid #ff6060;color:#ff6060;background:transparent"
+                          title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+            <% }) %>
+          <% } else { %>
+          <div class="text-center py-4 text-muted small"
+               style="border:1px dashed var(--border);border-radius:8px">
+            Sin slides. Agrega el primero con el botón de arriba.
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div><!-- /card slides hero -->
+  </div><!-- /col derecha -->
+
+</div><!-- /row principal -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     FILA INFERIOR: Carrusel de Marca
+     ══════════════════════════════════════════════════════════ -->
+<div class="row g-4 mt-2">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h6 style="font-family:'Bebas Neue',sans-serif;font-size:.7rem;letter-spacing:2px;color:var(--cp);margin-bottom:2px">
+              CARRUSEL DE MARCA (sección inferior)
+            </h6>
+            <p class="small text-muted mb-0">Imágenes independientes del carrusel principal del hero.</p>
+          </div>
+          <button class="btn btn-pm btn-sm" onclick="mcOpen('mcNewMarca')">
+            <i class="bi bi-plus me-1"></i>Agregar Imagen
+          </button>
+        </div>
+
+        <div class="row g-2">
+          <% if (carruselMarca && carruselMarca.length > 0) { %>
+            <% carruselMarca.forEach(function(s) { %>
+            <div class="col-12 col-md-4 col-lg-3">
+              <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                <img src="/uploads/banners/<%= s.imagen %>"
+                     style="width:100%;height:100px;object-fit:cover;opacity:.85;display:block"
+                     onerror="this.style.opacity='.2'">
+                <div style="padding:8px 10px;background:rgba(0,0,0,.55)">
+                  <div style="font-size:.75rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                    <%= s.titulo || '(sin título)' %>
+                  </div>
+                  <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+                    <button type="button" class="btn btn-sm btn-edit-marca"
+                            style="font-size:.6rem;padding:2px 8px;border:1px solid var(--border);color:var(--muted);background:transparent"
+                            data-id="<%= s.id %>"
+                            data-titulo="<%- encodeURIComponent(s.titulo || '') %>"
+                            data-subtitulo="<%- encodeURIComponent(s.subtitulo || '') %>"
+                            data-activo="<%= s.activo ? 1 : 0 %>"
+                            title="Editar">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <!-- Toggle -->
+                    <form action="/admin/homepage/carrusel-marca/<%= s.id %>/toggle" method="POST" style="margin:0"
+                          onsubmit="event.preventDefault();fetch(this.action,{method:'POST'}).then(()=>location.reload())">
+                      <button type="submit" class="btn btn-sm"
+                              style="font-size:.6rem;padding:2px 8px;border:1px solid var(--border);color:var(--muted);background:transparent"
+                              title="<%= s.activo ? 'Ocultar' : 'Mostrar' %>">
+                        <i class="bi bi-eye<%= s.activo ? '-slash' : '' %>"></i>
+                      </button>
+                    </form>
+                    <!-- Eliminar -->
+                    <form action="/admin/homepage/carrusel-marca/<%= s.id %>/eliminar" method="POST" style="margin:0"
+                          onsubmit="return confirm('¿Eliminar esta imagen?')">
+                      <button type="submit" class="btn btn-sm"
+                              style="font-size:.6rem;padding:2px 8px;border:1px solid #ff6060;color:#ff6060;background:transparent"
+                              title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% }) %>
+          <% } else { %>
+          <div class="col-12">
+            <div class="text-center py-4 text-muted small"
+                 style="border:1px dashed var(--border);border-radius:8px">
+              Sin imágenes de marca. Agrega la primera con el botón de arriba.
+            </div>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /row carrusel marca -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     MODALES CUSTOM
+     ══════════════════════════════════════════════════════════ -->
+
+<!-- Modal: Nuevo Slide Hero -->
+<div id="mcNewSlide" class="mc-backdrop">
+  <div class="mc-dialog">
+    <div class="mc-header">
+      <span class="mc-title">Nuevo Slide — Hero</span>
+      <button class="mc-close" onclick="mcClose('mcNewSlide')">&times;</button>
+    </div>
+    <form action="/admin/homepage/carrusel/nuevo" method="POST" enctype="multipart/form-data">
+      <div class="mc-body">
+        <div class="mb-3">
+          <label class="form-label">Imagen del banner</label>
+          <input type="file" name="imagen" accept="image/*" class="form-control" required>
+          <div class="form-text">Recomendado: 1920×600 px · Max 5 MB.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Título (opcional)</label>
+          <input type="text" name="titulo" class="form-control" placeholder="NUEVA COLECCIÓN">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Subtítulo (opcional)</label>
+          <input type="text" name="subtitulo" class="form-control" placeholder="Temporada 2025">
+        </div>
+      </div>
+      <div class="mc-footer">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="mcClose('mcNewSlide')">Cancelar</button>
+        <button type="submit" class="btn btn-pm btn-sm">
+          <i class="bi bi-cloud-upload me-1"></i>Subir
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Editar Slide -->
+<div id="mcEditSlide" class="mc-backdrop">
+  <div class="mc-dialog">
+    <div class="mc-header">
+      <span class="mc-title">Editar Slide</span>
+      <button class="mc-close" onclick="mcClose('mcEditSlide')">&times;</button>
+    </div>
+    <form id="formEditSlide" method="POST">
+      <div class="mc-body">
+        <div class="mb-3">
+          <label class="form-label">Título</label>
+          <input type="text" name="titulo" id="es-titulo" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Subtítulo</label>
+          <input type="text" name="subtitulo" id="es-subtitulo" class="form-control">
+        </div>
+        <div class="form-check">
+          <input type="checkbox" name="activo" id="es-activo" value="1" class="form-check-input">
+          <label class="form-check-label" for="es-activo">Visible en el sitio</label>
+        </div>
+      </div>
+      <div class="mc-footer">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="mcClose('mcEditSlide')">Cancelar</button>
+        <button type="submit" class="btn btn-pm btn-sm">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Editar imagen Carrusel de Marca -->
+<div id="mcEditMarca" class="mc-backdrop">
+  <div class="mc-dialog">
+    <div class="mc-header">
+      <span class="mc-title">Editar Imagen — Carrusel de Marca</span>
+      <button class="mc-close" onclick="mcClose('mcEditMarca')">&times;</button>
+    </div>
+    <form id="formEditMarca" method="POST">
+      <div class="mc-body">
+        <div class="mb-3">
+          <label class="form-label">Título</label>
+          <input type="text" name="titulo" id="em-titulo" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Subtítulo</label>
+          <input type="text" name="subtitulo" id="em-subtitulo" class="form-control">
+        </div>
+        <div class="form-check">
+          <input type="checkbox" name="activo" id="em-activo" value="1" class="form-check-input">
+          <label class="form-check-label" for="em-activo">Visible en el sitio</label>
+        </div>
+      </div>
+      <div class="mc-footer">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="mcClose('mcEditMarca')">Cancelar</button>
+        <button type="submit" class="btn btn-pm btn-sm">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Nueva imagen Carrusel de Marca -->
+<div id="mcNewMarca" class="mc-backdrop">
+  <div class="mc-dialog">
+    <div class="mc-header">
+      <span class="mc-title">Nueva Imagen — Carrusel de Marca</span>
+      <button class="mc-close" onclick="mcClose('mcNewMarca')">&times;</button>
+    </div>
+    <form action="/admin/homepage/carrusel-marca/nuevo" method="POST" enctype="multipart/form-data">
+      <div class="mc-body">
+        <div class="mb-3">
+          <label class="form-label">Imagen</label>
+          <input type="file" name="imagen" accept="image/*" class="form-control" required>
+          <div class="form-text">Recomendado: 1920×600 px · Max 5 MB.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Título (opcional)</label>
+          <input type="text" name="titulo" class="form-control" placeholder="NUEVA COLECCIÓN">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Subtítulo (opcional)</label>
+          <input type="text" name="subtitulo" class="form-control">
+        </div>
+      </div>
+      <div class="mc-footer">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="mcClose('mcNewMarca')">Cancelar</button>
+        <button type="submit" class="btn btn-pm btn-sm">Subir</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCRIPTS
+     ══════════════════════════════════════════════════════════ -->
+<script>
+/* ── Helpers de modal ── */
+function mcOpen(id)  { document.getElementById(id).classList.add('open'); }
+function mcClose(id) { document.getElementById(id).classList.remove('open'); }
+
+// Cerrar al hacer click en el fondo
+document.querySelectorAll('.mc-backdrop').forEach(function(bd) {
+  bd.addEventListener('click', function(e) {
+    if (e.target === bd) mcClose(bd.id);
+  });
+});
+
+// Cerrar con Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.mc-backdrop.open').forEach(function(bd) {
+      mcClose(bd.id);
+    });
+  }
+});
+
+/* ── Toggle visibilidad de sección ── */
+function toggleSec(btn, key) {
+  var isOn = btn.classList.contains('on');
+  btn.classList.toggle('on', !isOn);
+  btn.classList.toggle('off',  isOn);
+  document.getElementById('hid-' + key).value = isOn ? '0' : '1';
+}
+
+/* ── Drag-and-drop para reordenar secciones (solo desde el grip) ── */
+(function() {
+  var list     = document.getElementById('secciones-list');
+  var dragging = null;
+
+  list.querySelectorAll('.sec-card').forEach(function(card) {
+    var handle = card.querySelector('.sec-drag-handle');
+    if (!handle) return;
+
+    handle.setAttribute('draggable', 'true');
+
+    handle.addEventListener('dragstart', function(e) {
+      dragging = card;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    card.addEventListener('dragend', function() {
+      card.classList.remove('dragging');
+      list.querySelectorAll('.sec-card').forEach(function(c) { c.classList.remove('drag-over'); });
+      updateSecOrder();
+    });
+
+    card.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      if (!dragging) return;
+      e.dataTransfer.dropEffect = 'move';
+      var after = getDragAfter(list, e.clientY);
+      if (after == null) list.appendChild(dragging);
+      else list.insertBefore(dragging, after);
+    });
+  });
+
+  function getDragAfter(container, y) {
+    var els = Array.from(container.querySelectorAll('.sec-card:not(.dragging)'));
+    return els.reduce(function(closest, child) {
+      var box    = child.getBoundingClientRect();
+      var offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset)
+        return { offset: offset, element: child };
+      return closest;
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  function updateSecOrder() {
+    var order = Array.from(list.querySelectorAll('.sec-card'))
+                     .map(function(c) { return c.dataset.sec; });
+    document.getElementById('seccion_orden_input').value = order.join(',');
+  }
+})();
+
+function decodeDataAttr(val) {
+  try { return decodeURIComponent(val || ''); } catch(e) { return val || ''; }
+}
+
+/* ── Abrir modal editar slide ── */
+function abrirEditSlide(btn) {
+  document.getElementById('formEditSlide').action =
+    '/admin/homepage/carrusel/' + btn.dataset.id + '/editar';
+  document.getElementById('es-titulo').value    = decodeDataAttr(btn.dataset.titulo);
+  document.getElementById('es-subtitulo').value = decodeDataAttr(btn.dataset.subtitulo);
+  document.getElementById('es-activo').checked  = btn.dataset.activo === '1';
+  mcOpen('mcEditSlide');
+}
+
+function abrirEditMarca(btn) {
+  document.getElementById('formEditMarca').action =
+    '/admin/homepage/carrusel-marca/' + btn.dataset.id + '/editar';
+  document.getElementById('em-titulo').value    = decodeDataAttr(btn.dataset.titulo);
+  document.getElementById('em-subtitulo').value = decodeDataAttr(btn.dataset.subtitulo);
+  document.getElementById('em-activo').checked  = btn.dataset.activo === '1';
+  mcOpen('mcEditMarca');
+}
+
+document.querySelectorAll('.btn-edit-slide').forEach(function(btn) {
+  btn.addEventListener('click', function() { abrirEditSlide(btn); });
+});
+document.querySelectorAll('.btn-edit-marca').forEach(function(btn) {
+  btn.addEventListener('click', function() { abrirEditMarca(btn); });
+});
+</script>
+
+<%- include('../partials/footer') %>

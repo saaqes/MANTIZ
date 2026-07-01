@@ -1,0 +1,401 @@
+<%- include('partials/header') %>
+
+<style>
+/* ── HERO ── */
+.hero-wrap { position:relative; overflow:hidden; height:clamp(360px,58vw,620px); background:#050505; }
+.hslide { position:absolute; inset:0; transition:opacity 1.2s ease; opacity:0; }
+.hslide.active { opacity:1; }
+.hslide img { width:100%; height:100%; object-fit:cover; filter:brightness(.42); display:block; }
+.hero-dots { position:absolute; bottom:26px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:10; }
+.cdot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.3); cursor:pointer; border:none; padding:0; transition:background .3s; }
+.cdot.active { background:var(--pink); }
+/* Scroll button entre hero y la siguiente sección — vive FUERA del hero
+   (que tiene overflow:hidden) en un wrapper de altura 0 justo en el borde,
+   para quedar exactamente a caballo entre banner y sección de productos. */
+.scroll-down-btn { position:absolute; top:-22px; left:50%; transform:translateX(-50%); width:44px; height:44px; border:2px solid var(--pink); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; background:rgba(0,0,0,.5); backdrop-filter:blur(4px); animation:scrollBounce 1.8s ease-in-out infinite; filter:url(#gb); }
+.scroll-down-btn:hover { background:rgba(233,30,140,.35); }
+@keyframes scrollBounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
+@media(max-width:600px){ .scroll-down-btn{display:none} } /* en hero móvil hay menos espacio, no estorba */
+/* ── SECCIONES / TÍTULOS GRAFFITI (mismo lenguaje visual ya usado en /productos) ── */
+.home-section { padding:64px 40px; }
+.home-section-head { text-align:center; margin-bottom:36px; }
+/* ── GRID centrado, mismas cards que /productos ── */
+.pgrid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; max-width:1400px; margin:0 auto; }
+@media(max-width:1200px){ .pgrid4{grid-template-columns:repeat(3,1fr)} }
+@media(max-width:900px){ .pgrid4{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:600px){ .pgrid4{grid-template-columns:1fr} }
+@media(max-width:768px){ .home-section{padding:44px 20px} }
+/* ── LO MÁS VISTO (3D a un lado, productos al otro, centrado) ── */
+.bestsellers-section { background:var(--dark2); }
+.bestsellers-wrap { max-width:1100px; margin:0 auto; }
+.bestsellers-grid { display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(32px,5vw,56px); align-items:center; justify-items:center; }
+@media(max-width:900px){ .bestsellers-grid{ grid-template-columns:1fr; gap:36px; } }
+.viewer-3d-block { width:100%; max-width:520px; display:flex; flex-direction:column; align-items:center; }
+.viewer-3d-label { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:4px; color:var(--pink); margin-bottom:14px; filter:url(#gb); }
+#model-container { position:relative; background:#0e0e0e; border-radius:4px; overflow:hidden; aspect-ratio:1; width:100%; max-width:520px; border:2px solid rgba(233,30,140,.22); filter:url(#gb); cursor:pointer; }
+.bestsellers-products { width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+#model-container canvas { display:block; width:100%!important; height:100%!important; }
+.viewer-hover-info { position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.55) 45%,transparent 75%); display:flex; flex-direction:column; justify-content:flex-end; padding:24px; opacity:0; transition:opacity .35s ease; pointer-events:none; }
+#model-container:hover .viewer-hover-info { opacity:1; }
+.viewer-3d-hint { font-size:11px; color:var(--gray); letter-spacing:2px; margin-top:12px; opacity:.75; }
+.vh-name { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px; color:white; margin-bottom:4px; }
+.vh-price { font-family:'Bebas Neue',sans-serif; font-size:18px; color:var(--pink); margin-bottom:8px; }
+.vh-desc { font-size:12px; color:rgba(255,255,255,.75); line-height:1.5; margin-bottom:10px; max-height:54px; overflow:hidden; }
+.vh-tags { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+.vh-tag { font-size:10px; letter-spacing:1px; color:var(--pink); border:1px solid rgba(233,30,140,.5); padding:2px 8px; border-radius:2px; }
+.lomas-row { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:clamp(12px,2vw,16px); width:100%; max-width:340px; }
+@media(max-width:900px){ .lomas-row{ max-width:420px; grid-template-columns:repeat(4, minmax(0, 1fr)); } }
+@media(max-width:520px){ .lomas-row{ grid-template-columns:repeat(2, minmax(0, 1fr)); max-width:280px; } }
+.lomas-item { display:flex; flex-direction:column; text-decoration:none; border:1px solid var(--faint-2); background:var(--dark); transition:transform .25s; position:relative; overflow:hidden; width:100%; }
+.lomas-item::before { content:''; position:absolute; inset:-2px; border:1px solid transparent; filter:url(#gb); pointer-events:none; transition:border-color .25s; z-index:2; }
+.lomas-item:hover { transform:translateY(-3px); }
+.lomas-item:hover::before { border-color:var(--pink); }
+.lomas-img-wrap { overflow:hidden; aspect-ratio:1/1; }
+.lomas-img-wrap.pc-gallery-clip { aspect-ratio:1/1; }
+.lomas-img { width:100%; height:100%; object-fit:cover; display:block; }
+.lomas-info { padding:8px 8px 10px; text-align:center; }
+.lomas-name { font-size:10px; font-weight:600; color:var(--white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lomas-price { font-family:'Bebas Neue',sans-serif; font-size:12px; color:var(--pink); letter-spacing:1px; }
+/* ── ANIMACIONES HERO (texto/CTA del slide) ── */
+@keyframes hanim-fade-in  { from{opacity:0} to{opacity:1} }
+@keyframes hanim-fade-up  { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+@keyframes hanim-fade-left{ from{opacity:0;transform:translateX(50px)} to{opacity:1;transform:translateX(0)} }
+@keyframes hanim-fade-right{from{opacity:0;transform:translateX(-50px)} to{opacity:1;transform:translateX(0)} }
+@keyframes hanim-zoom-in  { from{opacity:0;transform:scale(.82)} to{opacity:1;transform:scale(1)} }
+@keyframes hanim-zoom-out { from{opacity:0;transform:scale(1.18)} to{opacity:1;transform:scale(1)} }
+@keyframes hanim-scale    { from{opacity:0;transform:scale(.5)} to{opacity:1;transform:scale(1)} }
+@keyframes hanim-slide    { from{opacity:0;transform:translateX(-70px)} to{opacity:1;transform:translateX(0)} }
+.hanim-fade-in{animation:hanim-fade-in .9s ease forwards}
+.hanim-fade-up{animation:hanim-fade-up .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-fade-left{animation:hanim-fade-left .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-fade-right{animation:hanim-fade-right .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-zoom-in{animation:hanim-zoom-in .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-zoom-out{animation:hanim-zoom-out .9s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-scale{animation:hanim-scale .7s cubic-bezier(.34,1.56,.64,1) forwards}
+.hanim-slide{animation:hanim-slide .8s cubic-bezier(.22,1,.36,1) forwards}
+.hanim-ninguna{opacity:1!important;animation:none!important}
+</style>
+
+<!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+<div class="hero-wrap" id="heroWrap">
+  <% if (carrusel && carrusel.length > 0) { carrusel.forEach(function(s,i){ %>
+  <div class="hslide <%= i===0 ? 'active' : '' %>" id="slide-<%= i %>">
+    <img src="/uploads/banners/<%= s.imagen %>" alt="<%= s.titulo||'' %>" loading="<%= i===0?'eager':'lazy' %>">
+  </div>
+  <% }); } else { %>
+  <div class="hslide active" style="background:linear-gradient(135deg,#0a0a0a,rgba(233,30,140,.12),#0a0a0a)"></div>
+  <% } %>
+
+  <div id="hero-center" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;z-index:5;pointer-events:none;padding:0 40px">
+    <h1 id="hero-title" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,8vw,100px);letter-spacing:10px;color:white;opacity:0;text-shadow:0 2px 40px rgba(0,0,0,.7);margin:0;max-width:900px;line-height:1.05;filter:url(#gb)"></h1>
+    <p id="hero-subtitle" style="font-family:'Rajdhani',sans-serif;font-size:clamp(13px,2vw,18px);letter-spacing:3px;color:rgba(255,255,255,.85);margin:0;max-width:600px;display:none"></p>
+    <div id="hero-countdown" style="display:none;font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,4vw,44px);letter-spacing:8px;color:white;text-shadow:0 2px 20px rgba(233,30,140,.6)">
+      <span id="cd-dias">00</span>D&nbsp;<span id="cd-horas">00</span>H&nbsp;<span id="cd-mins">00</span>M&nbsp;<span id="cd-segs">00</span>S
+    </div>
+    <div id="hero-btn" style="pointer-events:all;margin-top:6px;display:none">
+      <button id="hero-cta-btn" class="btn-grunge-fill">EXPLORAR</button>
+    </div>
+  </div>
+
+  <% if (carrusel && carrusel.length > 1) { %>
+  <div class="hero-dots"><% carrusel.forEach(function(s,i){ %><button class="cdot <%=i===0?'active':''%>" data-idx="<%=i%>"></button><% }); %></div>
+  <% } %>
+</div>
+
+<!-- Botón circular: a caballo entre el hero y la sección de productos (hero tiene overflow:hidden, por eso vive fuera de él) -->
+<div style="position:relative;height:0;z-index:15">
+  <button class="scroll-down-btn" onclick="document.getElementById('home-next-section').scrollIntoView({behavior:'smooth'})" aria-label="Bajar">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v10M3 7l5 5 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</div>
+
+<div id="home-next-section"></div>
+
+<!-- ══ PRODUCTOS (mismas cards que /productos, centradas) ══════════════════ -->
+<% if (!seccionOrden || seccionOrden.includes('productos')) { %>
+<section class="home-section">
+  <div class="home-section-head">
+    <h2 class="section-title">NUEVA COLECCIÓN</h2>
+    <%- include('partials/tribal-separator') %>
+  </div>
+  <% if (productos && productos.length > 0) { %>
+  <div class="pgrid4">
+    <% productos.forEach(function(p) {
+      var gUrls = (p.galeria || [p.imagen_principal]).filter(Boolean).map(function(g){ return '/uploads/products/' + g; });
+    %>
+    <div class="product-card reveal" onclick="window.location='/productos/<%= p.id %>'">
+      <div class="pc-label">
+        <span class="pc-label-text"><%= p.titulo.substring(0,16) %></span>
+        <% if (p.precio_descuento) { %><span class="badge-oferta">-<%= Math.round((1-p.precio_descuento/p.precio)*100) %>%</span><% } %>
+      </div>
+      <div class="pc-img-wrap">
+        <div class="pc-img-clip pc-gallery-clip">
+          <% gUrls.forEach(function(url, gi) { %>
+          <img class="pc-gallery-img <%= gi===0 ? 'is-active' : '' %>" src="<%= url %>" alt="<%= p.titulo %>" loading="<%= gi===0 ? 'eager' : 'lazy' %>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+          <% }) %>
+        </div>
+        <button class="pc-add-btn" onclick="event.stopPropagation();quickAdd(<%= p.id %>,'<%= p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39)) %>',<%= p.precio_descuento||p.precio %>,'<%= p.imagen_principal %>')">+</button>
+      </div>
+      <div class="pc-info">
+        <div>
+          <div class="pc-name"><%= p.titulo.substring(0,18) %></div>
+          <div style="font-size:10px;color:var(--gray);letter-spacing:1px;margin-top:2px"><%= p.categoria %></div>
+        </div>
+        <span class="pc-price">$<%= parseFloat(p.precio_final||p.precio).toLocaleString('es-CO') %></span>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <div style="text-align:center;margin-top:36px">
+    <a href="/productos" class="btn-grunge-w" style="display:inline-block;width:auto;padding:14px 44px">VER TODO EL CATÁLOGO</a>
+  </div>
+  <% } else { %>
+  <div style="text-align:center;padding:60px;color:var(--gray);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px">PRODUCTOS PRÓXIMAMENTE</div>
+  <% } %>
+</section>
+<% } %>
+
+<!-- ══ LO MÁS VISTO + PREVIEW 3D (3D a un lado, productos al otro) ═══════════════ -->
+<% if (modeloActivo && (!seccionOrden || seccionOrden.includes('bestsellers')) && hcfg.mostrar_bestsellers !== '0') { %>
+<section class="home-section bestsellers-section">
+  <div class="bestsellers-wrap">
+    <div class="home-section-head">
+      <h2 class="section-title" style="font-size:clamp(26px,4vw,42px)"><%= recomendadosLabel || 'LO MÁS VISTO' %></h2>
+      <div style="font-size:11px;color:var(--gray);letter-spacing:3px;margin-top:8px"><%= hasPersonalized ? 'BASADO EN TUS GUSTOS' : 'PRODUCTOS POPULARES' %></div>
+      <%- include('partials/tribal-separator') %>
+    </div>
+
+    <div class="bestsellers-grid">
+      <div class="viewer-3d-block">
+        <div class="viewer-3d-label">PREVIEW 3D INTERACTIVO</div>
+        <div id="model-container" onclick="<% if(viewer3d){ %>window.location='/productos/<%= viewer3d.id %>'<% } %>">
+          <canvas id="modelCanvas"></canvas>
+          <% if (viewer3d) { %>
+          <div class="viewer-hover-info">
+            <div class="vh-name"><%= viewer3d.titulo %></div>
+            <div class="vh-price">$<%= parseFloat(viewer3d.precio_final||viewer3d.precio).toLocaleString('es-CO') %></div>
+            <% if (viewer3d.descripcion) { %><div class="vh-desc"><%= viewer3d.descripcion.substring(0,140) %><% if(viewer3d.descripcion.length>140){ %>…<% } %></div><% } %>
+            <% if (viewer3d.categoria || viewer3d.tags) { %>
+            <div class="vh-tags">
+              <% if (viewer3d.categoria) { %><span class="vh-tag"><%= viewer3d.categoria %></span><% } %>
+              <% (viewer3d.tags||'').split(',').filter(Boolean).slice(0,3).forEach(function(t){ %><span class="vh-tag"><%= t.trim() %></span><% }) %>
+            </div>
+            <% } %>
+          </div>
+          <% } %>
+        </div>
+        <div class="viewer-3d-hint">Arrastra para rotar · Clic para ver producto</div>
+      </div>
+
+      <% if (recomendados && recomendados.length > 0) { %>
+      <div class="bestsellers-products">
+        <div class="lomas-row">
+          <% recomendados.slice(0,4).forEach(function(p) {
+            var gUrls = (p.galeria || [p.imagen_principal]).filter(Boolean).map(function(g){ return '/uploads/products/' + g; });
+          %>
+          <a href="/productos/<%= p.id %>" class="lomas-item">
+            <div class="lomas-img-wrap pc-gallery-clip">
+              <% gUrls.forEach(function(url, gi) { %>
+              <img class="pc-gallery-img lomas-img <%= gi===0 ? 'is-active' : '' %>" src="<%= url %>" alt="<%= p.titulo %>" loading="<%= gi===0 ? 'eager' : 'lazy' %>" onerror="this.src='https://via.placeholder.com/200x200/111/888?text=?'">
+              <% }) %>
+            </div>
+            <div class="lomas-info">
+              <div class="lomas-name"><%= p.titulo %></div>
+              <span class="lomas-price">$<%= parseFloat(p.precio_final||p.precio).toLocaleString('es-CO') %></span>
+            </div>
+          </a>
+          <% }) %>
+        </div>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+<% } else if (recomendados && recomendados.length > 0 && (!seccionOrden || seccionOrden.includes('bestsellers')) && hcfg.mostrar_bestsellers !== '0') { %>
+
+<!-- ══ RECOMENDADOS (sin viewer 3D activo) ═══════════════════════════════ -->
+<section class="home-section" style="background:var(--dark2)">
+  <div class="home-section-head">
+    <h2 class="section-title"><%= recomendadosLabel || 'LO MÁS VENDIDO' %></h2>
+    <div style="font-size:11px;color:var(--gray);letter-spacing:3px;margin-top:6px"><%= hasPersonalized ? 'BASADO EN TUS GUSTOS' : 'PRODUCTOS POPULARES' %></div>
+    <%- include('partials/tribal-separator') %>
+  </div>
+  <div class="pgrid4">
+    <% recomendados.forEach(function(p) {
+      var gUrls = (p.galeria || [p.imagen_principal]).filter(Boolean).map(function(g){ return '/uploads/products/' + g; });
+    %>
+    <div class="product-card reveal" onclick="window.location='/productos/<%= p.id %>'">
+      <div class="pc-label"><span class="pc-label-text"><%= p.titulo.substring(0,16) %></span></div>
+      <div class="pc-img-wrap">
+        <div class="pc-img-clip pc-gallery-clip">
+          <% gUrls.forEach(function(url, gi) { %>
+          <img class="pc-gallery-img <%= gi===0 ? 'is-active' : '' %>" src="<%= url %>" alt="<%= p.titulo %>" loading="<%= gi===0 ? 'eager' : 'lazy' %>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+          <% }) %>
+        </div>
+        <button class="pc-add-btn" onclick="event.stopPropagation();quickAdd(<%= p.id %>,'<%= p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39)) %>',<%= p.precio_descuento||p.precio %>,'<%= p.imagen_principal %>')">+</button>
+      </div>
+      <div class="pc-info">
+        <div class="pc-name"><%= p.titulo.substring(0,18) %></div>
+        <span class="pc-price">$<%= parseFloat(p.precio_final||p.precio).toLocaleString('es-CO') %></span>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+
+<!-- SIZE MODAL (idéntico al de /productos para mantener consistencia funcional) -->
+<div id="size-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
+  <div style="background:var(--card-bg);max-width:400px;width:90%;padding:32px;position:relative">
+    <div style="position:absolute;inset:0;border:3px solid var(--faint-3);filter:url(#gb);pointer-events:none;z-index:10"></div>
+    <button onclick="closeSzModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;z-index:20">&#x2715;</button>
+    <div id="sz-name" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--pink);margin-bottom:8px"></div>
+    <div id="sz-price" style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);margin-bottom:20px"></div>
+    <div style="font-size:11px;letter-spacing:2px;color:var(--gray);margin-bottom:10px">SELECCIONA TALLA</div>
+    <div id="sz-btns" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px"></div>
+    <button onclick="confirmAdd()" style="width:100%;background:var(--pink);border:2px solid white;color:white;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:4px;cursor:pointer;filter:url(#gb)">AÑADIR AL CARRITO</button>
+  </div>
+</div>
+
+<script>
+// ── HERO: configuración dinámica por slide (animación/destino/cronómetro) ──
+var slideConfigs = <%- JSON.stringify((carrusel||[]).map(function(s){ return {
+  content_type:s.content_type||'texto', mostrar_boton:s.mostrar_boton!==0&&s.mostrar_boton!=='0',
+  boton_texto:s.boton_texto||'EXPLORAR', boton_url:s.boton_url||'/productos',
+  countdown_fecha:s.countdown_fecha||null, titulo:s.titulo||'', subtitulo:s.subtitulo||'',
+  animacion:s.animacion||'fade-in', posicion_texto:s.posicion_texto||'centro'
+}; })) %>;
+var cdInterval=null;
+var HANIM=['hanim-fade-in','hanim-fade-up','hanim-fade-left','hanim-fade-right','hanim-zoom-in','hanim-zoom-out','hanim-scale','hanim-slide','hanim-ninguna'];
+function replayAnim(el,cls){HANIM.forEach(function(c){el.classList.remove(c);});el.style.opacity='0';void el.offsetWidth;el.classList.add(cls);}
+function applySlideConfig(idx){
+  var cfg=slideConfigs[idx]||{content_type:'texto',mostrar_boton:false,boton_texto:'EXPLORAR',boton_url:'/productos',titulo:'',subtitulo:'',animacion:'fade-in',posicion_texto:'centro'};
+  var hc=document.getElementById('hero-center');var tEl=document.getElementById('hero-title');var sEl=document.getElementById('hero-subtitle');
+  var cdEl=document.getElementById('hero-countdown');var btnEl=document.getElementById('hero-btn');var ctaBtn=document.getElementById('hero-cta-btn');
+  var showText=cfg.content_type==='texto'||cfg.content_type==='texto_cronometro';
+  var showCd=cfg.content_type==='cronometro'||cfg.content_type==='texto_cronometro';
+  var posMap={izquierda:{a:'flex-start',t:'left'},centro:{a:'center',t:'center'},derecha:{a:'flex-end',t:'right'}};
+  var pos=posMap[cfg.posicion_texto]||posMap.centro;
+  if(hc){hc.style.alignItems=pos.a;hc.style.textAlign=pos.t;}
+  if(tEl){tEl.textContent=cfg.titulo||'';tEl.style.display=(showText&&cfg.titulo)?'block':'none';if(showText&&cfg.titulo){var ac='hanim-'+(cfg.animacion||'fade-in');if(HANIM.indexOf(ac)===-1)ac='hanim-fade-in';replayAnim(tEl,ac);}}
+  if(sEl){sEl.textContent=cfg.subtitulo||'';sEl.style.display=(showText&&cfg.subtitulo)?'block':'none';}
+  if(cdEl)cdEl.style.display=showCd?'block':'none';
+  if(btnEl)btnEl.style.display=cfg.mostrar_boton?'block':'none';
+  if(ctaBtn){ctaBtn.textContent=cfg.boton_texto||'EXPLORAR';ctaBtn.onclick=function(){window.location.href=cfg.boton_url||'/productos';};}
+  if(cdInterval)clearInterval(cdInterval);
+  if(showCd&&cfg.countdown_fecha){
+    function upCd(){var diff=Math.max(0,new Date(cfg.countdown_fecha).getTime()-Date.now());function p(n){return String(n).padStart(2,'0');}
+      var d1=document.getElementById('cd-dias');if(!d1)return;
+      d1.textContent=p(Math.floor(diff/86400000));document.getElementById('cd-horas').textContent=p(Math.floor((diff%86400000)/3600000));
+      document.getElementById('cd-mins').textContent=p(Math.floor((diff%3600000)/60000));document.getElementById('cd-segs').textContent=p(Math.floor((diff%60000)/1000));}
+    upCd();cdInterval=setInterval(upCd,1000);
+  }
+}
+applySlideConfig(0);
+var hSlides=document.querySelectorAll('.hslide'),hDots=document.querySelectorAll('.cdot'),hCur=0;
+function goSlide(n){
+  if(hSlides.length<=1)return;
+  hSlides[hCur].classList.remove('active');if(hDots[hCur])hDots[hCur].classList.remove('active');
+  hCur=(n+hSlides.length)%hSlides.length;
+  hSlides[hCur].classList.add('active');if(hDots[hCur])hDots[hCur].classList.add('active');
+  applySlideConfig(hCur);
+}
+hDots.forEach(function(d){d.addEventListener('click',function(){goSlide(parseInt(d.dataset.idx));});});
+if(hSlides.length>1)setInterval(function(){goSlide(hCur+1);},4800);
+
+// ── CARRITO RÁPIDO (idéntico a /productos) ──────────────────────────────
+var pendProd=null, selSz=null;
+async function quickAdd(id,name,price,img){
+  try{
+    var r=await fetch('/productos/'+id+'/tallas');
+    var d=await r.json();
+    if(d.tallas&&d.tallas.length>0){
+      document.getElementById('sz-name').textContent=name;
+      document.getElementById('sz-price').textContent='$'+parseFloat(price).toLocaleString('es-CO');
+      var h='';
+      d.tallas.forEach(function(t){
+        h+='<button onclick="selSzBtn(this,\''+t.talla+'\')" class="sz-b" data-stock="'+t.stock+'" style="padding:6px 14px;border:2px solid var(--faint-3);background:none;color:var(--white);font-family:Rajdhani,sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;'+(t.stock===0?'opacity:0.3;cursor:not-allowed;text-decoration:line-through;':'')+'">'+(t.talla||'U')+'</button>';
+      });
+      document.getElementById('sz-btns').innerHTML=h;
+      pendProd={id:id,name:name,price:price,img:img};selSz=null;
+      var m=document.getElementById('size-modal');m.style.opacity='1';m.style.pointerEvents='all';
+    }else{await addCart(id,null);}
+  }catch(e){await addCart(id,null);}
+}
+function selSzBtn(btn,t){
+  if(btn.dataset.stock==='0')return;
+  document.querySelectorAll('.sz-b').forEach(function(b){b.style.background='none';b.style.borderColor='var(--faint-3)';b.style.color='var(--white)';});
+  btn.style.background='var(--pink)';btn.style.borderColor='var(--pink)';selSz=t;
+}
+function closeSzModal(){var m=document.getElementById('size-modal');m.style.opacity='0';m.style.pointerEvents='none';pendProd=null;selSz=null;}
+document.getElementById('size-modal').addEventListener('click',function(e){if(e.target===document.getElementById('size-modal'))closeSzModal();});
+async function confirmAdd(){
+  if(!pendProd)return;
+  if(!selSz){var sb=document.getElementById('sz-btns');sb.style.outline='1px solid var(--pink)';setTimeout(function(){sb.style.outline='';},500);return;}
+  await addCart(pendProd.id,selSz);closeSzModal();
+}
+async function addCart(id,talla){
+  try{
+    var r=await fetch('/carrito/agregar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto_id:id,talla:talla,cantidad:1})});
+    var d=await r.json();
+    if(d.success){showToast('PRODUCTO ANADIDO');var cc=document.getElementById('cart-count');if(cc){var n=(parseInt(cc.textContent)||0)+1;cc.textContent=n;cc.classList.add('show');}var cp=document.getElementById('cart-panel');if(cp){cp.classList.add('open');if(typeof loadCartPanel==='function')loadCartPanel();}}
+    else if(d.redirect){window.location=d.redirect;}
+  }catch(e){}
+}
+
+// ── VIEWER 3D ────────────────────────────────────────────────────────────
+<% if (modeloActivo) { %>
+(function(){
+  function loadLibs(cb){
+    var need=2,done=0;function ok(){if(++done>=need)cb();}
+    if(typeof THREE==='undefined'){need++;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=ok;document.head.appendChild(s);}
+    var s2=document.createElement('script');s2.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';s2.onload=ok;document.head.appendChild(s2);
+    var s3=document.createElement('script');s3.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';s3.onload=ok;document.head.appendChild(s3);
+  }
+  loadLibs(function(){
+    var canvas=document.getElementById('modelCanvas');if(!canvas)return;
+    var w=canvas.clientWidth||400;
+
+    // Colores del viewer según tema — se recalculan en vivo al cambiar de tema
+    var THEME_DARK  = { bg:0x0e0e0e, ambient:0xffffff, ambientI:.7, dirI:1.1, pointColor:0xe91e8c, pointI:.9, exposure:1.1 };
+    var THEME_LIGHT = { bg:0xe9e9ee, ambient:0xffffff, ambientI:1.0, dirI:.75, pointColor:0xe91e8c, pointI:.45, exposure:1.0 };
+    function currentTheme(){ return document.body.classList.contains('light-mode') ? THEME_LIGHT : THEME_DARK; }
+
+    var t0 = currentTheme();
+    var scene=new THREE.Scene();scene.background=new THREE.Color(t0.bg);
+    var camera=new THREE.PerspectiveCamera(45,1,0.01,1000);
+    var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+    renderer.setSize(w,w,false);renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+    renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=t0.exposure;
+    var ambientLight=new THREE.AmbientLight(t0.ambient,t0.ambientI);scene.add(ambientLight);
+    var dl=new THREE.DirectionalLight(0xffffff,t0.dirI);dl.position.set(4,7,4);scene.add(dl);
+    var pl=new THREE.PointLight(t0.pointColor,t0.pointI,14);pl.position.set(-3,2,3);scene.add(pl);
+
+    // Reaccionar a cambios de tema en vivo (sin recargar la página)
+    window.addEventListener('mantiz-theme-change', function(){
+      var t = currentTheme();
+      scene.background = new THREE.Color(t.bg);
+      ambientLight.intensity = t.ambientI;
+      dl.intensity = t.dirI;
+      pl.color.setHex(t.pointColor); pl.intensity = t.pointI;
+      renderer.toneMappingExposure = t.exposure;
+    });
+
+    var controls=new THREE.OrbitControls(camera,canvas);controls.enableDamping=true;controls.dampingFactor=.08;controls.enablePan=false;
+    var group=new THREE.Group();scene.add(group);
+    new THREE.GLTFLoader().load('<%= modeloActivo.archivo %>',function(gltf){
+      var model=gltf.scene;
+      var box=new THREE.Box3().setFromObject(model);var center=box.getCenter(new THREE.Vector3());var size=box.getSize(new THREE.Vector3());
+      var maxD=Math.max(size.x,size.y,size.z)||1;
+      model.position.sub(center);model.scale.setScalar(1);group.add(model);
+      camera.position.set(0,maxD*.15,maxD*2.1);camera.lookAt(0,0,0);controls.update();
+    });
+    (function animate(){requestAnimationFrame(animate);group.rotation.y+=.004;controls.update();renderer.render(scene,camera);})();
+    window.addEventListener('resize',function(){var w2=canvas.clientWidth;if(!w2)return;renderer.setSize(w2,w2,false);camera.aspect=1;camera.updateProjectionMatrix();});
+    setTimeout(function(){window.dispatchEvent(new Event('resize'));},300);
+  });
+})();
+<% } %>
+</script>
+
+<%- include('partials/footer') %>

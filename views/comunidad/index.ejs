@@ -1,0 +1,465 @@
+<%- include('../partials/header') %>
+
+<style>
+/* ── Layout ── */
+.com-wrap{max-width:1400px;margin:0 auto;padding:0 24px 80px}
+
+/* ── Hero ── */
+.com-hero{text-align:center;padding:48px 24px 32px}
+.com-hero-title{font-family:var(--fd);font-size:clamp(2rem,5vw,3.2rem);letter-spacing:8px;color:var(--text);line-height:1}
+.com-hero-sub{font-family:var(--fm);font-size:.78rem;color:var(--muted);letter-spacing:2px;margin-top:8px}
+.com-divider{display:flex;align-items:center;justify-content:center;margin:16px auto 0;opacity:.5}
+
+/* ── Tabs ── */
+.com-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;margin-bottom:32px}
+.com-tabs::-webkit-scrollbar{display:none}
+.com-tab{padding:12px 22px;font-family:var(--fm);font-size:.7rem;font-weight:700;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;text-transform:uppercase;background:none;border-top:none;border-left:none;border-right:none}
+.com-tab:hover{color:var(--text)}
+.com-tab.active{color:var(--cp);border-bottom-color:var(--cp)}
+.com-section{display:none}
+.com-section.active{display:block}
+
+/* ── Board cards (masonry) ── */
+.boards-masonry{columns:4 280px;gap:16px}
+.board-card{break-inside:avoid;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s;display:block;text-decoration:none;color:inherit}
+.board-card:hover{transform:translateY(-4px);border-color:rgba(233,30,140,.35);box-shadow:0 12px 40px rgba(233,30,140,.12);color:inherit;text-decoration:none}
+
+/* Portada del tablero */
+.board-cover-wrap{position:relative;overflow:hidden}
+.board-cover-color{width:100%;min-height:72px;display:flex;align-items:center;justify-content:center}
+.board-cover-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.board-cover-grid img{width:100%;height:90px;object-fit:cover;display:block}
+.board-cover-grid.one img{height:140px}
+.board-cover-img img{width:100%;height:160px;object-fit:cover;display:block}
+
+.board-body{padding:12px 14px}
+.board-name{font-family:var(--fb);font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:4px;line-height:1.2}
+.board-desc{font-family:var(--fb);font-size:.75rem;color:var(--muted);line-height:1.4;max-height:2.8em;overflow:hidden;margin-bottom:8px}
+.board-meta{display:flex;gap:10px;font-family:var(--fm);font-size:.62rem;color:var(--muted);margin-bottom:10px}
+.board-meta span{display:flex;align-items:center;gap:3px}
+.board-author{display:flex;align-items:center;gap:7px;padding:8px 14px;border-top:1px solid var(--border)}
+.board-author img{border-radius:50%;border:1px solid rgba(233,30,140,.3)}
+.board-author-name{font-family:var(--fm);font-size:.65rem;color:var(--muted);text-decoration:none;transition:color .18s}
+.board-author-name:hover{color:var(--cp)}
+.board-actions{display:flex;gap:4px;padding:4px 10px 10px;align-items:center}
+.react-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 9px;font-size:13px;cursor:pointer;border-radius:6px;transition:all .18s;line-height:1.4}
+.react-btn:hover,.react-btn.active{background:rgba(233,30,140,.1);color:var(--cp);border-color:rgba(233,30,140,.3)}
+.save-btn{margin-left:auto;background:none;border:1px solid var(--border);color:var(--muted);padding:3px 10px;font-family:var(--fm);font-size:.6rem;font-weight:700;letter-spacing:1px;cursor:pointer;border-radius:6px;transition:all .18s;display:flex;align-items:center;gap:4px}
+.save-btn:hover,.save-btn.saved{background:var(--cp);color:white;border-color:var(--cp)}
+
+/* ── Top bar: buscador + nuevo tablero ── */
+.com-topbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.com-search{flex:1;min-width:180px;max-width:320px;position:relative}
+.com-search input{width:100%;height:38px;background:var(--card);border:1px solid var(--border);border-radius:19px;padding:0 16px 0 38px;color:var(--text);font-family:var(--fm);font-size:13px;outline:none;transition:border-color .2s}
+.com-search input:focus{border-color:rgba(233,30,140,.4)}
+.com-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+
+/* ── Crear tablero: botón ── */
+.btn-nuevo-tablero{height:38px;padding:0 18px;background:var(--cp);color:white;border:none;border-radius:8px;font-family:var(--fm);font-size:.7rem;font-weight:700;letter-spacing:1.5px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .2s;white-space:nowrap;text-transform:uppercase}
+.btn-nuevo-tablero:hover{background:#d01478}
+
+/* ── Modal: crear tablero ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--dark2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;animation:modalIn .22s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(-12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
+.modal-title{font-family:var(--fd);font-size:.9rem;letter-spacing:3px;color:var(--text)}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:2px;line-height:1;transition:color .18s}
+.modal-close:hover{color:var(--cp)}
+.modal-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* Preview portada del modal */
+.portada-preview{width:100%;height:110px;border-radius:10px;overflow:hidden;position:relative;border:1px solid var(--border)}
+.portada-preview-inner{width:100%;height:100%;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.portada-label{font-family:var(--fm);font-size:.65rem;color:rgba(255,255,255,.3);letter-spacing:2px;position:absolute;bottom:8px;right:10px}
+
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-family:var(--fm);font-size:.62rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.form-inp{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-family:var(--fb);font-size:.88rem;outline:none;transition:border-color .2s;width:100%}
+.form-inp:focus{border-color:rgba(233,30,140,.4)}
+.form-inp::placeholder{color:var(--muted)}
+textarea.form-inp{resize:vertical;min-height:72px}
+.color-row{display:flex;gap:8px;flex-wrap:wrap}
+.color-swatch{width:30px;height:30px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.color-swatch.selected{border-color:white;transform:scale(1.15)}
+.priv-row{display:flex;gap:8px}
+.priv-opt{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;transition:all .18s;font-family:var(--fm);font-size:.65rem;font-weight:700;letter-spacing:1px;color:var(--muted)}
+.priv-opt:hover,.priv-opt.selected{border-color:var(--cp);color:var(--cp);background:rgba(233,30,140,.07)}
+.priv-opt i{display:block;font-size:18px;margin-bottom:4px}
+.cat-grid{display:flex;gap:6px;flex-wrap:wrap}
+.cat-chip{padding:5px 12px;border:1px solid var(--border);border-radius:16px;font-family:var(--fm);font-size:.63rem;color:var(--muted);cursor:pointer;transition:all .18s}
+.cat-chip.selected,.cat-chip:hover{border-color:var(--cp);color:var(--cp);background:rgba(233,30,140,.07)}
+
+/* ── Explorar masonry ── */
+.explorar-masonry{columns:6 130px;gap:8px}
+.explorar-pin{break-inside:avoid;margin-bottom:8px;overflow:hidden;border-radius:8px;cursor:pointer;position:relative}
+.explorar-pin img{width:100%;display:block;transition:transform .3s}
+.explorar-pin:hover img{transform:scale(1.05)}
+.explorar-pin-overlay{position:absolute;inset:0;background:rgba(10,10,10,.65);opacity:0;transition:opacity .2s;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:10px}
+.explorar-pin:hover .explorar-pin-overlay{opacity:1}
+.explorar-pin-label{font-family:var(--fm);font-size:.58rem;color:rgba(255,255,255,.8);letter-spacing:.5px;text-align:center}
+
+/* ── Creadores (usuarios) ── */
+.creadores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.creador-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 14px;text-align:center;transition:all .2s;text-decoration:none;display:block;color:inherit}
+.creador-card:hover{border-color:rgba(233,30,140,.35);transform:translateY(-3px);color:inherit}
+.creador-card img{width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid rgba(233,30,140,.3);margin-bottom:10px}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:60px 24px;color:var(--muted)}
+.empty-state i{font-size:2rem;display:block;margin-bottom:12px;color:rgba(233,30,140,.2)}
+
+/* ── Responsive ── */
+@media(max-width:900px){.boards-masonry{columns:2 240px}.explorar-masonry{columns:4 110px}}
+@media(max-width:600px){.boards-masonry{columns:1}.explorar-masonry{columns:3 100px}.com-wrap{padding:0 12px 100px}}
+</style>
+
+<div class="com-wrap">
+  <!-- Hero -->
+  <div class="com-hero">
+    <div class="com-hero-title">COMUNIDAD</div>
+    <%- include('../partials/tribal-separator') %>
+    <div class="com-hero-sub">Tableros, imágenes y creadores de la comunidad MANTIZ</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="com-tabs">
+    <button class="com-tab active" onclick="showTab('tableros',this)">◈ TABLEROS</button>
+    <button class="com-tab" onclick="showTab('explorar',this)">◈ EXPLORAR</button>
+    <button class="com-tab" onclick="showTab('creadores',this)">◈ CREADORES</button>
+  </div>
+
+  <!-- ══ TABLEROS ══ -->
+  <div id="tab-tableros" class="com-section active">
+    <!-- Top bar -->
+    <div class="com-topbar">
+      <div class="com-search">
+        <i class="bi bi-search"></i>
+        <input type="text" id="board-q" placeholder="Buscar tablero..." autocomplete="off">
+      </div>
+      <% if (user) { %>
+      <button class="btn-nuevo-tablero" onclick="document.getElementById('modal-crear').classList.add('open')">
+        <i class="bi bi-plus-circle"></i>CREAR TABLERO
+      </button>
+      <% } %>
+    </div>
+
+    <div class="boards-masonry" id="boards-grid">
+      <% if (!tableros || tableros.length === 0) { %>
+      <div class="empty-state" style="column-span:all">
+        <i class="bi bi-grid-3x3-gap"></i>
+        <div style="font-family:var(--fd);font-size:1rem;letter-spacing:3px;color:var(--text)">Aún no hay tableros</div>
+        <div style="font-size:.8rem;margin-top:6px">Sé el primero en publicar uno.</div>
+      </div>
+      <% } %>
+      <% tableros.forEach(t => {
+        const imgs = t.preview_imgs || [];
+        const cleanDesc = (t.descripcion||'').replace(/^\[cat:[^\]]+\]\s*/,'');
+        const catMatch = (t.descripcion||'').match(/^\[cat:([^\]]+)\]/);
+        const cat = catMatch ? catMatch[1] : '';
+      %><a class="board-card" href="/comunidad/tablero/<%= t.id %>">
+        <!-- Portada -->
+        <% if (imgs.length >= 2) { %>
+        <div class="board-cover-wrap board-cover-grid <%= imgs.length === 1 ? 'one' : '' %>">
+          <% imgs.slice(0,4).forEach(img => { %>
+          <img src="<%= img %>" onerror="this.parentElement.classList.add('hidden')">
+          <% }) %>
+        </div>
+        <% } else if (imgs.length === 1) { %>
+        <div class="board-cover-wrap board-cover-img" data-bg="<%= t.color_portada||'#1a1a2a' %>">
+          <img src="<%= imgs[0] %>" onerror="var bg=this.parentElement.dataset.bg;this.parentElement.innerHTML='<div style=&quot;height:160px;background:'+bg+'&quot;></div>'">
+        </div>
+        <% } else { %>
+        <div class="board-cover-color" style="background:<%= t.color_portada||'#1a1a2a' %>;min-height:<%= t.nombre.length > 20 ? 60 : 72 %>px">
+          <span style="font-family:var(--fd);font-size:1.1rem;letter-spacing:3px;color:rgba(255,255,255,.15);padding:8px 12px;text-align:center"><%= t.nombre.toUpperCase() %></span>
+        </div>
+        <% } %>
+
+        <!-- Info -->
+        <div class="board-body">
+          <% if (cat) { %>
+          <div style="font-family:var(--fm);font-size:.55rem;letter-spacing:1.5px;color:var(--cp);text-transform:uppercase;margin-bottom:4px"><%= cat %></div>
+          <% } %>
+          <div class="board-name"><%= t.nombre %></div>
+          <% if (cleanDesc) { %><div class="board-desc"><%= cleanDesc %></div><% } %>
+          <div class="board-meta">
+            <span><i class="bi bi-pin-fill"></i><%= t.total_pines %></span>
+            <span><i class="bi bi-eye"></i><%= t.total_vistas||0 %></span>
+            <span><i class="bi bi-heart"></i><%= t.total_reacciones||0 %></span>
+            <span><i class="bi bi-bookmark"></i><%= t.total_guardados||0 %></span>
+          </div>
+        </div>
+        <div class="board-author">
+          <img src="<%= t.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+t.foto_perfil : '/img/defaults/avatars/'+(t.foto_perfil_preset||'avatar1.png') %>" width="22" height="22" onerror="this.src='/img/defaults/avatars/avatar1.png'">
+          <a href="/u/<%= t.username %>" class="board-author-name" onclick="event.stopPropagation()">@<%= t.username %></a>
+        </div>
+        <div class="board-actions" onclick="event.stopPropagation()">
+          <button class="react-btn" onclick="reaccionar(<%= t.id %>,'fuego',this)" title="🔥">🔥</button>
+          <button class="react-btn" onclick="reaccionar(<%= t.id %>,'love',this)" title="❤️">❤️</button>
+          <button class="react-btn" onclick="reaccionar(<%= t.id %>,'wow',this)" title="😮">😮</button>
+          <% if (user) { %>
+          <button class="save-btn" id="save-<%= t.id %>" onclick="guardarTablero(<%= t.id %>)">
+            <i class="bi bi-bookmark"></i>GUARDAR
+          </button>
+          <% } %>
+        </div>
+      </a><% }) %>
+    </div>
+  </div>
+
+  <!-- ══ EXPLORAR (imágenes masonry) ══ -->
+  <div id="tab-explorar" class="com-section">
+    <% if (!imagenes || imagenes.length === 0) { %>
+    <div class="empty-state"><i class="bi bi-images"></i>Aún no hay imágenes en los tableros públicos.</div>
+    <% } else { %>
+    <div class="explorar-masonry">
+      <% imagenes.forEach(img => { %>
+      <div class="explorar-pin" onclick="window.location='/comunidad/tablero/<%= img.tablero_id %>'">
+        <img src="<%= img.imagen_url %>" alt="<%= img.titulo||'' %>" loading="lazy" onerror="this.parentElement.remove()">
+        <div class="explorar-pin-overlay">
+          <div class="explorar-pin-label"><%= img.tablero_nombre %></div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- ══ CREADORES ══ -->
+  <div id="tab-creadores" class="com-section">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <a href="/usuarios" style="font-family:var(--fm);font-size:.7rem;color:var(--cp);text-decoration:none;letter-spacing:1px">
+        Ver directorio completo <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <% if (!usuarios || usuarios.length === 0) { %>
+    <div class="empty-state"><i class="bi bi-people"></i>Sin creadores destacados aún.</div>
+    <% } else { %>
+    <div class="creadores-grid">
+      <% usuarios.forEach(u => { %>
+      <a href="/u/<%= u.username %>" class="creador-card">
+        <img src="<%= u.foto_perfil_tipo==='upload' ? '/uploads/profiles/'+u.foto_perfil : '/img/defaults/avatars/'+(u.foto_perfil_preset||'avatar1.png') %>"
+             onerror="this.src='/img/defaults/avatars/avatar1.png'">
+        <div style="font-family:var(--fb);font-weight:700;font-size:.88rem;color:var(--text)"><%= u.nombre_visible %></div>
+        <div style="font-family:var(--fm);font-size:.65rem;color:var(--muted);margin-bottom:10px">@<%= u.username %></div>
+        <% if (u.bio) { %><div style="font-family:var(--fb);font-size:.72rem;color:var(--muted);line-height:1.3;margin-bottom:8px;height:2.6em;overflow:hidden"><%= u.bio %></div><% } %>
+        <div style="display:flex;justify-content:center;gap:14px">
+          <div style="text-align:center">
+            <div style="font-family:var(--fd);font-size:.9rem;color:var(--cp)"><%= u.total_tableros %></div>
+            <div style="font-family:var(--fm);font-size:.55rem;color:var(--muted);letter-spacing:1px">TABLEROS</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-family:var(--fd);font-size:.9rem;color:var(--cp)"><%= u.total_likes %></div>
+            <div style="font-family:var(--fm);font-size:.55rem;color:var(--muted);letter-spacing:1px">LIKES</div>
+          </div>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- ══ MODAL: CREAR TABLERO ══ -->
+<% if (user) { %>
+<div class="modal-overlay" id="modal-crear" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">◈ NUEVO TABLERO</div>
+      <button class="modal-close" onclick="document.getElementById('modal-crear').classList.remove('open')">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <!-- Preview de portada -->
+      <div class="portada-preview">
+        <div class="portada-preview-inner" id="portada-preview-inner" style="background:#e91e8c">
+          <span style="font-family:var(--fd);font-size:1rem;letter-spacing:4px;color:rgba(255,255,255,.2)" id="portada-preview-nombre">MI TABLERO</span>
+        </div>
+        <span class="portada-label">PORTADA</span>
+      </div>
+
+      <!-- Nombre -->
+      <div class="form-group">
+        <label class="form-label">Nombre del tablero *</label>
+        <input type="text" class="form-inp" id="nt-nombre" placeholder="Ej: Outfits Y2K 2025" maxlength="100"
+               oninput="document.getElementById('portada-preview-nombre').textContent=this.value.toUpperCase()||'MI TABLERO'">
+      </div>
+
+      <!-- Descripción -->
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <textarea class="form-inp" id="nt-desc" placeholder="¿De qué trata este tablero?" maxlength="300"></textarea>
+      </div>
+
+      <!-- Color de portada -->
+      <div class="form-group">
+        <label class="form-label">Color de portada</label>
+        <div class="color-row" id="nt-colors">
+          <% ['#e91e8c','#9c27b0','#3f51b5','#00bcd4','#4caf50','#ff9800','#f44336','#1a1a2a','#2d2d3a'].forEach(c => { %>
+          <div class="color-swatch <%= c==='#e91e8c'?'selected':'' %>" style="background:<%= c %>" data-color="<%= c %>"
+               onclick="selectColor('<%= c %>',this)"></div>
+          <% }) %>
+          <input type="color" value="#e91e8c" id="nt-custom-color" title="Color personalizado"
+                 style="width:30px;height:30px;border-radius:6px;border:none;cursor:pointer;padding:0"
+                 oninput="selectColor(this.value,null)">
+        </div>
+      </div>
+
+      <!-- Categoría -->
+      <div class="form-group">
+        <label class="form-label">Categoría</label>
+        <div class="cat-grid">
+          <% ['Moda','Streetwear','Y2K','Accesorios','Outfits','Inspiración','Arte','Otros'].forEach(cat => { %>
+          <div class="cat-chip" data-cat="<%= cat %>" onclick="selectCat('<%= cat %>',this)"><%= cat %></div>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- Privacidad -->
+      <div class="form-group">
+        <label class="form-label">Privacidad</label>
+        <div class="priv-row">
+          <div class="priv-opt selected" data-priv="privado" onclick="selectPriv('privado',this)">
+            <i class="bi bi-lock-fill"></i>PRIVADO
+          </div>
+          <div class="priv-opt" data-priv="publico" onclick="selectPriv('publico',this)">
+            <i class="bi bi-globe-americas"></i>PÚBLICO
+          </div>
+        </div>
+        <div id="priv-hint" style="font-family:var(--fm);font-size:.65rem;color:var(--muted);margin-top:6px">
+          Solo tú podrás ver y editar este tablero.
+        </div>
+      </div>
+
+      <button class="btn-nuevo-tablero" style="width:100%;justify-content:center;height:42px" onclick="crearTablero()">
+        <i class="bi bi-plus-circle-fill"></i>CREAR TABLERO
+      </button>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<script>
+const isLoggedIn = <%= user ? 'true' : 'false' %>;
+
+// ── Tabs ────────────────────────────────────────────────────────────────────
+function showTab(id, btn){
+  document.querySelectorAll('.com-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.com-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Reaccionar ──────────────────────────────────────────────────────────────
+async function reaccionar(id, tipo, btn){
+  if (!isLoggedIn){ window.location='/auth/login'; return; }
+  try{
+    const r=await fetch('/comunidad/tablero/'+id+'/reaccion',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo})});
+    const d=await r.json();
+    btn.classList.toggle('active',!!d.reaccion);
+  }catch(e){}
+}
+
+// ── Guardar tablero ─────────────────────────────────────────────────────────
+async function guardarTablero(id){
+  if (!isLoggedIn){ window.location='/auth/login'; return; }
+  const btn=document.getElementById('save-'+id);
+  if(btn) btn.style.opacity='.5';
+  try{
+    const r=await fetch('/comunidad/tablero/'+id+'/guardar',{method:'POST'});
+    const d=await r.json();
+    if(btn){
+      btn.style.opacity='1';
+      btn.classList.toggle('saved',d.guardado);
+      btn.innerHTML=d.guardado
+        ?'<i class="bi bi-bookmark-check-fill"></i>GUARDADO'
+        :'<i class="bi bi-bookmark"></i>GUARDAR';
+    }
+  }catch(e){ if(btn) btn.style.opacity='1'; }
+}
+
+// ── Búsqueda en tableros ────────────────────────────────────────────────────
+let boardTimer;
+document.getElementById('board-q').addEventListener('input', function(){
+  clearTimeout(boardTimer);
+  const q=this.value.trim().toLowerCase();
+  boardTimer=setTimeout(function(){
+    document.querySelectorAll('.board-card').forEach(el=>{
+      el.style.display=el.textContent.toLowerCase().includes(q)?'':'none';
+    });
+  },300);
+});
+
+// ── Creator modal: color / cat / priv ──────────────────────────────────────
+let ntColor='#e91e8c', ntCat='', ntPriv='privado';
+
+function selectColor(c, el){
+  ntColor=c;
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  document.getElementById('portada-preview-inner').style.background=c;
+}
+function selectCat(c, el){
+  ntCat = ntCat===c ? '' : c;
+  document.querySelectorAll('.cat-chip').forEach(s=>s.classList.remove('selected'));
+  if(ntCat) el.classList.add('selected');
+}
+function selectPriv(p, el){
+  ntPriv=p;
+  document.querySelectorAll('.priv-opt').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('priv-hint').textContent=p==='publico'
+    ?'Tu tablero aparecerá en la comunidad y tus amigos serán notificados.'
+    :'Solo tú podrás ver y editar este tablero.';
+}
+
+async function crearTablero(){
+  const nombre=document.getElementById('nt-nombre').value.trim();
+  if(!nombre){ document.getElementById('nt-nombre').focus(); return; }
+  const btn=event.currentTarget;
+  btn.disabled=true; btn.textContent='Creando...';
+  try{
+    const r=await fetch('/tableros',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre, descripcion:document.getElementById('nt-desc').value.trim(),
+        privacidad:ntPriv, color_portada:ntColor, categoria:ntCat})
+    });
+    const d=await r.json();
+    if(d.success){
+      document.getElementById('modal-crear').classList.remove('open');
+      if(d.esPublico){
+        // Mostrar toast y refrescar feed después de crear tablero público
+        if(typeof showToast==='function') showToast('¡TABLERO PUBLICADO EN LA COMUNIDAD!');
+        setTimeout(function(){ window.location.href='/comunidad'; }, 1200);
+      } else {
+        window.location.href='/perfil#tableros';
+      }
+    } else {
+      btn.disabled=false;
+      btn.innerHTML='<i class="bi bi-plus-circle-fill"></i>CREAR TABLERO';
+    }
+  }catch(e){
+    btn.disabled=false;
+    btn.innerHTML='<i class="bi bi-plus-circle-fill"></i>CREAR TABLERO';
+  }
+}
+
+// IntersectionObserver para registrar vistas
+document.querySelectorAll('.board-card').forEach(function(card){
+  const href=card.getAttribute('href')||'';
+  const id=href.split('/').pop();
+  if(!id||isNaN(id)) return;
+  const obs=new IntersectionObserver(function(entries){
+    if(entries[0].isIntersecting){
+      fetch('/comunidad/tablero/'+id+'/vista',{method:'POST'}).catch(function(){});
+      obs.disconnect();
+    }
+  },{threshold:0.4});
+  obs.observe(card);
+});
+</script>
+
+<%- include('../partials/footer') %>

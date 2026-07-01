@@ -1,0 +1,758 @@
+<%- include('../partials/header') %>
+
+<div style="padding:20px 40px 0;font-size:12px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">
+  <a href="/" style="color:var(--gray);text-decoration:none" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'">INICIO</a>
+  <span style="margin:0 8px">&#8250;</span>
+  <a href="/productos" style="color:var(--gray);text-decoration:none">TIENDA</a>
+  <span style="margin:0 8px">&#8250;</span>
+  <span style="color:var(--white)"><%= producto.titulo.toUpperCase() %></span>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;padding:24px 40px 60px;max-width:1200px;margin:0 auto" class="det-grid">
+
+  <!-- GALLERY -->
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div id="galleryMain" style="position:relative;overflow:hidden;background:#111;aspect-ratio:4/5">
+      <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.4);filter:url(#gb);pointer-events:none;z-index:5"></div>
+      <img id="mainImg" src="/uploads/products/<%= producto.imagen_principal %>" alt="<%= producto.titulo %>"
+           style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:opacity 0.4s"
+           onerror="this.src='https://via.placeholder.com/600x750/111/888?text=MANTIZ'">
+      <% if (producto.precio_descuento) { %>
+      <div style="position:absolute;top:16px;left:16px;background:rgba(233,30,140,0.9);padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;z-index:6">
+        -<%= Math.round((1 - producto.precio_descuento / producto.precio) * 100) %>%
+      </div>
+      <% } %>
+      <button onclick="prevGallery()" style="position:absolute;top:50%;left:12px;transform:translateY(-50%);background:rgba(10,10,10,0.7);border:1px solid rgba(255,255,255,0.2);color:white;width:38px;height:38px;font-size:18px;cursor:pointer;z-index:6">&#8249;</button>
+      <button onclick="nextGallery()" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);background:rgba(10,10,10,0.7);border:1px solid rgba(255,255,255,0.2);color:white;width:38px;height:38px;font-size:18px;cursor:pointer;z-index:6">&#8250;</button>
+    </div>
+    <div id="gallDots" style="display:flex;gap:6px;justify-content:center"></div>
+    <div id="gallThumbs" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px"></div>
+  </div>
+
+  <!-- INFO -->
+  <div style="display:flex;flex-direction:column;gap:20px;padding-top:8px">
+    <div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;color:var(--pink);margin-bottom:4px"><%= producto.categoria.toUpperCase() %></div>
+      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,48px);letter-spacing:4px;line-height:1;color:var(--white)"><%= producto.titulo %></h1>
+      <% if (producto.descripcion) { %>
+      <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-top:8px"><%= producto.descripcion %></p>
+      <% } %>
+    </div>
+
+    <!-- Price -->
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--white);letter-spacing:2px">
+      <% if (producto.precio_descuento) { %>
+        <span style="color:var(--pink)">$<%= parseFloat(producto.precio_descuento).toLocaleString('es-CO') %></span>
+        <span style="font-size:18px;color:var(--gray);text-decoration:line-through;margin-left:8px">$<%= parseFloat(producto.precio).toLocaleString('es-CO') %></span>
+      <% } else { %>
+        $<%= parseFloat(producto.precio).toLocaleString('es-CO') %>
+      <% } %>
+    </div>
+
+    <!-- Avg rating -->
+    <%
+      var avgRating = 0;
+      var ratedCount = 0;
+      if (comentarios && comentarios.length > 0) {
+        comentarios.forEach(function(cm) { if (cm.calificacion) { avgRating += cm.calificacion; ratedCount++; } });
+        if (ratedCount > 0) avgRating = Math.round(avgRating / ratedCount);
+      }
+    %>
+    <% if (ratedCount > 0) { %>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;gap:2px">
+        <% for (var si = 1; si <= 5; si++) { %>
+        <% var starColor = (si <= avgRating) ? '#e91e8c' : 'var(--faint-3)'; %>
+        <span style="font-size:16px;color:<%= starColor %>">&#9733;</span>
+        <% } %>
+      </div>
+      <span style="font-size:13px;color:var(--gray)">(<%= ratedCount %> reseñas)</span>
+    </div>
+    <% } %>
+
+    <!-- Tallas -->
+    <% if (tallas && tallas.length > 0) { %>
+    <div>
+      <div style="font-size:11px;letter-spacing:3px;color:var(--gray);margin-bottom:10px">TALLA — <span id="selTallaLabel" style="color:var(--pink)">Seleccionar</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <% tallas.forEach(function(t) { %>
+        <%
+          var tcursor = (t.stock === 0) ? 'not-allowed' : 'pointer';
+          var tcolor  = (t.stock === 0) ? 'var(--muted)' : 'var(--text)';
+          var textra  = (t.stock === 0) ? 'text-decoration:line-through;opacity:0.4;' : '';
+        %>
+        <button onclick="selectTalla('<%= t.talla %>', this)"
+                class="talla-chip"
+                data-talla="<%= t.talla %>"
+                data-stock="<%= t.stock %>"
+                style="padding:8px 16px;border:2px solid var(--faint-3);background:none;color:<%= tcolor %>;font-family:Rajdhani,sans-serif;font-weight:600;font-size:13px;cursor:<%= tcursor %>;<%= textra %>transition:all 0.2s">
+          <%= t.talla %>
+        </button>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Actions -->
+    <input type="hidden" id="selectedTalla" value="">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="addToCart()" class="btn-grunge-fill" style="width:100%;font-size:18px;padding:16px" id="addCartBtn">AGREGAR AL CARRITO</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <%
+          var likedBorder  = userLiked ? 'var(--pink)' : 'var(--border)';
+          var likedColor   = userLiked ? 'var(--pink)' : 'var(--text)';
+          var likedBg      = userLiked ? 'rgba(233,30,140,0.15)' : 'transparent';
+          var likedHeart   = userLiked ? '&#10084;' : '&#9825;';
+        %>
+        <button id="likeBtn" onclick="toggleLike()"
+                style="background:<%= likedBg %>;border:2px solid <%= likedBorder %>;color:<%= likedColor %>;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;transition:all 0.3s;filter:url(#gb);display:flex;align-items:center;justify-content:center;gap:8px">
+          <span id="likeHeart" style="font-size:18px"><%- likedHeart %></span>
+          <span id="likeCount"><%= producto.total_likes || 0 %></span>
+        </button>
+        <button onclick="destacarProducto()"
+                style="background:transparent;border:2px solid var(--border);color:var(--text);padding:12px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;transition:all 0.3s;filter:url(#gb);display:flex;align-items:center;justify-content:center;gap:8px"
+                onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'"
+                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+          <span style="font-size:16px">&#128204;</span> GUARDAR
+        </button>
+      </div>
+
+      <!-- ── Botones Ver 3D + Probar ──────────────────────────────────── -->
+      <!-- Sección: tecnología Y2K / futurista — botones siempre presentes
+           para coherencia visual. "Ver 3D" se activa solo si hay modelo. -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+        <% if (typeof modelo3d !== 'undefined' && modelo3d) { %>
+        <button onclick="abrirViewer3D()"
+                style="background:rgba(0,200,255,0.08);border:2px solid rgba(0,200,255,0.35);color:#00c8ff;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px"
+                onmouseover="this.style.background='rgba(0,200,255,0.2)';this.style.borderColor='#00c8ff'"
+                onmouseout="this.style.background='rgba(0,200,255,0.08)';this.style.borderColor='rgba(0,200,255,0.35)'">
+          <span style="font-size:16px">&#x2B1C;</span> VER 3D
+        </button>
+        <% } else { %>
+        <button disabled
+                style="background:rgba(255,255,255,0.03);border:2px solid var(--faint-1);color:var(--muted);padding:12px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;opacity:0.5"
+                title="Este producto no tiene modelo 3D disponible aún">
+          <span style="font-size:16px">&#x2B1C;</span> VER 3D
+        </button>
+        <% } %>
+        <button onclick="abrirTryOn()"
+                style="background:rgba(233,30,140,0.08);border:2px solid rgba(233,30,140,0.35);color:var(--cp);padding:12px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px"
+                onmouseover="this.style.background='rgba(233,30,140,0.2)';this.style.borderColor='var(--cp)'"
+                onmouseout="this.style.background='rgba(233,30,140,0.08)';this.style.borderColor='rgba(233,30,140,0.35)'">
+          <span style="font-size:16px">&#x1F9D8;</span> PROBAR
+        </button>
+      </div>
+      <!-- ─────────────────────────────────────────────────────────────── -->
+    </div>
+
+    <div style="border-top:1px solid var(--faint-1);padding-top:16px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:12px;color:var(--gray);letter-spacing:1px">Envio $8.99 · 3-7 dias habiles</div>
+      <div style="font-size:12px;color:var(--gray);letter-spacing:1px">7 dias de devolucion</div>
+    </div>
+  </div>
+</div>
+
+<div style="height:1px;background:var(--faint-1);margin:0 40px"></div>
+
+<!-- COMENTARIOS -->
+<div style="padding:48px 40px;max-width:1200px;margin:0 auto">
+  <h2 class="section-title" style="font-size:36px">Comentarios</h2>
+  <div style="text-align:center;height:20px;margin:8px 0 24px;background-image:url(\"data:image/svg+xml,%3Csvg width='200' height='20' viewBox='0 0 200 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='10' x2='80' y2='10' stroke='rgba(233,30,140,0.4)' stroke-width='1'/%3E%3Ccircle cx='100' cy='10' r='5' fill='%23e91e8c'/%3E%3Cline x1='120' y1='10' x2='200' y2='10' stroke='rgba(233,30,140,0.4)' stroke-width='1'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center"></div>
+
+  <% if (user) { %>
+  <div style="background:var(--card);border:1px solid var(--border);padding:20px;margin-bottom:24px;position:relative">
+    <div style="position:absolute;inset:0;border:1px solid var(--faint-2);filter:url(#gb);pointer-events:none"></div>
+    <form action="/productos/<%= producto.id %>/comentar" method="POST">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <%
+          var userAvSrc = (user.foto_perfil_tipo === 'upload' && user.foto_perfil)
+            ? '/uploads/profiles/' + user.foto_perfil
+            : '/img/defaults/avatars/' + (user.foto_perfil_preset || 'avatar1.png');
+        %>
+        <img src="<%= userAvSrc %>" width="36" height="36"
+             style="border-radius:50%;object-fit:cover;border:2px solid var(--pink);flex-shrink:0;margin-top:4px"
+             onerror="this.src='/img/defaults/avatars/avatar1.png'">
+        <div style="flex:1">
+          <div style="display:flex;gap:4px;margin-bottom:8px">
+            <% for (var rr = 1; rr <= 5; rr++) { %>
+            <span data-val="<%= rr %>" onclick="setRating(<%= rr %>)"
+                  style="font-size:22px;cursor:pointer;color:var(--faint-3);transition:color 0.15s"
+                  onmouseover="hoverRating(<%= rr %>)" onmouseout="resetHover()">&#9733;</span>
+            <% } %>
+          </div>
+          <input type="hidden" name="calificacion" id="ratingInput" value="">
+          <div style="display:flex;gap:10px">
+            <input type="text" name="contenido" class="mantiz-input" placeholder="Escribe tu comentario..." required style="flex:1">
+            <button type="submit" style="background:var(--pink);color:white;border:none;padding:0 20px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;white-space:nowrap">ENVIAR</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <% } else { %>
+  <div style="text-align:center;padding:16px;margin-bottom:20px;border:1px solid var(--border)">
+    <span style="color:var(--gray);font-size:13px"><a href="/auth/login" style="color:var(--pink)">Inicia sesion</a> para comentar</span>
+  </div>
+  <% } %>
+
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <% if (comentarios && comentarios.length > 0) { %>
+    <% comentarios.forEach(function(com) { %>
+    <%
+      var comAvSrc = (com.foto_perfil_tipo === 'upload' && com.foto_perfil)
+        ? '/uploads/profiles/' + com.foto_perfil
+        : '/img/defaults/avatars/' + (com.foto_perfil_preset || 'avatar1.png');
+    %>
+    <div style="display:flex;align-items:flex-start;gap:14px;background:var(--card);border:1px solid var(--faint-1);padding:14px 16px">
+      <img src="<%= comAvSrc %>" width="36" height="36"
+           style="border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0"
+           onerror="this.src='/img/defaults/avatars/avatar1.png'">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-weight:700;font-size:13px;color:var(--white)"><%= com.nombre_visible %></span>
+          <% if (com.calificacion) { %>
+          <div style="display:flex;gap:2px">
+            <% for (var cs = 1; cs <= 5; cs++) { %>
+            <% var csc = (cs <= com.calificacion) ? '#e91e8c' : 'var(--faint-2)'; %>
+            <span style="font-size:12px;color:<%= csc %>">&#9733;</span>
+            <% } %>
+          </div>
+          <% } %>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.5"><%= com.contenido %></div>
+        <div style="display:flex;gap:12px;margin-top:8px;align-items:center">
+          <button onclick="likeComentario(<%= com.id %>, this)"
+            id="like-com-<%= com.id %>"
+            style="background:none;border:1px solid var(--faint-2);padding:3px 12px;font-size:11px;cursor:pointer;color:var(--gray);transition:all 0.2s"
+            onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'"
+            onmouseout="if(!this.classList.contains('liked')){this.style.borderColor='var(--faint-2)';this.style.color='var(--gray)'}">
+            👍 <span class="like-count-<%= com.id %>"><%= com.likes || 0 %></span>
+          </button>
+          <span style="font-size:11px;color:var(--gray)"><%= new Date(com.creado_en).toLocaleDateString('es-CO') %></span>
+          <% if (user && (user.id === com.usuario_id || user.rol === 'admin')) { %>
+          <form action="/productos/<%= producto.id %>/comentar/<%= com.id %>/eliminar" method="POST" style="display:inline">
+            <button type="submit" style="background:none;border:none;color:var(--faint-3);cursor:pointer;font-size:14px">&#128465;</button>
+          </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+    <% } else { %>
+    <div style="text-align:center;padding:40px;color:var(--gray)">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px">SE EL PRIMERO EN COMENTAR</div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- RELACIONADOS -->
+<% if (relacionados && relacionados.length > 0) { %>
+<div style="padding:48px 40px;max-width:1200px;margin:0 auto">
+  <h2 class="section-title" style="font-size:36px">RELACIONADOS</h2>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px" class="rel-grid">
+    <% relacionados.forEach(function(p) { %>
+    <div class="product-card" onclick="window.location='/productos/<%= p.id %>'">
+      <div class="pc-label"><span class="pc-label-text"><%= p.titulo.substring(0,18) %></span></div>
+      <div class="pc-img-wrap">
+        <div class="pc-img-clip">
+          <img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+          <% if (p.imagen_hover) { %><img class="pc-img-hover" src="/uploads/products/<%= p.imagen_hover %>" alt="" onerror="this.style.display='none'"><% } %>
+        </div>
+      </div>
+      <div class="pc-info"><span class="pc-name"><%= p.titulo.substring(0,20) %></span><span class="pc-price">$<%= parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO') %></span></div>
+    </div>
+    <% }) %>
+  </div>
+</div>
+<% } %>
+
+<!-- DESTACAR MODAL -->
+<div id="destacar-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s">
+  <div style="background:var(--card-bg);max-width:420px;width:90%;padding:32px;position:relative">
+    <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
+    <button onclick="cerrarDestacar()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;z-index:20">&#x2715;</button>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--pink);margin-bottom:16px">GUARDAR EN TABLERO</div>
+    <div id="tableros-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:200px;overflow-y:auto"></div>
+    <div style="border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:11px;letter-spacing:2px;color:var(--gray);margin-bottom:10px">CREAR NUEVO TABLERO</div>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="nuevoTableroNombre" class="mantiz-input" placeholder="Nombre del tablero..." style="flex:1">
+        <button onclick="crearYGuardar()" style="background:var(--pink);border:none;color:white;padding:0 18px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer">CREAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.talla-chip.active{background:var(--pink)!important;border-color:var(--pink)!important;color:white!important}
+@media(max-width:768px){.det-grid{grid-template-columns:1fr!important}div[style*="padding:24px 40px"]{padding:16px!important}.rel-grid{grid-template-columns:repeat(2,1fr)!important}}
+</style>
+
+<script>
+var productoId=<%=producto.id%>;
+var galleryImgs=['/uploads/products/<%=producto.imagen_principal%>'];
+<% if(imagenes){imagenes.forEach(function(img){%>galleryImgs.push('/uploads/products/<%=img.imagen%>');<%});}%>
+var galIdx=0;
+function buildGallery(){
+  var dh='',th='';
+  galleryImgs.forEach(function(s,i){
+    dh+='<div onclick="goGal('+i+')" style="width:7px;height:7px;border-radius:50%;background:'+(i===0?'var(--pink)':'var(--faint-3)')+';cursor:pointer;transition:background 0.2s"></div>';
+    th+='<div onclick="goGal('+i+')" style="width:64px;height:64px;overflow:hidden;border:2px solid '+(i===0?'var(--pink)':'var(--faint-2)')+';cursor:pointer;flex-shrink:0"><img src="'+s+'" style="width:100%;height:100%;object-fit:cover"></div>';
+  });
+  document.getElementById('gallDots').innerHTML=dh;
+  document.getElementById('gallThumbs').innerHTML=th;
+}
+function goGal(idx){
+  galIdx=((idx%galleryImgs.length)+galleryImgs.length)%galleryImgs.length;
+  document.getElementById('mainImg').src=galleryImgs[galIdx];
+  document.querySelectorAll('#gallDots div').forEach(function(d,i){d.style.background=i===galIdx?'var(--pink)':'var(--faint-3)';});
+  document.querySelectorAll('#gallThumbs div').forEach(function(t,i){t.style.borderColor=i===galIdx?'var(--pink)':'var(--faint-2)';});
+}
+function prevGallery(){goGal(galIdx-1);}
+function nextGallery(){goGal(galIdx+1);}
+buildGallery();
+
+function selectTalla(t,btn){
+  if(btn.dataset.stock==='0')return;
+  document.querySelectorAll('.talla-chip').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('selectedTalla').value=t;
+  document.getElementById('selTallaLabel').textContent=t;
+}
+async function addToCart(){
+  var talla=document.getElementById('selectedTalla').value;
+  var hasTallas=document.querySelectorAll('.talla-chip').length>0;
+  if(hasTallas&&!talla){var c=document.querySelector('.talla-chip');if(c){c.closest('div').style.outline='1px solid var(--pink)';setTimeout(function(){c.closest('div').style.removeProperty('outline');},600);}return;}
+  var btn=document.getElementById('addCartBtn');btn.textContent='AGREGANDO...';
+  try{
+    var r=await fetch('/carrito/agregar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto_id:productoId,talla:talla||null,cantidad:1})});
+    var d=await r.json();
+    if(d.success){btn.textContent='AGREGADO';showToast('PRODUCTO ANADIDO');var cc=document.getElementById('cart-count');if(cc){cc.textContent=(parseInt(cc.textContent)||0)+1;cc.classList.add('show');}var cp=document.getElementById('cart-panel');if(cp){cp.classList.add('open');loadCartPanel();}setTimeout(function(){btn.textContent='AGREGAR AL CARRITO';},2000);}
+    else if(d.redirect){window.location=d.redirect;}
+    else{btn.textContent='AGREGAR AL CARRITO';}
+  }catch(e){btn.textContent='AGREGAR AL CARRITO';}
+}
+var liked=<%=userLiked?'true':'false'%>;
+async function likeComentario(cid, btn) {
+  <% if (!user) { %>
+  window.location = '/auth/login'; return;
+  <% } %>
+  try {
+    var r = await fetch('/productos/comentario/' + cid + '/like', {
+      method: 'POST', headers: {'Content-Type': 'application/json'}
+    });
+    var d = await r.json();
+    if (d.liked !== undefined) {
+      var countEl = document.querySelector('.like-count-' + cid);
+      if (countEl) countEl.textContent = d.likes;
+      if (d.liked) {
+        btn.classList.add('liked');
+        btn.style.borderColor = 'var(--pink)';
+        btn.style.color = 'var(--pink)';
+        btn.style.background = 'rgba(233,30,140,0.1)';
+      } else {
+        btn.classList.remove('liked');
+        btn.style.borderColor = 'var(--faint-2)';
+        btn.style.color = 'var(--gray)';
+        btn.style.background = 'none';
+      }
+    }
+  } catch(e) { showToast && showToast('ERROR'); }
+}
+
+async function toggleLike(){
+  try{
+    var r=await fetch('/productos/'+productoId+'/like',{method:'POST',headers:{'Content-Type':'application/json'}});
+    var d=await r.json();
+    if(d.redirect){window.location=d.redirect;return;}
+    liked=d.liked;
+    var btn=document.getElementById('likeBtn');
+    document.getElementById('likeHeart').innerHTML=liked?'&#10084;':'&#9825;';
+    btn.style.borderColor=liked?'var(--pink)':'var(--faint-3)';
+    btn.style.color=liked?'var(--pink)':'var(--text)';
+    btn.style.background=liked?'rgba(233,30,140,0.15)':'transparent';
+    if(d.total_likes!==undefined)document.getElementById('likeCount').textContent=d.total_likes;
+    showToast(liked?'GUARDADO EN FAVORITOS':'ELIMINADO DE FAVORITOS');
+  }catch(e){}
+}
+async function destacarProducto(){
+  <%if(!user){%>window.location='/auth/login';return;<%}%>
+  try{
+    var r=await fetch('/productos/'+productoId+'/destacar',{method:'POST',headers:{'Content-Type':'application/json'}});
+    var d=await r.json();
+    if(d.needsBoard){
+      var lista=document.getElementById('tableros-lista');
+      lista.innerHTML=(d.tableros&&d.tableros.length>0)
+        ?d.tableros.map(function(t){return '<button onclick="guardarEnTablero('+t.id+')" style="background:var(--card);border:1px solid var(--border);padding:12px 16px;cursor:pointer;text-align:left;color:var(--text);font-family:Rajdhani,sans-serif;font-size:14px;width:100%;transition:border-color 0.2s" onmouseover="this.style.borderColor=\'var(--pink)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+t.nombre+'</button>';}).join('')
+        :'<div style="color:var(--gray);font-size:13px;text-align:center;padding:12px">Sin tableros. Crea uno abajo.</div>';
+      var m=document.getElementById('destacar-modal');m.style.opacity='1';m.style.pointerEvents='all';
+    }else if(d.success){showToast('GUARDADO EN PINES');}
+  }catch(e){}
+}
+function cerrarDestacar(){var m=document.getElementById('destacar-modal');m.style.opacity='0';m.style.pointerEvents='none';}
+document.getElementById('destacar-modal').addEventListener('click',function(e){if(e.target===this)cerrarDestacar();});
+async function guardarEnTablero(tableroId){
+  var r=await fetch('/productos/'+productoId+'/destacar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tablero_id:tableroId})});
+  var d=await r.json();cerrarDestacar();
+  if(d.success)showToast('GUARDADO');
+}
+async function crearYGuardar(){
+  var nombre=document.getElementById('nuevoTableroNombre').value.trim();
+  if(!nombre){document.getElementById('nuevoTableroNombre').style.outline='1px solid var(--pink)';return;}
+  var r=await fetch('/productos/'+productoId+'/destacar/nuevo-tablero',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:nombre,privacidad:'privado'})});
+  var d=await r.json();cerrarDestacar();
+  if(d.success)showToast('TABLERO CREADO Y GUARDADO');
+}
+var currentRating=0;
+function setRating(val){currentRating=val;document.getElementById('ratingInput').value=val;document.querySelectorAll('span[data-val]').forEach(function(s){s.style.color=parseInt(s.dataset.val)<=val?'var(--pink)':'var(--faint-3)';});}
+function hoverRating(val){document.querySelectorAll('span[data-val]').forEach(function(s){s.style.color=parseInt(s.dataset.val)<=val?'var(--pink)':'var(--faint-3)';});}
+function resetHover(){document.querySelectorAll('span[data-val]').forEach(function(s){s.style.color=parseInt(s.dataset.val)<=currentRating?'var(--pink)':'var(--faint-3)';});}
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL: VER 3D
+══════════════════════════════════════════════════════════════════ -->
+<% if (typeof modelo3d !== 'undefined' && modelo3d) { %>
+<style>
+#modal3d{position:fixed;inset:0;z-index:3000;background:rgba(5,5,5,.96);display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+#modal3d.open{display:flex}
+.m3d-wrap{width:min(90vw,700px);aspect-ratio:1/1;position:relative;background:#080808;border-radius:10px;overflow:hidden;border:1px solid rgba(0,200,255,.2);box-shadow:0 0 60px rgba(0,200,255,.08)}
+.m3d-wrap canvas{width:100%!important;height:100%!important;display:block}
+.m3d-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#00c8ff;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:.8rem;z-index:4}
+.m3d-close{position:absolute;top:16px;right:20px;background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.3);color:#00c8ff;width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;z-index:5}
+.m3d-close:hover{background:rgba(255,60,60,.15);border-color:#ff4444;color:#ff4444}
+.m3d-ctrl{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:center}
+.m3d-btn{padding:8px 18px;border:1px solid rgba(0,200,255,.3);background:rgba(0,200,255,.06);color:#00c8ff;font-family:'Bebas Neue',sans-serif;font-size:.65rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all .18s;display:flex;align-items:center;gap:5px}
+.m3d-btn:hover,.m3d-btn.active{background:rgba(0,200,255,.18);border-color:#00c8ff}
+.m3d-title{font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:rgba(0,200,255,.7);margin-bottom:12px}
+.m3d-hint{font-size:.6rem;color:rgba(255,255,255,.3);margin-top:8px;letter-spacing:.5px}
+</style>
+<div id="modal3d">
+  <button class="m3d-close" onclick="cerrar3D()" title="Cerrar (Esc)"><i class="bi bi-x-lg"></i></button>
+  <div class="m3d-title"><%= producto.titulo.toUpperCase() %> — MODELO 3D</div>
+  <div class="m3d-wrap">
+    <div class="m3d-loading" id="m3dLoading">
+      <i class="bi bi-box-seam" style="font-size:28px;animation:m3dPulse 1.2s ease infinite alternate"></i>
+      CARGANDO MODELO...
+    </div>
+    <canvas id="m3dCanvas"></canvas>
+  </div>
+  <div class="m3d-ctrl">
+    <button class="m3d-btn active" onclick="m3dView('front',this)"><i class="bi bi-square"></i> FRONTAL</button>
+    <button class="m3d-btn" onclick="m3dView('side',this)"><i class="bi bi-square-half"></i> LATERAL</button>
+    <button class="m3d-btn" onclick="m3dView('back',this)"><i class="bi bi-square"></i> TRASERA</button>
+    <button class="m3d-btn" onclick="m3dSpin(this)" id="m3dSpinBtn"><i class="bi bi-arrow-repeat"></i> AUTO-ROTAR</button>
+    <button class="m3d-btn" onclick="m3dZoom(0.8)"><i class="bi bi-zoom-in"></i> +</button>
+    <button class="m3d-btn" onclick="m3dZoom(1.25)"><i class="bi bi-zoom-out"></i> −</button>
+  </div>
+  <div class="m3d-hint">Arrastra para rotar · Scroll para zoom</div>
+</div>
+<style>@keyframes m3dPulse{from{opacity:.3}to{opacity:1}}</style>
+<script>
+var m3dViewer=null, m3dSpinning=false;
+var MODELO3D_URL='/models/<%= modelo3d.archivo %>';
+var MODELO3D_ESCALA=<%= modelo3d.escala || 1 %>;
+var MODELO3D_POSY=<%= modelo3d.pos_y || 0 %>;
+
+var m3dLibsReady=false;
+function loadM3dLibs(cb){
+  if(m3dLibsReady){cb();return;}
+  var loads=0, need=3;
+  function done(){if(++loads===need){m3dLibsReady=true;cb();}}
+  if(typeof THREE!=='undefined'){need--;} else {
+    var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=done;document.head.appendChild(s);
+  }
+  var s2=document.createElement('script');s2.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';s2.onload=done;document.head.appendChild(s2);
+  var s3=document.createElement('script');s3.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';s3.onload=done;document.head.appendChild(s3);
+  if(typeof THREE!=='undefined')done();
+}
+
+function abrirViewer3D(){
+  document.getElementById('modal3d').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('m3dLoading').style.display='flex';
+  loadM3dLibs(function(){
+    var canvas=document.getElementById('m3dCanvas');
+    if(m3dViewer)m3dViewer.dispose();
+    m3dViewer=buildM3dViewer(canvas,MODELO3D_ESCALA,MODELO3D_POSY);
+    m3dViewer.load(MODELO3D_URL,function(){
+      document.getElementById('m3dLoading').style.display='none';
+    });
+  });
+}
+function cerrar3D(){
+  document.getElementById('modal3d').classList.remove('open');
+  document.body.style.overflow='';
+  if(m3dViewer){m3dViewer.dispose();m3dViewer=null;}
+  m3dSpinning=false;
+  document.getElementById('m3dSpinBtn').classList.remove('active');
+}
+function m3dView(view,btn){
+  if(!m3dViewer)return;
+  document.querySelectorAll('.m3d-ctrl .m3d-btn:not(#m3dSpinBtn)').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  m3dViewer.setView(view);
+}
+function m3dSpin(btn){m3dSpinning=m3dViewer?m3dViewer.toggleSpin():false;btn.classList.toggle('active',m3dSpinning);}
+function m3dZoom(f){if(m3dViewer)m3dViewer.zoom(f);}
+
+function buildM3dViewer(canvas,escala,posY){
+  var scene=new THREE.Scene();scene.background=new THREE.Color(0x080808);
+  var w=canvas.clientWidth||500,h=canvas.clientHeight||500;
+  var camera=new THREE.PerspectiveCamera(45,w/h,0.01,1000);
+  var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+  renderer.setSize(w,h,false);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+  scene.add(new THREE.AmbientLight(0xffffff,0.7));
+  var dir=new THREE.DirectionalLight(0xffffff,1.1);dir.position.set(4,7,4);scene.add(dir);
+  var blue=new THREE.PointLight(0x00c8ff,0.7,12);blue.position.set(-3,2,3);scene.add(blue);
+  var fill=new THREE.DirectionalLight(0xffffff,0.3);fill.position.set(-4,-2,-4);scene.add(fill);
+  var controls=new THREE.OrbitControls(camera,canvas);
+  controls.enableDamping=true;controls.dampingFactor=0.08;controls.enablePan=false;controls.minDistance=0.2;controls.maxDistance=40;
+  var group=new THREE.Group();scene.add(group);
+  var model=null,baseDist=3,spinning=false,disposed=false,rafId=null;
+  function frameModel(){
+    if(!model)return;
+    var box=new THREE.Box3().setFromObject(model);
+    var center=box.getCenter(new THREE.Vector3());
+    var size=box.getSize(new THREE.Vector3());
+    var maxD=Math.max(size.x,size.y,size.z)||1;
+    model.position.sub(center);
+    baseDist=maxD*2.1;
+    camera.position.set(0,maxD*0.15,baseDist);
+    camera.lookAt(0,0,0);controls.target.set(0,0,0);controls.update();
+  }
+  function animate(){
+    if(disposed)return;
+    rafId=requestAnimationFrame(animate);
+    if(spinning)group.rotation.y+=0.006;
+    controls.update();
+    renderer.render(scene,camera);
+  }
+  animate();
+  var obs=('ResizeObserver' in window)?new ResizeObserver(function(){
+    var w2=canvas.clientWidth,h2=canvas.clientHeight;if(!w2||!h2)return;
+    camera.aspect=w2/h2;camera.updateProjectionMatrix();renderer.setSize(w2,h2,false);
+  }):null;
+  if(obs)obs.observe(canvas);
+  return{
+    load:function(url,onDone){
+      var loader=new THREE.GLTFLoader();
+      loader.load(url,function(gltf){
+        if(disposed)return;
+        model=gltf.scene;
+        model.scale.setScalar(escala||1);
+        group.add(model);
+        model.position.y+=(posY||0);
+        frameModel();
+        if(onDone)onDone();
+      });
+    },
+    setView:function(view){
+      if(!model)return;
+      var d=baseDist;
+      var p={front:[0,.15*d,d],side:[d,.15*d,0],back:[0,.15*d,-d],'three-quarter':[d*.7,d*.4,d*.7]}[view]||[0,.15*d,d];
+      camera.position.set(p[0],p[1],p[2]);camera.lookAt(0,0,0);controls.target.set(0,0,0);controls.update();
+    },
+    zoom:function(f){camera.position.multiplyScalar(f);controls.update();},
+    toggleSpin:function(){spinning=!spinning;return spinning;},
+    dispose:function(){
+      disposed=true;if(rafId)cancelAnimationFrame(rafId);if(obs)obs.disconnect();controls.dispose();
+      scene.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material){var ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(function(m){for(var k in m){if(m[k]&&m[k].isTexture)m[k].dispose();}m.dispose&&m.dispose();});}});
+      renderer.dispose();
+    }
+  };
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrar3D();});
+</script>
+<% } %>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL: PROBAR (Virtual Try-On con cámara)
+══════════════════════════════════════════════════════════════════ -->
+<style>
+#modalTryOn{position:fixed;inset:0;z-index:3000;background:rgba(5,5,5,.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+#modalTryOn.open{display:flex}
+.to-stage{position:relative;width:min(90vw,540px);aspect-ratio:3/4;background:#000;border-radius:10px;overflow:hidden;border:1px solid rgba(233,30,140,.25);box-shadow:0 0 60px rgba(233,30,140,.08);cursor:move;user-select:none}
+#toVideo{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}/* espejo natural */
+#toOverlay{position:absolute;top:10%;left:15%;width:70%;cursor:move;user-select:none;touch-action:none;filter:drop-shadow(0 4px 16px rgba(0,0,0,.7));opacity:.88;transition:opacity .18s}
+#toOverlay:hover{opacity:1}
+.to-close{position:absolute;top:16px;right:20px;background:rgba(233,30,140,.1);border:1px solid rgba(233,30,140,.3);color:var(--cp);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;z-index:5}
+.to-close:hover{background:rgba(255,60,60,.15);border-color:#ff4444;color:#ff4444}
+.to-ctrl{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:center}
+.to-btn{padding:9px 18px;border:1px solid rgba(233,30,140,.35);background:rgba(233,30,140,.07);color:var(--cp);font-family:'Bebas Neue',sans-serif;font-size:.68rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all .18s;display:flex;align-items:center;gap:6px}
+.to-btn:hover{background:rgba(233,30,140,.2)}
+.to-btn.primary{background:var(--cp);color:white;border-color:var(--cp)}
+.to-btn.primary:hover{background:#d01478}
+.to-hint{font-size:.6rem;color:rgba(255,255,255,.35);margin-top:8px;text-align:center;letter-spacing:.5px;max-width:420px}
+.to-no-cam{display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);text-align:center;padding:40px;position:absolute;inset:0;background:#070707}
+.to-no-cam i{font-size:2rem;color:rgba(233,30,140,.3)}
+#toCaptureResult{display:none;max-width:min(90vw,540px);border-radius:10px;border:1px solid rgba(233,30,140,.3);margin-top:12px}
+</style>
+
+<div id="modalTryOn">
+  <button class="to-close" onclick="cerrarTryOn()" title="Cerrar (Esc)"><i class="bi bi-x-lg"></i></button>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:rgba(233,30,140,.7);margin-bottom:12px">
+    PROBADOR VIRTUAL — <%= producto.titulo.toUpperCase() %>
+  </div>
+  <div class="to-stage" id="toStage">
+    <video id="toVideo" autoplay playsinline muted></video>
+    <img id="toOverlay"
+         src="<%= producto.imagen_principal ? '/uploads/products/'+producto.imagen_principal : '' %>"
+         alt="<%= producto.titulo %>"
+         onerror="this.style.display='none'">
+    <div class="to-no-cam" id="toNoCam">
+      <i class="bi bi-camera-video-off"></i>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:2px">SIN ACCESO A CÁMARA</div>
+      <div style="font-size:.72rem;max-width:260px;line-height:1.5">
+        Para usar el probador virtual necesitas permitir el acceso a tu cámara en el navegador.
+      </div>
+    </div>
+  </div>
+  <!-- Foto capturada (aparece debajo tras capturar) -->
+  <img id="toCaptureResult" alt="Captura probador">
+  <div class="to-ctrl">
+    <button class="to-btn" onclick="toScale(1.1)"><i class="bi bi-zoom-in"></i> AMPLIAR</button>
+    <button class="to-btn" onclick="toScale(0.9)"><i class="bi bi-zoom-out"></i> REDUCIR</button>
+    <button class="to-btn" onclick="toResetPos()"><i class="bi bi-arrow-counterclockwise"></i> RESET</button>
+    <button class="to-btn primary" onclick="toCapturar()"><i class="bi bi-camera-fill"></i> CAPTURAR FOTO</button>
+  </div>
+  <div class="to-hint">
+    Arrastra la prenda sobre tu cuerpo · Usa Ampliar/Reducir para ajustar el tamaño · Haz clic en Capturar para guardar la foto
+  </div>
+</div>
+
+<script>
+// ── TRY-ON: cámara + overlay arrastrable ───────────────────────────────────
+var toStream=null, toOvEl=null, toDragging=false, toStartX=0, toStartY=0, toOvX=0, toOvY=0, toOvW=70;
+
+function abrirTryOn(){
+  document.getElementById('modalTryOn').classList.add('open');
+  document.body.style.overflow='hidden';
+  toOvEl=document.getElementById('toOverlay');
+  document.getElementById('toCaptureResult').style.display='none';
+  initTryOnCamera();
+  setupDrag();
+}
+function cerrarTryOn(){
+  document.getElementById('modalTryOn').classList.remove('open');
+  document.body.style.overflow='';
+  if(toStream){toStream.getTracks().forEach(function(t){t.stop();});toStream=null;}
+}
+
+function initTryOnCamera(){
+  var video=document.getElementById('toVideo');
+  var noCam=document.getElementById('toNoCam');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    noCam.style.display='flex'; return;
+  }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:720},height:{ideal:960}},audio:false})
+    .then(function(stream){
+      toStream=stream;
+      video.srcObject=stream;
+      noCam.style.display='none';
+    })
+    .catch(function(){noCam.style.display='flex';});
+}
+
+function setupDrag(){
+  var el=document.getElementById('toOverlay');
+  var stage=document.getElementById('toStage');
+
+  // Reset posición y tamaño
+  el.style.left='15%'; el.style.top='10%'; el.style.width='70%'; toOvW=70;
+
+  // Mouse
+  el.addEventListener('mousedown',function(e){
+    toDragging=true;
+    toStartX=e.clientX; toStartY=e.clientY;
+    toOvX=parseFloat(el.style.left)||0;
+    toOvY=parseFloat(el.style.top)||0;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',function(e){
+    if(!toDragging)return;
+    var stageW=stage.offsetWidth,stageH=stage.offsetHeight;
+    var dx=(e.clientX-toStartX)/stageW*100;
+    var dy=(e.clientY-toStartY)/stageH*100;
+    el.style.left=Math.min(80,Math.max(-10,toOvX+dx))+'%';
+    el.style.top=Math.min(80,Math.max(-10,toOvY+dy))+'%';
+  });
+  document.addEventListener('mouseup',function(){toDragging=false;});
+
+  // Touch
+  el.addEventListener('touchstart',function(e){
+    if(e.touches.length===1){
+      toDragging=true;
+      toStartX=e.touches[0].clientX; toStartY=e.touches[0].clientY;
+      toOvX=parseFloat(el.style.left)||0;
+      toOvY=parseFloat(el.style.top)||0;
+    }
+    e.preventDefault();
+  },{passive:false});
+  document.addEventListener('touchmove',function(e){
+    if(!toDragging||e.touches.length!==1)return;
+    var stageW=stage.offsetWidth,stageH=stage.offsetHeight;
+    var dx=(e.touches[0].clientX-toStartX)/stageW*100;
+    var dy=(e.touches[0].clientY-toStartY)/stageH*100;
+    el.style.left=Math.min(80,Math.max(-10,toOvX+dx))+'%';
+    el.style.top=Math.min(80,Math.max(-10,toOvY+dy))+'%';
+  },{passive:true});
+  document.addEventListener('touchend',function(){toDragging=false;});
+}
+
+function toScale(factor){
+  toOvW=Math.min(130,Math.max(20,toOvW*factor));
+  document.getElementById('toOverlay').style.width=toOvW+'%';
+}
+function toResetPos(){
+  var el=document.getElementById('toOverlay');
+  el.style.left='15%'; el.style.top='10%'; el.style.width='70%'; toOvW=70;
+}
+
+function toCapturar(){
+  var video=document.getElementById('toVideo');
+  var stage=document.getElementById('toStage');
+  var ovEl=document.getElementById('toOverlay');
+  var sw=stage.offsetWidth, sh=stage.offsetHeight;
+  var canvas=document.createElement('canvas');
+  canvas.width=sw*2; canvas.height=sh*2; // double resolution
+  var ctx=canvas.getContext('2d');
+  ctx.save();
+  ctx.translate(canvas.width,0);
+  ctx.scale(-1,1); // espejo para coincidir con el video
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  ctx.restore();
+  // Dibujar overlay
+  var ovRect=ovEl.getBoundingClientRect();
+  var stRect=stage.getBoundingClientRect();
+  var ox=(ovRect.left-stRect.left)*2, oy=(ovRect.top-stRect.top)*2;
+  var ow=ovRect.width*2, oh=ovRect.height*2;
+  var img=new Image();
+  img.crossOrigin='anonymous';
+  img.onload=function(){
+    ctx.drawImage(img,ox,oy,ow,oh);
+    var dataUrl=canvas.toDataURL('image/jpeg',.9);
+    var resultEl=document.getElementById('toCaptureResult');
+    resultEl.src=dataUrl;
+    resultEl.style.display='block';
+    // Descargar automáticamente
+    var a=document.createElement('a');
+    a.href=dataUrl;
+    a.download='mantiz-tryon-<%= producto.id %>.jpg';
+    a.click();
+  };
+  img.onerror=function(){
+    // Si la imagen no carga por CORS, mostrar solo el video
+    var dataUrl=canvas.toDataURL('image/jpeg',.9);
+    var resultEl=document.getElementById('toCaptureResult');
+    resultEl.src=dataUrl; resultEl.style.display='block';
+  };
+  img.src=ovEl.src;
+}
+
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){cerrar3D();cerrarTryOn();}});
+</script>
+
+<%- include('../partials/footer') %>

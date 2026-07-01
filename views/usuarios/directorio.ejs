@@ -1,0 +1,285 @@
+<%- include('../partials/header') %>
+<style>
+/* ── Layout ── */
+.dir-wrap{max-width:1300px;margin:0 auto;padding:0 24px 80px}
+.dir-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:24px}
+.dir-search{flex:1;min-width:200px;max-width:340px;position:relative}
+.dir-search input{width:100%;height:40px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:0 16px 0 40px;color:var(--text);font-family:var(--fm);font-size:13px;outline:none;transition:border-color .2s}
+.dir-search input:focus{border-color:rgba(233,30,140,.5)}
+.dir-search i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+.dir-filter-btn{height:36px;padding:0 16px;border-radius:18px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.dir-filter-btn.active,.dir-filter-btn:hover{border-color:rgba(233,30,140,.4);color:var(--cp);background:rgba(233,30,140,.07)}
+.dir-sort{height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:var(--fm);font-size:11px;cursor:pointer;outline:none}
+
+/* ── Grid de cards ── */
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+
+/* ── User card (Discord+Roblox) ── */
+.user-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s;text-decoration:none;display:block;position:relative}
+.user-card:hover{transform:translateY(-4px);border-color:rgba(233,30,140,.35);box-shadow:0 12px 40px rgba(233,30,140,.12);text-decoration:none}
+.user-card-banner{height:72px;background:#1a0a1a;position:relative;overflow:hidden}
+.user-card-banner img{width:100%;height:100%;object-fit:cover;opacity:.55}
+.user-card-banner-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(10,10,10,.7))}
+.user-card-body{padding:0 16px 16px;position:relative}
+.user-card-avatar-wrap{margin-top:-28px;margin-bottom:8px;display:flex;align-items:flex-end;justify-content:space-between}
+.user-card-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid var(--dark);box-shadow:0 0 0 2.5px var(--cp)}
+.user-card-badges{display:flex;gap:4px;align-items:center;padding-bottom:4px}
+.role-badge{font-family:var(--fm);font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:4px}
+.user-card-name{font-family:var(--fb);font-weight:700;font-size:1rem;color:var(--text);line-height:1.2}
+.user-card-username{font-family:var(--fm);font-size:.7rem;color:var(--muted);letter-spacing:.5px;margin-bottom:6px}
+.user-card-bio{font-family:var(--fb);font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.4;height:2.6em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:10px}
+body.light-mode .user-card-bio{color:rgba(0,0,0,.45)}
+
+/* ── Stats row ── */
+.user-card-stats{display:flex;gap:12px;margin-bottom:10px}
+.stat-chip{display:flex;flex-direction:column;align-items:center;gap:1px}
+.stat-val{font-family:var(--fd);font-size:.85rem;font-weight:800;color:var(--text);letter-spacing:.5px}
+.stat-lbl{font-family:var(--fm);font-size:.55rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+
+/* ── Conexiones mini-badges ── */
+.user-card-conex{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.conex-badge{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px}
+
+/* ── Logros mini ── */
+.user-card-logros{display:flex;gap:4px;flex-wrap:wrap}
+.logro-mini{font-size:16px;cursor:default;line-height:1}
+
+/* ── Botón de acción (amigo) ── */
+.card-friend-btn{position:absolute;top:12px;right:12px;background:rgba(10,10,10,.7);border:1px solid rgba(233,30,140,.3);color:var(--cp);border-radius:8px;padding:4px 10px;font-family:var(--fm);font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .18s;z-index:5;display:flex;align-items:center;gap:4px}
+.card-friend-btn:hover{background:rgba(233,30,140,.15)}
+.card-friend-btn.amigo{border-color:rgba(0,200,83,.3);color:#00c853}
+.card-friend-btn.pendiente{border-color:rgba(255,200,0,.3);color:#ffc800}
+
+/* ── Empty / loading ── */
+.dir-empty{text-align:center;padding:60px 24px;color:var(--muted);grid-column:1/-1}
+.dir-empty i{font-size:2.2rem;display:block;margin-bottom:12px;color:rgba(233,30,140,.25)}
+.dir-loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;grid-column:1/-1;color:var(--muted);font-family:var(--fm);font-size:.8rem}
+
+/* ── Pagination ── */
+.dir-pagination{display:flex;justify-content:center;gap:8px;margin-top:32px;flex-wrap:wrap}
+.page-btn{height:36px;min-width:36px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:var(--fm);font-size:12px;cursor:pointer;transition:all .18s}
+.page-btn.active,.page-btn:hover{border-color:rgba(233,30,140,.4);color:var(--cp);background:rgba(233,30,140,.08)}
+.page-btn:disabled{opacity:.4;cursor:default;pointer-events:none}
+
+/* ── Conexión palette ── */
+.plat-discord{background:rgba(88,101,242,.2);color:#5865f2}
+.plat-steam{background:rgba(27,40,56,.4);color:#c2c2c2}
+.plat-playstation{background:rgba(0,120,255,.15);color:#0078ff}
+.plat-xbox{background:rgba(16,124,16,.15);color:#4caf50}
+.plat-spotify{background:rgba(30,215,96,.1);color:#1ed760}
+.plat-twitch{background:rgba(145,70,255,.15);color:#9146ff}
+.plat-tiktok{background:rgba(254,44,85,.1);color:#fe2c55}
+.plat-youtube{background:rgba(255,0,0,.1);color:#ff0000}
+.plat-instagram{background:rgba(225,48,108,.1);color:#e1306c}
+
+/* ── Responsive ── */
+@media(max-width:600px){.dir-grid{grid-template-columns:1fr}}
+@media(max-width:767px){.dir-wrap{padding:0 12px 100px}}
+</style>
+
+<div class="dir-wrap">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <div style="font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase">MANTIZ</div>
+      <div style="font-family:var(--fd);font-size:1.4rem;font-weight:800;color:var(--text)">Directorio de Usuarios</div>
+    </div>
+    <div style="font-family:var(--fm);font-size:.75rem;color:var(--muted)">
+      <span id="dir-total-label">Cargando...</span>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="dir-filters">
+    <div class="dir-search">
+      <i class="bi bi-search"></i>
+      <input type="text" id="dir-q" placeholder="Buscar por nombre o @usuario..." autocomplete="off">
+    </div>
+    <button class="dir-filter-btn active" data-filtro="todos" onclick="setFiltro('todos',this)">Todos</button>
+    <button class="dir-filter-btn" data-filtro="con_logros" onclick="setFiltro('con_logros',this)">🏆 Con logros</button>
+    <button class="dir-filter-btn" data-filtro="con_conexiones" onclick="setFiltro('con_conexiones',this)">🎮 Conectados</button>
+    <select class="dir-sort" id="dir-orden" onchange="recargar()">
+      <option value="reciente">Más recientes</option>
+      <option value="amigos">Más amigos</option>
+      <option value="logros">Más logros</option>
+      <option value="tableros">Más tableros</option>
+    </select>
+  </div>
+
+  <!-- Grid -->
+  <div class="dir-grid" id="dir-grid">
+    <div class="dir-loading"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite"></i> Cargando usuarios...</div>
+  </div>
+
+  <!-- Paginación -->
+  <div class="dir-pagination" id="dir-pag"></div>
+</div>
+
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<script>
+const DIR_PAGE_SIZE = 20;
+let dirPage = 1, dirFiltro = 'todos', dirQ = '', dirOrden = 'reciente';
+const sessionUserId = <% if(user){ %><%= user.id %><% } else { %>null<% } %>;
+
+// ── Paleta de plataformas ────────────────────────────────────────────────
+const PLAT = {
+  discord:     { ico:'bi-discord',     label:'Discord',     cls:'plat-discord' },
+  steam:       { ico:'bi-steam',        label:'Steam',       cls:'plat-steam' },
+  playstation: { ico:'bi-playstation',  label:'PlayStation', cls:'plat-playstation' },
+  xbox:        { ico:'bi-xbox',         label:'Xbox',        cls:'plat-xbox' },
+  spotify:     { ico:'bi-spotify',      label:'Spotify',     cls:'plat-spotify' },
+  twitch:      { ico:'bi-twitch',       label:'Twitch',      cls:'plat-twitch' },
+  tiktok:      { ico:'bi-tiktok',       label:'TikTok',      cls:'plat-tiktok' },
+  youtube:     { ico:'bi-youtube',      label:'YouTube',     cls:'plat-youtube' },
+  instagram:   { ico:'bi-instagram',    label:'Instagram',   cls:'plat-instagram' }
+};
+
+// ── Cargar datos ─────────────────────────────────────────────────────────
+async function cargarDir(){
+  const grid = document.getElementById('dir-grid');
+  const pag  = document.getElementById('dir-pag');
+  grid.innerHTML = '<div class="dir-loading"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite"></i> Cargando usuarios...</div>';
+  pag.innerHTML = '';
+  try {
+    const params = new URLSearchParams({ q: dirQ, filtro: dirFiltro, orden: dirOrden, page: dirPage, limit: DIR_PAGE_SIZE });
+    const r = await fetch('/usuarios/api?' + params);
+    const d = await r.json();
+    renderGrid(d.usuarios || [], d.total || 0);
+    renderPaginacion(d.total || 0);
+  } catch(e) {
+    grid.innerHTML = '<div class="dir-empty"><i class="bi bi-exclamation-circle"></i>Error al cargar usuarios. Intenta de nuevo.</div>';
+  }
+}
+
+function recargar(){ dirPage = 1; cargarDir(); }
+
+function setFiltro(f, btn){
+  dirFiltro = f;
+  document.querySelectorAll('.dir-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  recargar();
+}
+
+// ── Renderizar grid ──────────────────────────────────────────────────────
+function renderGrid(usuarios, total){
+  document.getElementById('dir-total-label').textContent = total + ' usuario' + (total !== 1 ? 's' : '');
+  const grid = document.getElementById('dir-grid');
+  if (!usuarios.length) {
+    grid.innerHTML = '<div class="dir-empty"><i class="bi bi-people"></i>No se encontraron usuarios con esos criterios.</div>';
+    return;
+  }
+  grid.innerHTML = usuarios.map(u => buildCard(u)).join('');
+}
+
+function buildCard(u){
+  const bannerSrc = u.banner_tipo === 'upload' && u.banner
+    ? '/uploads/banners/' + u.banner
+    : '/img/defaults/banners/' + (u.banner_preset || 'banner1.jpg');
+  const avatarSrc = u.foto_perfil_tipo === 'upload' && u.foto_perfil
+    ? '/uploads/profiles/' + u.foto_perfil
+    : '/img/defaults/avatars/' + (u.foto_perfil_preset || 'avatar1.png');
+  const cfgColor = u.color_primario || 'var(--cp)';
+
+  // Conexiones (top 4)
+  const conexBadges = (u.conexiones || []).slice(0, 5).map(c => {
+    const p = PLAT[c.plataforma] || {};
+    return `<span class="conex-badge ${p.cls||''}" title="${p.label||c.plataforma}"><i class="bi ${p.ico||'bi-link-45deg'}"></i></span>`;
+  }).join('');
+
+  // Logros (top 5)
+  const logMini = (u.logros || []).slice(0, 5).map(l =>
+    `<span class="logro-mini" title="${l.nombre}: ${l.descripcion||''}">${l.icono || '🏆'}</span>`
+  ).join('');
+
+  // Botón de amistad (solo si hay sesión y no es el mismo usuario)
+  let friendBtn = '';
+  if (sessionUserId && sessionUserId != u.id) {
+    const estado = u.estado_amistad;
+    const cls  = estado === 'aceptada' ? 'amigo' : (estado === 'pendiente' ? 'pendiente' : '');
+    const ico  = estado === 'aceptada' ? 'bi-person-check-fill' : (estado === 'pendiente' ? 'bi-person-clock' : 'bi-person-plus');
+    const lbl  = estado === 'aceptada' ? 'AMIGOS' : (estado === 'pendiente' ? 'ENVIADA' : 'AGREGAR');
+    friendBtn = `<button class="card-friend-btn ${cls}" onclick="accionAmigo(event,${u.id},'${estado||'ninguno'}')" data-uid="${u.id}" data-estado="${estado||'ninguno'}">`
+      + `<i class="bi ${ico}"></i>${lbl}</button>`;
+  }
+
+  return `<a href="/u/${u.username}" class="user-card">
+    <div class="user-card-banner">
+      <img src="${bannerSrc}" onerror="this.style.display='none'">
+      <div class="user-card-banner-overlay"></div>
+    </div>
+    <div class="user-card-body">
+      ${friendBtn}
+      <div class="user-card-avatar-wrap">
+        <img class="user-card-avatar" src="${avatarSrc}" onerror="this.src='/img/defaults/avatars/avatar1.png'"
+             style="box-shadow:0 0 0 2.5px ${cfgColor}">
+        <div class="user-card-badges">
+          ${u.rol === 'admin' ? '<span class="role-badge" style="background:rgba(233,30,140,.15);color:var(--cp)">ADMIN</span>' : ''}
+          ${u.total_logros > 0 ? '<span class="role-badge" style="background:rgba(255,215,0,.1);color:#ffd700">🏆 '+u.total_logros+'</span>' : ''}
+        </div>
+      </div>
+      <div class="user-card-name">${u.nombre_visible}</div>
+      <div class="user-card-username">@${u.username}</div>
+      ${u.bio ? `<div class="user-card-bio">${u.bio}</div>` : '<div style="height:0.4em"></div>'}
+      <div class="user-card-stats">
+        <div class="stat-chip"><span class="stat-val">${u.total_amigos||0}</span><span class="stat-lbl">Amigos</span></div>
+        <div class="stat-chip"><span class="stat-val">${u.total_tableros||0}</span><span class="stat-lbl">Tableros</span></div>
+        <div class="stat-chip"><span class="stat-val">${u.total_likes||0}</span><span class="stat-lbl">Likes</span></div>
+      </div>
+      ${conexBadges ? `<div class="user-card-conex">${conexBadges}</div>` : ''}
+      ${logMini ? `<div class="user-card-logros">${logMini}</div>` : ''}
+    </div>
+  </a>`;
+}
+
+// ── Paginación ───────────────────────────────────────────────────────────
+function renderPaginacion(total){
+  const pages = Math.ceil(total / DIR_PAGE_SIZE);
+  if (pages <= 1) return;
+  const pag = document.getElementById('dir-pag');
+  let html = `<button class="page-btn" onclick="goPage(${dirPage-1})" ${dirPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= pages; i++) {
+    if (pages > 7 && Math.abs(i - dirPage) > 2 && i !== 1 && i !== pages) {
+      if (i === dirPage - 3 || i === dirPage + 3) html += '<span style="color:var(--muted);padding:0 4px">…</span>';
+      continue;
+    }
+    html += `<button class="page-btn ${i===dirPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn" onclick="goPage(${dirPage+1})" ${dirPage===pages?'disabled':''}>›</button>`;
+  pag.innerHTML = html;
+}
+function goPage(p){ dirPage = p; cargarDir(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+// ── Acción de amistad ────────────────────────────────────────────────────
+async function accionAmigo(ev, uid, estadoActual){
+  ev.preventDefault(); ev.stopPropagation();
+  if (!sessionUserId) { window.location.href = '/auth/login'; return; }
+  if (estadoActual === 'aceptada') return; // ya son amigos
+  const btn = ev.currentTarget;
+  btn.style.opacity = '.5';
+  try {
+    const r = await fetch('/amigos/solicitud/' + uid, { method: 'POST' });
+    const d = await r.json();
+    if (d.success || d.estado === 'pendiente') {
+      btn.className = 'card-friend-btn pendiente';
+      btn.innerHTML = '<i class="bi bi-person-clock"></i>ENVIADA';
+      btn.dataset.estado = 'pendiente';
+    }
+  } catch(e) {}
+  btn.style.opacity = '1';
+}
+
+// ── Debounce búsqueda ────────────────────────────────────────────────────
+let qTimer;
+document.getElementById('dir-q').addEventListener('input', function(){
+  clearTimeout(qTimer);
+  const v = this.value.trim();
+  qTimer = setTimeout(() => { dirQ = v; recargar(); }, 320);
+});
+document.getElementById('dir-orden').addEventListener('change', function(){ dirOrden = this.value; recargar(); });
+
+// ── Carga inicial ────────────────────────────────────────────────────────
+cargarDir();
+</script>
+
+<%- include('../partials/footer') %>

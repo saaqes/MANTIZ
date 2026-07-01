@@ -1,0 +1,255 @@
+<%- include('../partials/header') %>
+
+<style>
+  .y2k-wrap {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    position: relative;
+    overflow: hidden;
+    background: #0a000f;
+  }
+
+  .y2k-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(157,0,255,0.3) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 70%, rgba(0,245,255,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 100% at 50% 50%, rgba(233,30,140,0.1) 0%, transparent 70%);
+    animation: bgPulse 8s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes bgPulse {
+    0%   { filter: hue-rotate(0deg) brightness(1); }
+    100% { filter: hue-rotate(20deg) brightness(1.1); }
+  }
+
+  .y2k-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+    animation: gridMove 20s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes gridMove {
+    from { background-position: 0 0; }
+    to   { background-position: 48px 48px; }
+  }
+
+  .y2k-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    animation: scanMove 6s linear infinite;
+  }
+  @keyframes scanMove {
+    from { background-position: 0 0; }
+    to   { background-position: 0 80px; }
+  }
+
+  .y2k-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .y2k-card {
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .y2k-card-inner {
+    background: rgba(10,0,20,0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 40px;
+    position: relative;
+    border: 1.5px solid rgba(233,30,140,0.5);
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+    animation: cardIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .y2k-topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #9d00ff, var(--pink), #00f5ff, var(--pink));
+    background-size: 300% 100%;
+    animation: barSlide 3s linear infinite;
+  }
+  @keyframes barSlide {
+    from { background-position: 0% 0%; }
+    to   { background-position: 300% 0%; }
+  }
+
+  .y2k-card-inner::before,
+  .y2k-card-inner::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-style: solid;
+    animation: cornerPulse 2.5s ease-in-out infinite alternate;
+  }
+  .y2k-card-inner::before { top: 8px; left: 8px; border-width: 2px 0 0 2px; border-color: #00f5ff; }
+  .y2k-card-inner::after  { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; border-color: #00f5ff; }
+  @keyframes cornerPulse {
+    from { border-color: #00f5ff; opacity: 0.5; }
+    to   { border-color: var(--pink); opacity: 1; }
+  }
+
+  .mantiz-input:-webkit-autofill,
+  .mantiz-input:-webkit-autofill:hover,
+  .mantiz-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #0a000f inset !important;
+    -webkit-text-fill-color: #fff !important;
+    caret-color: #fff;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  .y2k-logo-glitch {
+    animation: logoGlitch 5s steps(1) infinite;
+  }
+  @keyframes logoGlitch {
+    0%,93%,100% { clip-path: none; text-shadow: 0 0 20px rgba(233,30,140,0.4); }
+    94% { clip-path: polygon(0 20%,100% 20%,100% 40%,0 40%); text-shadow: -3px 0 #00f5ff, 3px 0 var(--pink); }
+    95% { clip-path: polygon(0 60%,100% 60%,100% 80%,0 80%); text-shadow: 3px 0 #9d00ff; }
+    96% { clip-path: none; text-shadow: 0 0 20px rgba(233,30,140,0.4); }
+  }
+</style>
+
+<div class="y2k-wrap">
+  <div class="y2k-bg"></div>
+  <div class="y2k-grid"></div>
+  <div class="y2k-scanlines"></div>
+  <canvas class="y2k-canvas" id="y2kCanvas"></canvas>
+
+  <div class="y2k-card">
+    <div class="y2k-card-inner">
+      <div class="y2k-topbar"></div>
+      <div style="position:absolute;inset:0;border:3px solid rgba(255,255,255,0.5);filter:url(#gb);pointer-events:none;z-index:10"></div>
+
+      <div style="text-align:center;margin-bottom:32px">
+        <a href="/" class="y2k-logo-glitch" style="font-family:'Permanent Marker',cursive;font-size:36px;color:var(--pink);text-decoration:none;display:block;text-shadow:0 0 20px rgba(233,30,140,0.4)">
+          <%= sitio.nombre_tienda || 'MANTIZ' %>
+        </a>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:5px;color:#f0f0f0;margin-top:8px">INICIAR SESION</div>
+        <div style="width:60px;height:2px;background:var(--pink);margin:12px auto 0;filter:url(#gb)"></div>
+      </div>
+
+      <form action="/auth/login" method="POST">
+        <div style="margin-bottom:20px">
+          <label class="mantiz-label">Usuario o Email</label>
+          <input type="text" name="username" class="mantiz-input" placeholder="tu_usuario" required>
+        </div>
+        <div style="margin-bottom:24px">
+          <label class="mantiz-label">Contrasena</label>
+          <input type="password" name="password" class="mantiz-input" placeholder="........" required>
+        </div>
+        <button type="submit" class="btn-grunge-fill" style="width:100%">INGRESAR &#8594;</button>
+      </form>
+
+      <div style="text-align:center;margin-top:24px;font-size:13px;color:#999;letter-spacing:1px">
+        No tienes cuenta?
+        <a href="/auth/registro" style="color:var(--pink);text-decoration:none;font-weight:700">REGISTRATE</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('y2kCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const colors = ['#ff2d9b','#00f5ff','#9d00ff','#ffe600'];
+  const shapes = ['circle','square','diamond'];
+
+  function spawn() {
+    return {
+      x: Math.random() * W, y: H + 10,
+      r: Math.random() * 3 + 1,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: -(Math.random() * 1.2 + 0.4),
+      alpha: 0, fadeIn: Math.random() * 0.012 + 0.005,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      shape: shapes[Math.floor(Math.random() * shapes.length)],
+      rot: 0, rotV: (Math.random() - 0.5) * 0.04,
+      life: 0, maxLife: Math.random() * 200 + 120,
+    };
+  }
+
+  for (let i = 0; i < 50; i++) {
+    const p = spawn();
+    p.y = Math.random() * H;
+    p.life = Math.random() * p.maxLife;
+    p.alpha = Math.random() * 0.6;
+    particles.push(p);
+  }
+
+  function draw(p) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(p.alpha, 0.7);
+    ctx.fillStyle = p.color;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = p.color;
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    const r = p.r;
+    if (p.shape === 'circle') {
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+    } else if (p.shape === 'square') {
+      ctx.fillRect(-r,-r,r*2,r*2);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(0,-r*1.5); ctx.lineTo(r*1.2,0);
+      ctx.lineTo(0,r*1.5); ctx.lineTo(-r*1.2,0);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function tick() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach((p,i) => {
+      p.life++;
+      if (p.life < p.maxLife * 0.2)      p.alpha = Math.min(p.alpha + p.fadeIn, 0.7);
+      else if (p.life > p.maxLife * 0.7) p.alpha = Math.max(p.alpha - p.fadeIn, 0);
+      p.x += p.vx; p.y += p.vy; p.rot += p.rotV;
+      draw(p);
+      if (p.life >= p.maxLife) particles[i] = spawn();
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+</script>
+
+<%- include('../partials/footer') %>
