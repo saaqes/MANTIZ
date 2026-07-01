@@ -117,9 +117,6 @@ body.light-mode .pp-bio{color:rgba(0,0,0,.45)}
             <i class="bi bi-person-plus-fill"></i>AGREGAR AMIGO
           </button>
         <% } %>
-        <a href="/chat?with=<%= perfil.username %>" class="pp-btn pp-btn-outline">
-          <i class="bi bi-chat-dots"></i>MENSAJE
-        </a>
       <% } else if (!user) { %>
         <a href="/auth/login" class="pp-btn pp-btn-primary"><i class="bi bi-person-plus-fill"></i>SEGUIR</a>
       <% } %>

@@ -11,11 +11,19 @@
 @media(max-width:900px){.pgrid4{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.pgrid4{grid-template-columns:1fr}}
 @media(max-width:768px){#productos-page{padding:40px 20px 60px}}
+/* tribal condicional */
+.tribal-img-dark{display:block;opacity:.5;width:100%;max-width:420px;margin:10px auto 0}
+.tribal-img-light{display:none;opacity:.42;width:100%;max-width:420px;margin:10px auto 0}
+body.light-mode .tribal-img-dark{display:none}
+body.light-mode .tribal-img-light{display:block}
 </style>
 
 <div id="productos-page">
-  <h1 class="section-title">TIENDA</h1>
-  <%- include('../partials/tribal-separator') %>
+  <h1 class="section-title">PRODUCTOS</h1>
+  <div style="text-align:center;margin:0 0 36px">
+    <img src="/img/tribal-blanco.png" class="tribal-img-dark" alt="">
+    <img src="/img/tribal-negro.png"  class="tribal-img-light" alt="">
+  </div>
 
   <!-- Filter bar -->
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;flex-wrap:wrap;gap:14px">
@@ -49,18 +57,17 @@
       <a href="/productos" class="btn-grunge" style="display:inline-flex;margin-top:20px">VER TODO</a>
     </div>
     <% } %>
-    <% productos.forEach(function(p) {
-      var gUrls = (p.galeria || [p.imagen_principal]).filter(Boolean).map(function(g){ return '/uploads/products/' + g; });
-    %>
+    <% productos.forEach(function(p) { %>
     <div class="product-card" onclick="window.location='/productos/<%= p.id %>'">
       <div class="pc-label">
         <span class="pc-label-text"><%= p.titulo.substring(0,16) %></span>
         <% if (p.precio_descuento) { %><span class="badge-oferta">-<%= Math.round((1-p.precio_descuento/p.precio)*100) %>%</span><% } %>
       </div>
       <div class="pc-img-wrap">
-        <div class="pc-img-clip pc-gallery-clip" data-gallery='<%- JSON.stringify(gUrls) %>'>
-          <img class="pc-img" src="<%= gUrls[0] %>" alt="<%= p.titulo %>"
+        <div class="pc-img-clip">
+          <img class="pc-img" src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>"
                onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'">
+            <%if(p.imagen_hover){%><img class="pc-img-hover" src="/uploads/products/<%=p.imagen_hover%>" alt="" onerror="this.style.display='none'"><%}%>
         </div>
         <button class="pc-add-btn"
                 onclick="event.stopPropagation();quickAdd(<%= p.id %>,'<%= p.titulo.substring(0,30).replace(/'/g,String.fromCharCode(39)) %>',<%= p.precio_descuento||p.precio %>,'<%= p.imagen_principal %>')">+</button>

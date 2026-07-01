@@ -119,7 +119,9 @@ textarea.form-inp{resize:vertical;min-height:72px}
   <!-- Hero -->
   <div class="com-hero">
     <div class="com-hero-title">COMUNIDAD</div>
-    <%- include('../partials/tribal-separator') %>
+    <div class="com-divider">
+      <svg width="180" height="12" viewBox="0 0 180 12"><path d="M0,6 L70,6 L80,2 L90,10 L100,2 L110,6 L180,6" fill="none" stroke="var(--cp)" stroke-width="1.2"/></svg>
+    </div>
     <div class="com-hero-sub">Tableros, imágenes y creadores de la comunidad MANTIZ</div>
   </div>
 
@@ -181,7 +183,10 @@ textarea.form-inp{resize:vertical;min-height:72px}
           <% if (cat) { %>
           <div style="font-family:var(--fm);font-size:.55rem;letter-spacing:1.5px;color:var(--cp);text-transform:uppercase;margin-bottom:4px"><%= cat %></div>
           <% } %>
-          <div class="board-name"><%= t.nombre %></div>
+          <div class="board-name" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= t.nombre %></span>
+            <a href="/u/<%= t.username %>" onclick="event.stopPropagation()" style="font-size:10px;color:var(--gray);text-decoration:none;white-space:nowrap;flex-shrink:0;letter-spacing:.5px" onmouseover="this.style.color='var(--cp)'" onmouseout="this.style.color='var(--gray)'">@<%= t.username %></a>
+          </div>
           <% if (cleanDesc) { %><div class="board-desc"><%= cleanDesc %></div><% } %>
           <div class="board-meta">
             <span><i class="bi bi-pin-fill"></i><%= t.total_pines %></span>

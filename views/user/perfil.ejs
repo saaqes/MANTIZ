@@ -73,18 +73,106 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--pink)"><%= pedidos ? pedidos.length : 0 %></div>
         <div style="font-size:10px;color:var(--gray);letter-spacing:1.5px">PEDIDOS</div>
       </div>
+      <!-- Engranaje: abre panel lateral desde la derecha -->
+      <button onclick="abrirPanelCfg()" title="Configuración" style="width:40px;height:40px;border:1px solid var(--border);background:transparent;color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;border-radius:4px;align-self:center" onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--gray)'">
+        <i class="bi bi-gear-fill" style="font-size:16px"></i>
+      </button>
     </div>
   </div>
 
-  <!-- TABS -->
+<!-- ── PANEL LATERAL DE CONFIGURACIÓN ─────────────────────────────────── -->
+<div id="cfg-overlay" onclick="cerrarPanelCfg()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1800;backdrop-filter:blur(3px)"></div>
+<div id="cfg-panel" style="position:fixed;top:64px;right:0;bottom:0;width:min(420px,92vw);background:#0a0a0a;z-index:1900;transform:translateX(100%);transition:transform .38s cubic-bezier(.16,1,.3,1),top .4s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;border-left:1px solid rgba(233,30,140,.2);overflow:hidden">
+  <div style="height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--border);background:rgba(233,30,140,.06)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="cfg-back-btn" onclick="cfg_back()" style="display:none;background:none;border:none;color:var(--pink);cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;padding:0;align-items:center;gap:6px"><i class="bi bi-arrow-left"></i> VOLVER</button>
+      <span id="cfg-panel-title" style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--pink)">CONFIGURACIÓN</span>
+    </div>
+    <button onclick="cerrarPanelCfg()" style="background:none;border:none;color:var(--gray);font-size:20px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <!-- Menú raíz -->
+  <div id="cfg-root" style="flex:1;overflow-y:auto;position:relative">
+    <% var _cfgItems=[{id:'cfg-sec-perfil',ico:'bi-person-fill',label:'PERFIL',desc:'Nombre, bio y teléfono'},{id:'cfg-sec-config',ico:'bi-sliders',label:'CONFIG',desc:'Direcciones y métodos de pago'},{id:'cfg-sec-apariencia',ico:'bi-palette-fill',label:'APARIENCIA',desc:'Avatar y banner'},{id:'cfg-sec-seguridad',ico:'bi-shield-lock-fill',label:'SEGURIDAD',desc:'Contraseña y privacidad'}]; %>
+    <% _cfgItems.forEach(function(o){ %>
+    <button onclick="cfg_showSection('<%= o.id %>','<%= o.label %>')" style="width:100%;background:none;border:none;border-bottom:1px solid var(--faint-1);color:var(--white);padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;transition:background .18s" onmouseover="this.style.background='rgba(233,30,140,.07)'" onmouseout="this.style.background='transparent'">
+      <div style="width:38px;height:38px;border-radius:50%;background:rgba(233,30,140,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="bi <%= o.ico %>" style="color:var(--pink);font-size:15px"></i></div>
+      <div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px"><%= o.label %></div><div style="font-size:11px;color:var(--gray);margin-top:2px"><%= o.desc %></div></div>
+      <i class="bi bi-chevron-right" style="color:var(--faint-3);font-size:11px"></i>
+    </button>
+    <% }) %>
+    <!-- Sub-secciones -->
+    <div id="cfg-section-wrap" style="position:absolute;inset:0;background:#0a0a0a;transform:translateX(100%);transition:transform .32s cubic-bezier(.16,1,.3,1);overflow-y:auto;padding:18px">
+      <!-- PERFIL -->
+      <div id="cfg-sec-perfil" style="display:none">
+        <form action="/perfil/actualizar" method="POST" style="display:flex;flex-direction:column;gap:12px">
+          <div><label class="mantiz-label" style="font-size:10px">NOMBRE VISIBLE</label><input type="text" name="nombre_visible" class="mantiz-input" value="<%= usuario.nombre_visible %>" required></div>
+          <div><label class="mantiz-label" style="font-size:10px">TELÉFONO</label><input type="text" name="telefono" class="mantiz-input" value="<%= usuario.telefono||'' %>"></div>
+          <div><label class="mantiz-label" style="font-size:10px">BIO</label><textarea name="bio" class="mantiz-input" rows="3"><%= usuario.bio||'' %></textarea></div>
+          <button type="submit" class="btn-grunge-fill" style="padding:11px;font-size:13px;letter-spacing:3px">GUARDAR</button>
+        </form>
+      </div>
+      <!-- CONFIG -->
+      <div id="cfg-sec-config" style="display:none">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--pink);margin-bottom:8px">DIRECCIONES</div>
+        <% if (direcciones && direcciones.length > 0) { %><% direcciones.forEach(function(d) { %>
+        <div style="border:1px solid <%= d.predeterminada?'var(--pink)':'var(--faint-1)' %>;padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;border-radius:3px">
+          <div style="font-size:12px"><div style="font-weight:600"><%= d.alias %><% if(d.predeterminada){%><span style="background:var(--pink);color:white;font-size:8px;padding:1px 5px;margin-left:6px;border-radius:2px">★</span><%}%></div><div style="color:var(--gray);font-size:11px"><%= d.ciudad %></div></div>
+          <form action="/perfil/direccion/eliminar/<%= d.id %>" method="POST"><button type="submit" style="background:none;border:none;color:var(--faint-3);cursor:pointer;font-size:14px" onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='var(--faint-3)'">✕</button></form>
+        </div>
+        <% }) %><% } %>
+        <details style="margin-bottom:16px"><summary style="cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--pink);list-style:none;padding:8px 0;border-top:1px dashed var(--faint-1)">+ AGREGAR DIRECCIÓN</summary>
+          <form action="/perfil/direcciones" method="POST" style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+            <input type="text" name="alias" class="mantiz-input" placeholder="Alias" style="font-size:12px">
+            <input type="text" name="nombre_destinatario" class="mantiz-input" placeholder="Destinatario" required style="font-size:12px">
+            <input type="text" name="ciudad" class="mantiz-input" placeholder="Ciudad" required style="font-size:12px">
+            <input type="text" name="departamento" class="mantiz-input" placeholder="Departamento" style="font-size:12px">
+            <input type="text" name="direccion" class="mantiz-input" placeholder="Dirección completa" required style="font-size:12px">
+            <button type="submit" class="btn-grunge-fill" style="padding:9px;font-size:12px">GUARDAR</button>
+          </form>
+        </details>
+        <div style="border-top:1px solid var(--border);padding-top:12px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--pink);margin-bottom:8px">MÉTODOS DE PAGO</div>
+          <% if (metodosPago && metodosPago.length > 0) { %><% metodosPago.forEach(function(mp) { %>
+          <div style="border:1px solid var(--faint-1);padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;border-radius:3px">
+            <div style="font-size:12px"><div style="font-weight:600"><%= mp.banco %></div><div style="color:var(--gray);font-size:11px">****<%= (mp.numero_cuenta||'').slice(-4) %> · <%= mp.tipo_cuenta %></div></div>
+            <button onclick="eliminarMetodoPago(<%= mp.id %>)" style="background:none;border:none;color:var(--faint-3);cursor:pointer;font-size:14px" onmouseover="this.style.color='#ff4444'" onmouseout="this.style.color='var(--faint-3)'">✕</button>
+          </div>
+          <% }) %><% } %>
+          <button onclick="document.getElementById('formNuevoMetodoPago').style.display='flex'" style="width:100%;background:transparent;border:1px dashed rgba(255,255,255,.2);color:var(--gray);padding:8px;cursor:pointer;font-size:11px;letter-spacing:1px;border-radius:3px">+ NUEVO MÉTODO</button>
+        </div>
+      </div>
+      <!-- APARIENCIA -->
+      <div id="cfg-sec-apariencia" style="display:none">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--pink);margin-bottom:8px">AVATAR</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">
+          <% avsList.forEach(function(av) { %><form action="/perfil/avatar/preset" method="POST"><input type="hidden" name="preset" value="<%= av %>"><button type="submit" style="width:44px;height:44px;border:2px solid <%= usuario.foto_perfil_preset===av?'var(--pink)':'var(--faint-2)' %>;border-radius:50%;overflow:hidden;padding:0;cursor:pointer;background:none"><img src="/img/defaults/avatars/<%= av %>" width="44" height="44" style="border-radius:50%;object-fit:cover" onerror="this.style.display='none'"></button></form><% }) %>
+        </div>
+        <form action="/perfil/avatar/upload" method="POST" enctype="multipart/form-data" style="display:flex;gap:8px;margin-bottom:14px"><input type="file" name="foto_perfil" accept="image/*" class="mantiz-input" style="flex:1;font-size:11px"><button type="submit" class="btn-grunge-fill" style="padding:8px 12px;font-size:11px">SUBIR</button></form>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--pink);margin-bottom:8px">BANNER</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <% bansList.forEach(function(bn) { %><form action="/perfil/banner/preset" method="POST"><input type="hidden" name="preset" value="<%= bn %>"><button type="submit" style="width:60px;height:36px;border:2px solid <%= usuario.banner_preset===bn?'var(--pink)':'var(--faint-2)' %>;overflow:hidden;padding:0;cursor:pointer;background:none"><img src="/img/defaults/banners/<%= bn %>" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"></button></form><% }) %>
+        </div>
+      </div>
+      <!-- SEGURIDAD -->
+      <div id="cfg-sec-seguridad" style="display:none">
+        <form action="/perfil/cambiar-password" method="POST" style="display:flex;flex-direction:column;gap:12px">
+          <div><label class="mantiz-label" style="font-size:10px">CONTRASEÑA ACTUAL</label><input type="password" name="password_actual" class="mantiz-input" required></div>
+          <div><label class="mantiz-label" style="font-size:10px">NUEVA CONTRASEÑA</label><input type="password" name="password_nuevo" class="mantiz-input" required minlength="6"></div>
+          <div><label class="mantiz-label" style="font-size:10px">CONFIRMAR</label><input type="password" name="password_confirm" class="mantiz-input" required></div>
+          <button type="submit" class="btn-grunge-fill" style="padding:11px;font-size:13px;letter-spacing:3px">CAMBIAR CONTRASEÑA</button>
+        </form>
+        <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;text-align:center"><a href="/auth/logout" style="color:#ff6060;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;text-decoration:none;border:1px solid #ff6060;padding:7px 18px;display:inline-block">CERRAR SESIÓN</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- TABS (sin las opciones de gestión de perfil — esas viven en el engranaje) -->
   <div style="display:flex;border-bottom:1px solid var(--border);margin:24px 0 0;padding:0 40px;overflow-x:auto">
-    <button onclick="showTab('info')"          id="tab-info"          class="ptab">PERFIL</button>
     <button onclick="showTab('favoritos')"     id="tab-favoritos"     class="ptab">FAVORITOS</button>
     <button onclick="showTab('tableros')"      id="tab-tableros"      class="ptab">MIS PINES</button>
     <button onclick="showTab('pedidos_tab')"   id="tab-pedidos_tab"   class="ptab">PEDIDOS</button>
-    <button onclick="showTab('configuracion')" id="tab-configuracion" class="ptab">CONFIG</button>
-    <button onclick="showTab('avatar')"        id="tab-avatar"        class="ptab">APARIENCIA</button>
-    <button onclick="showTab('seguridad')"     id="tab-seguridad"     class="ptab">SEGURIDAD</button>
+    <button onclick="showTab('cupones')"       id="tab-cupones"       class="ptab">CUPONES</button>
     <button onclick="showTab('conexiones');cargarConexionesPerfil()"  id="tab-conexiones"  class="ptab">CONEXIONES</button>
     <button onclick="showTab('logros');cargarLogrosPerfil()"          id="tab-logros"      class="ptab">🏆 LOGROS</button>
     <button onclick="showTab('amigos');cargarAmigos()"                id="tab-amigos"      class="ptab">AMIGOS</button>
@@ -191,7 +279,7 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
                         style="background:none;border:none;color:var(--gray);cursor:pointer;padding:4px 8px;font-size:18px;line-height:1;transition:color 0.2s"
                         onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--gray)'"
                         onclick="toggleTbMenu(<%= t.id %>,event)">⋮</button>
-                <div id="tb-menu-<%= t.id %>" style="display:none;position:absolute;right:0;top:28px;background:rgba(17,17,17,0.98);border:1px solid var(--border);min-width:140px;z-index:100">
+                <div id="tb-menu-<%= t.id %>" style="display:none;position:absolute;right:0;top:32px;background:rgba(14,14,14,0.99);border:1px solid rgba(233,30,140,.3);min-width:160px;z-index:1200;box-shadow:0 8px 30px rgba(0,0,0,.7);border-radius:6px;overflow:hidden">
                   <button data-tb-id="<%= t.id %>" data-tb-nombre="<%= t.nombre %>" class="tb-btn-ver"
                           style="display:block;width:100%;background:none;border:none;border-bottom:1px solid var(--faint-1);color:var(--white);padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;text-align:left"
                           onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--white)'">
@@ -558,6 +646,15 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
     </div>
   </div>
 
+  <!-- PANEL: CUPONES -->
+  <div id="panel-cupones" style="display:none;padding:32px 40px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;margin-bottom:8px">MIS CUPONES</div>
+    <div style="font-size:13px;color:var(--gray);margin-bottom:24px">Cupones obtenidos al desbloquear logros. Cada cupón aplica un descuento en un solo producto.</div>
+    <div id="cupones-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+      <div style="color:var(--muted);font-size:13px">Cargando cupones...</div>
+    </div>
+  </div>
+
 </div><!-- end max-width container -->
 
 <!-- MODAL: Crear/Editar tablero (OUTSIDE all panels) -->
@@ -599,7 +696,69 @@ var bansList  = ['banner1.jpg','banner2.jpg','banner3.jpg','banner4.jpg','banner
 
 <script>
 // ── TAB SWITCHING ────────────────────────────────────────
-var ALL_PANELS = ['info','favoritos','tableros','pedidos_tab','configuracion','avatar','seguridad','conexiones','logros','amigos'];
+var ALL_PANELS = ['info','favoritos','tableros','pedidos_tab','configuracion','avatar','seguridad','conexiones','logros','amigos','cupones'];
+
+// ── PANEL LATERAL DE CONFIGURACIÓN (engranaje) ─────────────────────────────
+var _cfgPanel = null, _cfgOverlay = null;
+function abrirPanelCfg(){
+  if(!_cfgPanel){ _cfgPanel=document.getElementById('cfg-panel'); _cfgOverlay=document.getElementById('cfg-overlay'); }
+  if(_cfgPanel){ _cfgPanel.style.transform='translateX(0)'; _cfgOverlay.style.display='block'; document.body.style.overflow='hidden'; }
+}
+function cerrarPanelCfg(){
+  if(_cfgPanel){ _cfgPanel.style.transform='translateX(100%)'; _cfgOverlay.style.display='none'; document.body.style.overflow=''; }
+  setTimeout(function(){ var sw=document.getElementById('cfg-section-wrap'); if(sw)sw.style.transform='translateX(100%)'; var t=document.getElementById('cfg-panel-title'); if(t)t.textContent='CONFIGURACIÓN'; var b=document.getElementById('cfg-back-btn'); if(b)b.style.display='none'; }, 380);
+}
+// Sincronizar top del panel con el navbar (navEl definido en header.ejs)
+(function syncCfgPanelTop(){
+  var cfgP = document.getElementById('cfg-panel');
+  if(!cfgP) return;
+  function updateTop(navHidden){
+    cfgP.style.top = navHidden ? '0px' : '64px';
+  }
+  // Observar cambios de clase en el navbar
+  var nav = document.getElementById('navbar');
+  if(nav && window.MutationObserver){
+    new MutationObserver(function(muts){
+      muts.forEach(function(m){ if(m.attributeName==='class') updateTop(nav.classList.contains('hidden')); });
+    }).observe(nav,{attributes:true});
+  }
+  // También en resize (mobile: navbar height = 56px)
+  window.addEventListener('resize',function(){ var nh=window.innerWidth<=767?56:64; cfgP.style.top=nav&&nav.classList.contains('hidden')?'0px':nh+'px'; });
+})();
+function cfg_showSection(id, label){
+  document.querySelectorAll('[id^="cfg-sec-"]').forEach(function(el){ el.style.display='none'; });
+  var sec=document.getElementById(id); if(sec) sec.style.display='block';
+  var t=document.getElementById('cfg-panel-title'); if(t) t.textContent=label;
+  var b=document.getElementById('cfg-back-btn'); if(b) b.style.display='flex';
+  var sw=document.getElementById('cfg-section-wrap'); if(sw) sw.style.transform='translateX(0)';
+}
+function cfg_back(){
+  var sw=document.getElementById('cfg-section-wrap'); if(sw)sw.style.transform='translateX(100%)';
+  var t=document.getElementById('cfg-panel-title'); if(t)t.textContent='CONFIGURACIÓN';
+  var b=document.getElementById('cfg-back-btn'); if(b)b.style.display='none';
+}
+document.addEventListener('keydown',function(e){ if(e.key==='Escape')cerrarPanelCfg(); });
+
+// ── CUPONES ────────────────────────────────────────────────────────────────
+async function cargarCupones(){
+  var lista=document.getElementById('cupones-lista'); if(!lista)return;
+  try{
+    var r=await fetch('/perfil/cupones'); var d=await r.json();
+    if(!d.cupones||d.cupones.length===0){ lista.innerHTML='<div style="color:var(--muted);font-size:13px;grid-column:1/-1">No tienes cupones aún. ¡Desbloquea logros para ganarlos!</div>'; return; }
+    lista.innerHTML=d.cupones.map(function(c){
+      var usado=c.usado; var pct=c.descuento+'%';
+      var bg=usado?'opacity:.45;filter:grayscale(.5)':'';
+      return '<div style="background:var(--card);border:1px solid '+(usado?'var(--faint-2)':'rgba(233,30,140,.35)')+';padding:20px;position:relative;'+bg+'">'+
+        '<div style="position:absolute;top:0;right:0;background:'+(usado?'var(--faint-3)':'var(--pink)')+';color:white;font-family:\'Bebas Neue\',sans-serif;font-size:22px;padding:6px 14px;letter-spacing:2px">'+pct+'</div>'+
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:4px">'+c.codigo+'</div>'+
+        '<div style="font-size:12px;color:var(--gray);margin-bottom:12px">'+c.descripcion+'</div>'+
+        (usado?'<div style="font-size:11px;color:var(--faint-3);letter-spacing:1px">Ya utilizado</div>':'<div style="font-size:11px;color:var(--pink);letter-spacing:1px">Disponible · aplica en el checkout</div>')+
+        '</div>';
+    }).join('');
+  }catch(e){ lista.innerHTML='<div style="color:var(--muted);font-size:13px">Error al cargar cupones.</div>'; }
+}
+
+
 
 function showTab(t) {
   ALL_PANELS.forEach(function(k) {
@@ -609,11 +768,12 @@ function showTab(t) {
     if (b) b.classList.toggle('ptab-active', k === t);
   });
   try { history.replaceState(null,'',location.pathname+'#'+t); } catch(e){}
+  if(t === 'cupones') cargarCupones();
 }
 
 window.addEventListener('load', function() {
   var h = location.hash.replace('#','');
-  showTab(ALL_PANELS.indexOf(h) > -1 ? h : 'info');
+  showTab(ALL_PANELS.indexOf(h) > -1 ? h : 'favoritos');
   // Attach tablero button events via data attributes (avoids inline onclick quote issues)
   document.querySelectorAll('.tb-btn-ver').forEach(function(btn) {
     btn.addEventListener('click', function(e) {

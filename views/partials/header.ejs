@@ -142,19 +142,12 @@
     /* navbar border line removed */
     #navbar.hidden { transform: translateY(-100%); }
     #navbar.scrolled { background: rgba(10,10,10,0.92) !important; backdrop-filter: blur(20px) saturate(180%) !important; }
-    .nav-inner {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      align-items: center;
-      height: 64px;
-      padding: 0 clamp(12px, 2.5vw, 32px);
-      gap: clamp(8px, 1.5vw, 16px);
-    }
-    .nav-left { display: flex; gap: clamp(10px, 1.8vw, 28px); flex: 1; min-width: 0; overflow: hidden; }
+    .nav-inner { display: flex; align-items: center; height: 64px; padding: 0 32px; gap: 16px; }
+    .nav-left { display: flex; gap: 28px; flex: 1; }
     .nav-left a {
       color: var(--white); text-decoration: none; font-family: 'Rajdhani', sans-serif;
-      font-weight: 600; font-size: clamp(10px, 1.1vw, 13px); letter-spacing: clamp(1px, 0.25vw, 2px); text-transform: uppercase;
-      transition: color 0.2s; position: relative; white-space: nowrap; flex-shrink: 0;
+      font-weight: 600; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+      transition: color 0.2s; position: relative;
     }
     .nav-left a::after {
       content: ''; position: absolute; bottom: -4px; left: 0;
@@ -163,12 +156,12 @@
     .nav-left a:hover { color: var(--pink); }
     .nav-left a:hover::after { width: 100%; }
     .nav-logo {
-      font-family: 'Permanent Marker', cursive; font-size: clamp(22px, 2.8vw, 32px); color: var(--pink);
-      letter-spacing: 1px; text-decoration: none; position: static; transform: none;
-      text-shadow: 0 0 20px rgba(233,30,140,0.5); white-space: nowrap; justify-self: center;
-      padding: 0 clamp(8px, 1.5vw, 16px); z-index: 2; line-height: 1;
+      font-family: 'Permanent Marker', cursive; font-size: 32px; color: var(--pink);
+      letter-spacing: 1px; text-decoration: none; position: absolute;
+      left: 50%; transform: translateX(-50%);
+      text-shadow: 0 0 20px rgba(233,30,140,0.5);
     }
-    .nav-right { display: flex; align-items: center; gap: clamp(8px, 1.2vw, 16px); flex: 1; justify-content: flex-end; min-width: 0; }
+    .nav-right { display: flex; align-items: center; gap: 16px; flex: 1; justify-content: flex-end; }
     .nav-btn {
       background: none; border: none; color: var(--white); cursor: pointer;
       font-size: 18px; padding: 6px; transition: color 0.2s, transform 0.2s; position: relative; line-height: 1;
@@ -309,9 +302,9 @@
     }
     .pc-label-text { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 3px; color: white; }
     .pc-img-wrap { position: relative; overflow: visible; }
-    .pc-img-clip { overflow: hidden; position: relative; }
-    .pc-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; transition: transform 0.5s; }
-    .pc-img-hover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s ease; }
+    .pc-img-clip { overflow: hidden; position: relative; display: block; }
+    .pc-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; transition: transform 0.5s; position: relative; z-index: 0; }
+    .pc-img-hover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s ease; z-index: 2; pointer-events: none; display: block; }
     .product-card:hover .pc-img-hover { opacity: 1; }
     .product-card:hover .pc-img { transform: scale(1.04); }
     .pc-add-btn {
@@ -333,33 +326,6 @@
       letter-spacing: 2px; font-weight: lighter; text-align: center; color: var(--pink); margin-bottom: 16px;
     }
     .tribal-divider { text-align: center; margin: 16px 0 40px; opacity: 0.8; }
-    .tribal-separator {
-      display: flex; align-items: center; justify-content: center;
-      width: min(920px, 96vw); margin: 24px auto 40px; line-height: 0;
-    }
-    .tribal-separator img {
-      width: 100%; height: auto; max-height: clamp(56px, 11vw, 100px);
-      object-fit: contain; display: block;
-    }
-    .tribal-sep-dark { mix-blend-mode: screen; opacity: 0.96; }
-    body.light-mode .tribal-sep-dark { display: none; }
-    .tribal-sep-light { mix-blend-mode: multiply; opacity: 0.94; }
-    body:not(.light-mode) .tribal-sep-light { display: none; }
-    /* Galería hover — imágenes apiladas al pasar el cursor */
-    .pc-gallery-clip {
-      position: relative; overflow: hidden; aspect-ratio: 3/4; cursor: ew-resize;
-    }
-    .pc-gallery-clip .pc-gallery-img,
-    .pc-gallery-clip .pc-img {
-      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-      transition: opacity 0.18s ease; opacity: 0; pointer-events: none;
-    }
-    .pc-gallery-clip .pc-gallery-img.is-active { opacity: 1; z-index: 2; }
-    .pc-gallery-clip.is-scrubbing .pc-gallery-img { transition: opacity 0.08s ease; }
-    .pc-gallery-clip:not(.is-scrubbing) .pc-gallery-img.is-active:first-of-type,
-    .pc-gallery-clip .pc-gallery-img:first-child.is-active { opacity: 1; }
-    .product-card:hover .pc-gallery-clip:not(.is-scrubbing) .pc-gallery-img.is-active { transform: none; }
-    .product-card:hover .pc-gallery-clip { transform: scale(1.03); transition: transform 0.4s ease; }
 
     /* FORMS */
     .mantiz-input {
@@ -424,6 +390,44 @@
     .chat-input-row input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--white); padding: 8px 12px; font-family: 'Rajdhani', sans-serif; font-size: 13px; outline: none; }
     .chat-send-btn { background: var(--pink); border: none; color: white; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
     .chat-send-btn:hover { background: var(--pink-light); }
+
+    /* IA CHATBOT FAB (asistente virtual, independiente del chat de soporte) */
+    .ia-fab {
+      position: fixed; bottom: 24px; right: 24px; width: 54px; height: 54px;
+      border-radius: 50%; background: linear-gradient(135deg, var(--pink), #c2185b); color: white; border: 2px solid rgba(255,255,255,0.3);
+      font-size: 1.3rem; display: flex; align-items: center; justify-content: center;
+      z-index: 2001; box-shadow: 0 4px 20px rgba(233,30,140,0.6); cursor: pointer;
+      transition: all 0.3s; filter: url(#gb); animation: fabP 3s infinite;
+    }
+    .ia-fab:hover { transform: scale(1.1); animation: none; }
+    /* Si el fab de soporte también está visible, lo empujamos a la izquierda */
+    .chat-fab ~ .ia-fab, .ia-fab:has(~ .chat-fab) { right: 90px; }
+    .ia-fab-window {
+      position: fixed; bottom: 90px; right: 24px; width: 340px; height: 480px;
+      background: rgba(17,17,17,0.98); border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8); z-index: 2000;
+      display: none; flex-direction: column; overflow: hidden;
+    }
+    .ia-fab-window.active { display: flex; }
+    .ia-fab-hdr { background: linear-gradient(90deg,var(--pink),#c2185b); color: white; padding: 14px 16px; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 3px; display: flex; justify-content: space-between; align-items: center; flex-shrink:0; }
+    .ia-fab-hdr small { display:block; font-family:'Rajdhani',sans-serif; font-size:10px; letter-spacing:1px; opacity:.85; font-weight:400; }
+    .ia-fab-close { background:rgba(255,255,255,.15); border:none; color:white; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; }
+    .ia-fab-msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .ia-fab-msg { max-width: 84%; padding: 10px 14px; font-size: 13px; line-height: 1.5; font-family: 'Rajdhani', sans-serif; }
+    .ia-fab-msg.user { background: var(--pink); color: white; align-self: flex-end; }
+    .ia-fab-msg.bot { background: rgba(255,255,255,0.06); color: var(--white); align-self: flex-start; border-left: 2px solid var(--pink); }
+    .ia-fab-typing { align-self:flex-start; display:none; gap:5px; align-items:center; background: rgba(255,255,255,0.06); border-left: 2px solid var(--pink); padding:10px 14px; }
+    .ia-fab-typing.show { display:flex; }
+    .ia-fab-typing span { width:6px; height:6px; border-radius:50%; background:var(--pink); animation:iadot 1.2s infinite; }
+    .ia-fab-typing span:nth-child(2){animation-delay:.2s} .ia-fab-typing span:nth-child(3){animation-delay:.4s}
+    @keyframes iadot{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-6px);opacity:1}}
+    .ia-fab-input-row { padding: 12px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; background: rgba(0,0,0,0.3); flex-shrink:0; }
+    .ia-fab-input-row input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--white); padding: 8px 12px; font-family: 'Rajdhani', sans-serif; font-size: 13px; outline: none; }
+    .ia-fab-input-row input:focus { border-color: var(--pink); }
+    .ia-fab-send { background: var(--pink); border: none; color: white; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink:0; }
+    .ia-fab-send:hover { background: #c2185b; }
+    .ia-fab-send:disabled { opacity:.5; cursor:not-allowed; }
+    @media(max-width:767px){ .ia-fab{ display:none !important; } .ia-fab-window{ display:none !important; } }
 
     /* HAMBURGER */
     .hamburger-btn { display: none; background: none; border: none; color: var(--white); cursor: pointer; padding: 6px; flex-direction: column; gap: 5px; }
@@ -684,13 +688,6 @@
     /* ═══════════════════════════════════════════════════════════════════════
        RESPONSIVE — existente (tablet + desktop se mantiene intacto)
        ═══════════════════════════════════════════════════════════════════════ */
-    @media (max-width: 1100px) {
-      .nav-left a:nth-child(n+5) { display: none; }
-    }
-    @media (max-width: 900px) {
-      .nav-left a:nth-child(n+4) { display: none; }
-      .nav-logo { font-size: clamp(20px, 4vw, 26px); }
-    }
     @media (max-width: 768px) {
       .admin-sidebar { transform: translateX(-100%); } .admin-sidebar.open { transform: translateX(0); }
       .admin-content { margin-left: 0; } .sidebar-toggle-btn { display: block; }
@@ -926,7 +923,7 @@
     <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
     <div class="nav-left">
       <a href="/">INICIO</a>
-      <a href="/productos">TIENDA</a>
+      <a href="/productos">PRODUCTOS</a>
       <a href="/comunidad">COMUNIDAD</a>
       <a href="/opiniones">OPINIONES</a>
       <a href="/tiendas">TIENDAS</a>
@@ -983,6 +980,27 @@
   </div>
 </nav>
 
+<!-- ── BANNER DE AVISO ──────────────────────────────────────────────────── -->
+<% if (sitio && sitio.banner_aviso) { %>
+<style>
+@keyframes avisoScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+#aviso-bar{position:fixed;top:64px;left:0;right:0;z-index:998;height:28px;overflow:hidden;display:flex;align-items:center;background:rgba(233,30,140,.55);transition:top .4s cubic-bezier(.4,0,.2,1);}
+#aviso-bar.nav-hidden{top:0}
+#aviso-bar.page-hidden{display:none!important}
+.aviso-track{display:flex;align-items:center;white-space:nowrap;animation:avisoScroll 22s linear infinite;}
+.aviso-track:hover{animation-play-state:paused}
+@media(max-width:767px){#aviso-bar{top:56px;height:24px;}}
+</style>
+<div id="aviso-bar">
+  <div class="aviso-track">
+    <% var _av = sitio.banner_aviso; for(var _i=0;_i<8;_i++){ %>
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;color:white;padding:0 40px"><%= _av %></span>
+    <span style="color:rgba(255,255,255,.3);padding:0 2px">•</span>
+    <% } %>
+  </div>
+</div>
+<% } %>
+
 <!-- PANEL NOTIFICACIONES -->
 <div class="notif-panel" id="notif-panel">
   <div class="notif-ph">
@@ -1012,7 +1030,7 @@
 <div id="mobile-menu">
   <div class="mobile-menu-inner">
     <a href="/">INICIO</a>
-    <a href="/productos">TIENDA</a>
+    <a href="/productos">PRODUCTOS</a>
     <a href="/comunidad">COMUNIDAD</a>
     <a href="/opiniones">OPINIONES</a>
     <a href="/tiendas">TIENDAS</a>
@@ -1056,13 +1074,20 @@
 <!-- TOAST -->
 <div id="toast">¡PRODUCTO AÑADIDO!</div>
 
-<!-- CHAT SOPORTE (reemplaza al asistente IA, eliminado) -->
+<!-- CHAT SOPORTE (chat humano usuario↔admin) -->
 <% if ((typeof hideChatFab === 'undefined' || !hideChatFab) && typeof user !== 'undefined' && user && user.rol !== 'admin') { %>
 <a href="/chat" class="chat-fab" title="Chat con soporte" style="display:flex;align-items:center;justify-content:center;text-decoration:none">
   <i class="bi bi-headset"></i>
   <% if (typeof chatNoLeidos !== 'undefined' && chatNoLeidos > 0) { %>
   <span style="position:absolute;top:-4px;right:-4px;background:#ff3b6e;color:white;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--black)"><%= chatNoLeidos %></span>
   <% } %>
+</a>
+<% } %>
+
+<!-- CHAT IA (asistente virtual con IA, disponible para todos) -->
+<% if (typeof hideChatFab === 'undefined' || !hideChatFab) { %>
+<a href="/ia" class="ia-fab" id="iaFabBtn" title="Asistente Mantiz (IA)" style="display:flex;align-items:center;justify-content:center;text-decoration:none">
+  <i class="bi bi-robot"></i>
 </a>
 <% } %>
 
@@ -1200,21 +1225,51 @@
 
 <script>
 // NAVBAR SCROLL
-let lastY=0;const navEl=document.getElementById('navbar');
-if(navEl){window.addEventListener('scroll',()=>{const y=window.scrollY;if(y>lastY&&y>100)navEl.classList.add('hidden');else navEl.classList.remove('hidden');lastY=y;});}
+let lastY=0;const navEl=document.getElementById('navbar');const avisoBar=document.getElementById('aviso-bar');
+// Ocultar aviso-bar en la página de perfil
+if(avisoBar && (window.location.pathname==='/perfil'||window.location.pathname.startsWith('/perfil/'))) {
+  avisoBar.classList.add('page-hidden');
+}
+if(navEl){window.addEventListener('scroll',()=>{const y=window.scrollY;const hide=y>lastY&&y>100;navEl.classList.toggle('hidden',hide);if(avisoBar&&!avisoBar.classList.contains('page-hidden'))avisoBar.classList.toggle('nav-hidden',hide);lastY=y;});}
 
 // HAMBURGER
 const hBtn=document.getElementById('hamburger-btn'),mMenu=document.getElementById('mobile-menu');
 let mOpen=false;
 if(hBtn){hBtn.addEventListener('click',e=>{e.stopPropagation();mOpen=!mOpen;hBtn.classList.toggle('open',mOpen);mMenu.classList.toggle('open',mOpen);});document.addEventListener('click',e=>{if(mOpen&&mMenu&&!mMenu.contains(e.target)&&e.target!==hBtn){mOpen=false;hBtn.classList.remove('open');mMenu.classList.remove('open');}});}
 
-// SEARCH
+// SEARCH — autocompletado letra a letra con imagen y precio
 const sTgl=document.getElementById('search-toggle'),sBar=document.getElementById('search-bar'),sInp=document.getElementById('searchInput');
 let sOpen=false;
 if(sTgl){sTgl.addEventListener('click',e=>{e.stopPropagation();sOpen=!sOpen;sBar.classList.toggle('open',sOpen);if(sOpen&&sInp)setTimeout(()=>sInp.focus(),300);});document.addEventListener('click',e=>{if(sOpen&&sBar&&!sBar.contains(e.target)&&e.target!==sTgl){sOpen=false;sBar.classList.remove('open');}});}
-// Suggestions
 const sSugg=document.getElementById('searchSugg');let sTimer;
-if(sInp){sInp.addEventListener('input',()=>{clearTimeout(sTimer);const q=sInp.value.trim();if(q.length<2){if(sSugg)sSugg.style.display='none';return;}sTimer=setTimeout(async()=>{try{const r=await fetch(`/buscar/sugerencias?q=${encodeURIComponent(q)}`);const d=await r.json();if(!d.length){sSugg.style.display='none';return;}sSugg.innerHTML=d.map(p=>`<div class="item" onclick="window.location='/productos/${p.id}'">${p.titulo}<span style="color:var(--pink);font-size:11px;margin-left:8px">${p.categoria}</span></div>`).join('');sSugg.style.display='block';}catch(e){}},300);});document.addEventListener('click',e=>{if(sSugg&&sInp&&!sInp.closest('form').contains(e.target))sSugg.style.display='none';});}
+if(sInp){
+  sInp.addEventListener('input',()=>{
+    clearTimeout(sTimer);
+    const q=sInp.value.trim();
+    if(!q){if(sSugg)sSugg.style.display='none';return;}
+    sTimer=setTimeout(async()=>{
+      try{
+        const r=await fetch(`/buscar/sugerencias?q=${encodeURIComponent(q)}`);
+        const d=await r.json();
+        if(!d||!d.length){if(sSugg)sSugg.style.display='none';return;}
+        sSugg.innerHTML=d.slice(0,8).map(p=>{
+          const href=p.tipo==='usuario'?`/u/${p.sub}`:`/productos/${p.id}`;
+          let imgHtml='<div style="width:38px;height:38px;border-radius:4px;background:var(--dark2);flex-shrink:0"></div>';
+          if(p.tipo==='producto'&&p.img){
+            imgHtml=`<img src="/uploads/products/${p.img}" style="width:38px;height:38px;object-fit:cover;border-radius:4px;flex-shrink:0" onerror="this.style.background='var(--dark2)'">`;
+          }
+          const sub=p.tipo==='usuario'?`<span style="color:var(--gray);font-size:11px">@${p.sub}</span>`
+            :(p.precio?`<span style="color:var(--pink);font-size:11px">COP ${parseFloat(p.precio).toLocaleString('es-CO')}</span>`
+            :(p.sub?`<span style="color:var(--gray);font-size:11px">${p.sub}</span>`:''));
+          return `<div class="item" onclick="window.location='${href}'" style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer">${imgHtml}<div style="flex:1;min-width:0"><div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nombre}</div>${sub}</div></div>`;
+        }).join('');
+        sSugg.style.display='block';
+      }catch(e){if(sSugg)sSugg.style.display='none';}
+    },100);
+  });
+  sInp.addEventListener('keydown',e=>{if(e.key==='Enter'){window.location.href='/buscar?q='+encodeURIComponent(sInp.value.trim());}});
+  document.addEventListener('click',e=>{if(sSugg&&sInp&&!sInp.closest('form').contains(e.target))sSugg.style.display='none';});
+}
 
 // USER DROPDOWN
 const uBtn=document.getElementById('user-btn'),uDd=document.getElementById('user-dd');
@@ -1241,7 +1296,6 @@ loadCartPanel();
 
 function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg||'¡PRODUCTO AÑADIDO!';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
-// Chat IA eliminado — el chat de soporte ahora es un enlace directo a /chat
 
 // ADMIN CLOCK
 const cl=document.getElementById('adminClock');if(cl){const uc=()=>{const n=new Date();cl.textContent=n.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});};uc();setInterval(uc,1000);}

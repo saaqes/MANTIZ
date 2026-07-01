@@ -1,7 +1,6 @@
 <% const isAdminPage = typeof isAdmin !== 'undefined' && isAdmin; %>
 
 <% if (!isAdminPage) { %>
-<%- include('marca-carousel') %>
 </main>
 
 <!-- FOOTER -->
@@ -155,42 +154,6 @@
     },{rootMargin:'200px 0px'});
     document.querySelectorAll('img[data-src]').forEach(function(img){ lazyObs.observe(img); });
   }
-})();
-</script>
-
-<script>
-(function initProductGalleryScrub(){
-  function bindGallery(clip){
-    if (clip.dataset.galleryBound) return;
-    var imgs = clip.querySelectorAll('.pc-gallery-img, .pc-img');
-    if (!imgs.length) return;
-    if (imgs.length < 2) return;
-    clip.dataset.galleryBound = '1';
-    function setActive(idx){
-      imgs.forEach(function(im, i){
-        im.classList.toggle('is-active', i === idx);
-        im.style.opacity = i === idx ? '1' : '0';
-        im.style.zIndex = i === idx ? '2' : '1';
-      });
-    }
-    clip.addEventListener('mouseenter', function(){ clip.classList.add('is-scrubbing'); });
-    clip.addEventListener('mousemove', function(e){
-      e.stopPropagation();
-      var rect = clip.getBoundingClientRect();
-      if (!rect.width) return;
-      var ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      var idx = Math.min(imgs.length - 1, Math.floor(ratio * imgs.length));
-      setActive(idx);
-    });
-    clip.addEventListener('mouseleave', function(){
-      clip.classList.remove('is-scrubbing');
-      setActive(0);
-    });
-  }
-  function scan(){ document.querySelectorAll('.pc-gallery-clip').forEach(bindGallery); }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scan);
-  else scan();
-  window.initProductGalleries = scan;
 })();
 </script>
 

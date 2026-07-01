@@ -4,7 +4,9 @@
 
 <div style="padding:40px;max-width:1100px;margin:0 auto">
   <h2 class="section-title">FINALIZAR COMPRA</h2>
-  <%- include('../partials/tribal-separator') %>
+  <div style="text-align:center;margin:8px 0 28px;opacity:0.7">
+    <svg width="200" height="20" viewBox="0 0 200 20" fill="none"><line x1="0" y1="10" x2="80" y2="10" stroke="rgba(233,30,140,0.4)" stroke-width="1"/><circle cx="100" cy="10" r="5" fill="var(--pink)"/><line x1="120" y1="10" x2="200" y2="10" stroke="rgba(233,30,140,0.4)" stroke-width="1"/></svg>
+  </div>
 
   <form action="/pedidos/checkout" method="POST" id="checkoutForm">
     <div style="display:grid;grid-template-columns:1fr 360px;gap:32px" class="checkout-grid">
@@ -141,6 +143,18 @@
           <label class="mantiz-label"><i class="bi bi-chat-left-text me-2"></i>Notas adicionales</label>
           <textarea name="notas" class="mantiz-input" rows="3" placeholder="Instrucciones especiales para tu pedido..."></textarea>
         </div>
+
+        <!-- 4. CUPÓN DE DESCUENTO -->
+        <div style="background:var(--card);border:1px solid var(--border);padding:24px;position:relative">
+          <div style="position:absolute;inset:0;border:2px solid var(--faint-3);filter:url(#gb);pointer-events:none"></div>
+          <label class="mantiz-label"><i class="bi bi-ticket-perforated me-2"></i>Código de cupón</label>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input type="text" id="cupon-input" class="mantiz-input" placeholder="CUP-XXXXX-5PCT" style="flex:1;text-transform:uppercase">
+            <button type="button" onclick="aplicarCupon()" class="btn-grunge-w" style="padding:10px 20px;font-size:13px;letter-spacing:2px;white-space:nowrap">APLICAR</button>
+          </div>
+          <div id="cupon-msg" style="font-size:12px;margin-top:8px;display:none"></div>
+          <input type="hidden" name="cupon_codigo" id="cupon-codigo-hidden">
+        </div>
       </div>
 
       <!-- RIGHT: ORDER SUMMARY -->
@@ -258,6 +272,31 @@ function confirmarUbicacion() {
   if (!lat || !lng) { alert('Haz clic en el mapa para seleccionar tu ubicacion'); return; }
   document.getElementById('map-picker-wrap').style.display = 'none';
   showToast('UBICACION GUARDADA');
+}
+
+// ── CUPÓN DE DESCUENTO ────────────────────────────────────────────────────
+async function aplicarCupon() {
+  var inp = document.getElementById('cupon-input');
+  var msg = document.getElementById('cupon-msg');
+  var hidden = document.getElementById('cupon-codigo-hidden');
+  var codigo = (inp.value || '').trim().toUpperCase();
+  if (!codigo) { msg.textContent = 'Escribe un código de cupón'; msg.style.color = '#ff6060'; msg.style.display = 'block'; return; }
+  msg.textContent = 'Verificando...'; msg.style.color = 'var(--gray)'; msg.style.display = 'block';
+  try {
+    var r = await fetch('/perfil/cupones/aplicar', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ codigo }) });
+    var d = await r.json();
+    if (d.success) {
+      hidden.value = d.codigo;
+      msg.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#00c8ff"></i> Cupón aplicado: <strong style="color:var(--pink)">' + d.descuento + '% de descuento</strong> en tu pedido';
+      msg.style.color = '#00c8ff'; showToast('CUPON APLICADO: -' + d.descuento + '%');
+    } else if (d.usado) {
+      msg.innerHTML = '<i class="bi bi-x-circle-fill" style="color:#ff6060"></i> Este cupón ya fue utilizado anteriormente.';
+      msg.style.color = '#ff6060';
+    } else {
+      msg.textContent = d.error || 'Cupón no válido';
+      msg.style.color = '#ff6060';
+    }
+  } catch(e) { msg.textContent = 'Error al verificar el cupón'; msg.style.color = '#ff6060'; }
 }
 </script>
 

