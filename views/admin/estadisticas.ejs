@@ -73,6 +73,7 @@
 <!-- TOP PRODUCTOS TABLA -->
 <div class="sect-title"><i class="bi bi-trophy" style="color:#ffd700"></i>Top 10 productos por visitas</div>
 <div class="chart-box" style="padding:0;overflow:hidden">
+  <div style="overflow-x:auto">
   <table class="table table-hover mb-0">
     <thead>
       <tr><th>#</th><th>Producto</th><th>Categoría</th><th>Visitas</th><th>Precio</th><th>Stock</th><th>Estado</th><th></th></tr>
@@ -83,7 +84,7 @@
         <td style="font-family:var(--fm);font-size:.7rem;color:var(--cp)">#<%= i+1 %></td>
         <td>
           <div class="d-flex align-items-center gap-2">
-            <img src="<%= p.imagen_principal  %>" width="36" height="36" style="border-radius:6px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.background='var(--dark2)'">
+            <img src="/uploads/products/<%= p.imagen_principal %>" width="36" height="36" style="border-radius:6px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.background='var(--dark2)'">
             <span style="font-family:var(--fb);font-size:.82rem;font-weight:600"><%= p.titulo %></span>
           </div>
         </td>
@@ -106,6 +107,7 @@
       <% }) %>
     </tbody>
   </table>
+  </div>
 </div>
 
 <script>

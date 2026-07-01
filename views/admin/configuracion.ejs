@@ -19,7 +19,7 @@
 .theme-preview{width:100%;height:50px;border-radius:6px;margin-bottom:8px}
 .live-preview{background:#050510;border:1px solid rgba(233,30,140,.2);border-radius:10px;padding:16px;position:relative;overflow:hidden}
 .lp-nav{height:40px;border-radius:6px;background:rgba(7,7,16,.97);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;padding:0 12px;gap:8px;margin-bottom:10px}
-.lp-brand{font-family:'Orbitron',monospace;font-size:.7rem;font-weight:900}
+.lp-brand{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:2px}
 .lp-card{background:#0f0f1e;border-radius:8px;padding:10px;flex:1;min-height:60px}
 .lp-btn{border:none;border-radius:4px;color:white;padding:4px 10px;font-size:.7rem;font-family:'Rajdhani',sans-serif;font-weight:700;cursor:default}
 .save-bar{position:fixed;bottom:0;left:var(--sw);right:0;background:var(--dark2);border-top:1px solid var(--border);padding:14px 28px;display:flex;justify-content:space-between;align-items:center;z-index:100;backdrop-filter:blur(10px)}
@@ -78,7 +78,7 @@
         <label class="form-label">Logo actual</label>
         <div class="d-flex align-items-center gap-3">
           <% if (config.logo) { %>
-            <img src="<%= config.logo %>" class="logo-current" onerror="this.style.display='none'" alt="Logo">
+            <img src="/uploads/logos/<%= config.logo %>" class="logo-current" onerror="this.style.display='none'" alt="Logo">
           <% } else { %>
             <div style="width:80px;height:60px;background:var(--dark3);border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.7rem">Sin logo</div>
           <% } %>
@@ -193,6 +193,10 @@
         <label class="form-label">Envío gratis desde</label>
         <input type="number" name="envio_gratis_desde" class="form-control" value="<%= config.envio_gratis_desde||'' %>" min="0" step="0.01" placeholder="0 = siempre gratis">
       </div>
+      <div class="col-md-6">
+        <label class="form-label">Costo de envío <span style="color:var(--muted);font-weight:400">(mostrado en el footer)</span></label>
+        <input type="number" name="costo_envio" class="form-control" value="<%= config.costo_envio||'8.99' %>" min="0" step="0.01">
+      </div>
       <div class="col-12">
         <label class="form-label">Aviso / Banner de alerta <span style="color:var(--muted);font-weight:400">(se muestra en el navbar)</span></label>
         <input type="text" name="banner_aviso" class="form-control" value="<%= config.banner_aviso||'' %>" placeholder="Ej: 🚚 Envío gratis en compras mayores a $599">
@@ -209,29 +213,73 @@
                    style="width:18px;height:18px;accent-color:var(--cp)">
             <span style="font-family:var(--fb);font-weight:600">Permitir nuevos registros</span>
           </label>
-          <label class="d-flex align-items-center gap-2" style="cursor:pointer">
-            <input type="checkbox" name="chat_ia_activo" value="1" <%= (config.chat_ia_activo!=='0')?'checked':'' %>
-                   style="width:18px;height:18px;accent-color:var(--cp)">
-            <span style="font-family:var(--fb);font-weight:600">Chat IA activo</span>
-          </label>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Redes sociales -->
+  <!-- Footer editable -->
+  <div class="config-section">
+    <div class="config-section-title"><i class="bi bi-layout-bottombar"></i>Footer</div>
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label">Descripción / eslogan</label>
+        <textarea name="footer_descripcion" class="form-control" rows="2" placeholder="Tu tienda de moda con estilo urbano..."><%= config.footer_descripcion||'' %></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Email de contacto</label>
+        <input type="email" name="footer_email" class="form-control" value="<%= config.footer_email||'' %>" placeholder="contacto@mantiz.com">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Teléfono de contacto</label>
+        <input type="text" name="footer_telefono" class="form-control" value="<%= config.footer_telefono||'' %>" placeholder="+57 300 000 0000">
+      </div>
+      <div class="col-12">
+        <label class="form-label">Texto de copyright <span style="color:var(--muted);font-weight:400">(vacío = automático)</span></label>
+        <input type="text" name="footer_copyright" class="form-control" value="<%= config.footer_copyright||'' %>" placeholder="© 2025 MANTIZ. Todos los derechos reservados.">
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagos -->
+  <div class="config-section">
+    <div class="config-section-title"><i class="bi bi-credit-card"></i>Métodos de Pago Aceptados</div>
+    <div class="d-flex gap-3 flex-wrap" id="metodosPagoWrap">
+      <% var _todosMetodos = ['Tarjeta','Efectivo','PSE','Nequi','Daviplata','Transferencia','PayPal']; %>
+      <% var _metodosActivos = []; try { _metodosActivos = JSON.parse(config.metodos_pago_json || '["Tarjeta","Efectivo","PSE","Nequi","Daviplata"]'); } catch(e) { _metodosActivos = ['Tarjeta','Efectivo']; } %>
+      <% _todosMetodos.forEach(function(m) { %>
+      <label class="d-flex align-items-center gap-2" style="cursor:pointer;background:var(--dark2);padding:8px 14px;border-radius:8px;border:1px solid var(--border)">
+        <input type="checkbox" class="metodo-pago-chk" value="<%= m %>" <%= _metodosActivos.includes(m) ? 'checked' : '' %> style="width:16px;height:16px;accent-color:var(--cp)">
+        <span style="font-family:var(--fb);font-weight:600;font-size:.85rem"><%= m %></span>
+      </label>
+      <% }) %>
+    </div>
+    <input type="hidden" name="metodos_pago_json" id="metodosPagoInput" value="<%= config.metodos_pago_json||'[]' %>">
+  </div>
+
+  <!-- Redes sociales (lista fija de 9 plataformas — sin duplicados posibles) -->
   <div class="config-section">
     <div class="config-section-title"><i class="bi bi-share"></i>Redes Sociales</div>
-    <div class="row g-3">
-      <% [
-        {name:'instagram',icon:'instagram',placeholder:'@tutienda'},
-        {name:'facebook',icon:'facebook',placeholder:'facebook.com/tutienda'},
-        {name:'tiktok',icon:'tiktok',placeholder:'@tutienda'},
-        {name:'whatsapp',icon:'whatsapp',placeholder:'5212345678901'},
-      ].forEach(s=>{ %>
-      <div class="col-md-6">
-        <label class="form-label"><i class="bi bi-<%= s.icon %> me-1" style="color:var(--cp)"></i><%= s.name.charAt(0).toUpperCase()+s.name.slice(1) %></label>
-        <input type="text" name="<%= s.name %>" class="form-control" value="<%= config[s.name]||'' %>" placeholder="<%= s.placeholder %>">
+    <div style="font-size:.75rem;color:var(--muted);margin-bottom:14px">Cada plataforma tiene un único registro. Actívala, cambia su enlace, color u orden — se refleja automáticamente en el pie de página.</div>
+    <div id="redesSocialesList">
+      <% (redesConfig||[]).forEach(function(r, i) { %>
+      <div class="row g-2 align-items-center mb-2" style="background:var(--dark2);padding:10px;border-radius:8px;border:1px solid var(--border)" data-red-id="<%= r.id %>" data-red-nombre="<%= r.nombre %>">
+        <div class="col-auto"><i class="<%= r.icono %>" style="font-size:1.1rem;color:<%= r.color %>;width:24px;text-align:center"></i></div>
+        <div class="col-md-2">
+          <input type="text" class="red-nombre" value="<%= r.nombre %>" readonly
+                 style="background:transparent;border:none;color:var(--text);font-weight:700;font-size:.85rem;width:100%;cursor:default">
+        </div>
+        <div class="col-md-3"><input type="text" class="form-control form-control-sm red-url" value="<%= r.url||'' %>" placeholder="https://..."></div>
+        <div class="col-md-1"><input type="color" class="form-control form-control-sm red-color" value="<%= r.color||'#e91e8c' %>" style="height:31px;padding:2px"></div>
+        <div class="col-md-1">
+          <input type="number" class="form-control form-control-sm red-orden" value="<%= r.orden||(i+1) %>" min="1" max="9" style="width:60px" title="Orden">
+        </div>
+        <div class="col-auto ms-auto">
+          <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:.7rem;color:var(--muted)" title="Visible en footer">
+            <input type="checkbox" class="red-visible" <%= r.visible ? 'checked' : '' %> style="width:16px;height:16px;accent-color:var(--cp)">
+            VISIBLE
+          </label>
+        </div>
       </div>
       <% }) %>
     </div>
@@ -320,6 +368,39 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('lp-btn1').style.background = `linear-gradient(135deg,${cp},${ca})`;
   document.getElementById('lp-btn2').style.borderColor = cp;
   document.getElementById('lp-btn2').style.color = cp;
+}); // cierre de window.addEventListener('DOMContentLoaded', ...) — antes faltaba, dejando el listener de submit anidado incorrectamente dentro de este callback
+
+// ── Interceptar submit: sincronizar métodos de pago + guardar redes vía AJAX, luego enviar el form normal ──
+document.getElementById('configForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+
+  // Serializar métodos de pago seleccionados
+  var metodos = Array.from(document.querySelectorAll('.metodo-pago-chk:checked')).map(c => c.value);
+  document.getElementById('metodosPagoInput').value = JSON.stringify(metodos);
+
+  // Serializar redes sociales (lista fija de 9 plataformas, identificadas por id —
+  // el nombre es de solo lectura, nunca se crean filas nuevas ni se eliminan)
+  var redes = Array.from(document.querySelectorAll('#redesSocialesList [data-red-id]')).map(function(row, i){
+    return {
+      id: row.dataset.redId || null,
+      nombre: row.dataset.redNombre || row.querySelector('.red-nombre').value.trim(),
+      icono: row.querySelector('i').className.trim() || 'bi bi-link-45deg',
+      url: row.querySelector('.red-url').value.trim(),
+      color: row.querySelector('.red-color').value,
+      visible: row.querySelector('.red-visible').checked ? 1 : 0,
+      orden: parseInt(row.querySelector('.red-orden').value) || (i + 1)
+    };
+  }).filter(r => r.nombre);
+
+  try {
+    await fetch('/admin/configuracion/redes', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ redes: redes })
+    });
+  } catch(err) { console.error('Error guardando redes:', err); }
+
+  // Ahora sí, enviar el resto del formulario normalmente
+  e.target.submit();
 });
 </script>
 

@@ -3,7 +3,7 @@
 <style>
 /* Sección cards drag & drop */
 .sec-card {
-  background: rgba(255,255,255,.03);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px 18px;
@@ -23,7 +23,7 @@
   transition: background .25s; position: relative; flex-shrink: 0;
 }
 .sec-toggle.on  { background: var(--cp); }
-.sec-toggle.off { background: rgba(255,255,255,.15); }
+.sec-toggle.off { background: var(--faint-2); }
 .sec-toggle::after {
   content: ''; position: absolute;
   width: 18px; height: 18px; border-radius: 50%;
@@ -237,8 +237,8 @@
           <% if (carrusel && carrusel.length > 0) { %>
             <% carrusel.forEach(function(s) { %>
             <div class="d-flex align-items-center gap-3 p-2 rounded"
-                 style="border:1px solid var(--border);background:rgba(255,255,255,.02)">
-              <img src="<%= s.imagen %>" class="slide-thumb"
+                 style="border:1px solid var(--border);background:var(--card)">
+              <img src="/uploads/banners/<%= s.imagen %>" class="slide-thumb"
                    alt="<%= s.titulo || 'slide' %>"
                    onerror="this.style.opacity='.3'">
               <div class="flex-grow-1 min-w-0">
@@ -324,7 +324,7 @@
             <% carruselMarca.forEach(function(s) { %>
             <div class="col-12 col-md-4 col-lg-3">
               <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
-                <img src="<%= s.imagen %>"
+                <img src="/uploads/banners/<%= s.imagen %>"
                      style="width:100%;height:100px;object-fit:cover;opacity:.85;display:block"
                      onerror="this.style.opacity='.2'">
                 <div style="padding:8px 10px;background:rgba(0,0,0,.55)">

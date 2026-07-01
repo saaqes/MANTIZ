@@ -13,10 +13,10 @@
 .ia-grid{display:grid;grid-template-columns:260px 1fr;gap:22px}
 
 /* SIDEBAR */
-.ia-panel{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);padding:16px}
+.ia-panel{background:var(--card);border:1px solid var(--faint-1);padding:16px}
 .ia-panel-title{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;color:var(--pink);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .ia-panel-title i{font-size:12px}
-.ia-quick{display:block;width:100%;text-align:left;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:rgba(240,240,240,.6);padding:9px 13px;font-size:12px;font-family:'Rajdhani',sans-serif;letter-spacing:.5px;cursor:pointer;transition:all .2s;margin-bottom:6px}
+.ia-quick{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--faint-1);color:var(--muted);padding:9px 13px;font-size:12px;font-family:'Rajdhani',sans-serif;letter-spacing:.5px;cursor:pointer;transition:all .2s;margin-bottom:6px}
 .ia-quick:hover{background:rgba(233,30,140,.1);border-color:rgba(233,30,140,.3);color:var(--pink)}
 .ia-quick i{margin-right:8px;color:var(--pink);font-size:11px}
 .ia-tag{display:inline-block;background:rgba(233,30,140,.08);border:1px solid rgba(233,30,140,.2);color:var(--pink);font-size:10px;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;padding:4px 10px;cursor:pointer;margin:3px;transition:all .2s}
@@ -25,7 +25,7 @@
 @keyframes sp{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,255,100,.4)}50%{opacity:.8;box-shadow:0 0 0 5px rgba(0,255,100,0)}}
 
 /* CHAT */
-.ia-chat{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;height:660px}
+.ia-chat{background:var(--card);border:1px solid var(--faint-1);display:flex;flex-direction:column;height:660px}
 .ia-chat-hdr{background:linear-gradient(90deg,var(--pink),#c2185b);padding:15px 20px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;display:flex;align-items:center;gap:12px;flex-shrink:0}
 .ia-chat-hdr .ia-actions{margin-left:auto;display:flex;gap:8px}
 .ia-act-btn{background:rgba(255,255,255,.15);border:none;color:white;padding:5px 12px;font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;cursor:pointer;transition:all .2s}
@@ -40,25 +40,25 @@
 .im.bot{align-self:flex-start;align-items:flex-start}
 .im .ib{padding:12px 16px;font-size:13.5px;line-height:1.6;font-family:'Rajdhani',sans-serif;letter-spacing:.2px}
 .im.user .ib{background:var(--pink);color:#fff}
-.im.bot .ib{background:rgba(255,255,255,.055);color:rgba(240,240,240,.92);border-left:3px solid var(--pink)}
-.im .it{font-size:10px;color:rgba(255,255,255,.25);font-family:'Rajdhani',sans-serif;letter-spacing:.5px}
+.im.bot .ib{background:var(--card);color:var(--text);border-left:3px solid var(--pink)}
+.im .it{font-size:10px;color:var(--muted);font-family:'Rajdhani',sans-serif;letter-spacing:.5px}
 
 /* Typing */
 .ia-typing{align-self:flex-start;display:none}
 .ia-typing.show{display:flex}
-.ia-typing .ib{background:rgba(255,255,255,.055);border-left:3px solid var(--pink);padding:13px 16px;display:flex;gap:5px;align-items:center}
+.ia-typing .ib{background:var(--card);border-left:3px solid var(--pink);padding:13px 16px;display:flex;gap:5px;align-items:center}
 .iad{width:7px;height:7px;border-radius:50%;background:var(--pink);animation:iadot 1.2s infinite}
 .iad:nth-child(2){animation-delay:.2s}.iad:nth-child(3){animation-delay:.4s}
 @keyframes iadot{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-7px);opacity:1}}
 
 /* Sugerencias */
-.ia-sugs{display:flex;gap:7px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.ia-sugs{display:flex;gap:7px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--faint-1);flex-shrink:0}
 .ia-sug{background:rgba(233,30,140,.07);border:1px solid rgba(233,30,140,.2);color:rgba(233,30,140,.9);font-size:10px;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;padding:5px 12px;cursor:pointer;transition:all .2s}
 .ia-sug:hover{background:rgba(233,30,140,.2)}
 
 /* Input */
-.ia-inp-wrap{padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.35);flex-shrink:0}
-.ia-inp{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:#fff;padding:11px 15px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;transition:border-color .2s;resize:none;height:46px;overflow:hidden;line-height:1.4}
+.ia-inp-wrap{padding:14px 16px;border-top:1px solid var(--faint-1);display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.35);flex-shrink:0}
+.ia-inp{flex:1;background:var(--card);border:1px solid var(--faint-2);color:var(--text);padding:11px 15px;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;transition:border-color .2s;resize:none;height:46px;overflow:hidden;line-height:1.4}
 .ia-inp:focus{border-color:var(--pink)}
 .ia-send{background:var(--pink);border:none;color:#fff;width:46px;height:46px;cursor:pointer;font-size:16px;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .ia-send:hover{background:#c2185b;transform:scale(1.05)}
@@ -66,10 +66,10 @@
 
 /* Info extra */
 .ia-info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:20px}
-.ia-info-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);padding:18px;text-align:center}
+.ia-info-card{background:var(--card);border:1px solid var(--faint-1);padding:18px;text-align:center}
 .ia-info-card i{font-size:1.6rem;color:var(--pink);margin-bottom:10px;display:block}
 .ia-info-card .iic-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;margin-bottom:6px}
-.ia-info-card .iic-desc{font-size:11px;color:rgba(255,255,255,.4);font-family:'Rajdhani',sans-serif;line-height:1.5}
+.ia-info-card .iic-desc{font-size:11px;color:var(--muted);font-family:'Rajdhani',sans-serif;line-height:1.5}
 
 @media(max-width:820px){.ia-grid{grid-template-columns:1fr}.ia-chat{height:520px}.ia-info-grid{grid-template-columns:1fr}}
 </style>
@@ -79,10 +79,8 @@
   <div class="ia-hero">
     <div class="ia-label">INTELIGENCIA ARTIFICIAL</div>
     <h1 class="section-title" style="margin-bottom:10px">ASISTENTE MANTIZ</h1>
-    <div class="ia-divider">
-      <svg width="200" height="16" viewBox="0 0 200 16"><path d="M0,8 L80,8 L90,2 L100,14 L110,2 L120,8 L200,8" fill="none" stroke="rgba(233,30,140,0.6)" stroke-width="1.5"/></svg>
-    </div>
-    <p style="color:rgba(240,240,240,.45);font-size:13px;letter-spacing:1px;max-width:500px;margin:0 auto">
+    <%- include('../partials/tribal-separator') %>
+    <p style="color:var(--muted);font-size:13px;letter-spacing:1px;max-width:500px;margin:0 auto">
       Tu asistente personal de moda con IA. Outfits, tallas, pedidos y todo lo que necesites.
     </p>
   </div>
@@ -97,9 +95,9 @@
       <div class="ia-panel">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
           <span class="status-pulse"></span>
-          <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:rgba(240,240,240,.6);letter-spacing:1px">IA EN LÍNEA</span>
+          <span style="font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--muted);letter-spacing:1px">IA EN LÍNEA</span>
         </div>
-        <div style="font-size:10px;color:rgba(255,255,255,.22);font-family:'Rajdhani',sans-serif;margin-bottom:10px">Powered by Google Gemini · 100% Gratis</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Rajdhani',sans-serif;margin-bottom:10px">Powered by Google Gemini · 100% Gratis</div>
         <a href="/ia/chat" style="display:block;text-align:center;background:rgba(233,30,140,.12);border:1px solid rgba(233,30,140,.3);color:var(--pink);font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;padding:8px;text-decoration:none;transition:all .2s" onmouseover="this.style.background='rgba(233,30,140,.22)'" onmouseout="this.style.background='rgba(233,30,140,.12)'">
           VER PÁGINA COMPLETA →
         </a>
@@ -132,7 +130,7 @@
       <!-- Puedo ayudarte -->
       <div class="ia-panel">
         <div class="ia-panel-title"><i class="bi bi-info-circle"></i>TE AYUDO CON</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,.35);font-family:'Rajdhani',sans-serif;line-height:2.2">
+        <div style="font-size:11.5px;color:var(--muted);font-family:'Rajdhani',sans-serif;line-height:2.2">
           ✦ Recomendaciones personalizadas<br>
           ✦ Combinación de prendas y colores<br>
           ✦ Estado de pedidos y envíos<br>

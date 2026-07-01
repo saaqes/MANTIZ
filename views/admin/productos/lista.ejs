@@ -11,7 +11,7 @@
         <tbody>
           <% productos.forEach(p => { %>
           <tr>
-            <td><img src="<%= p.imagen_principal  %>" width="50" height="50" class="rounded-2" style="object-fit:cover" onerror="this.src='https://via.placeholder.com/50x50/f0f0f0/999?text=IMG'"></td>
+            <td><img src="/uploads/products/<%= p.imagen_principal %>" width="50" height="50" class="rounded-2" style="object-fit:cover" onerror="this.src='https://via.placeholder.com/50x50/f0f0f0/999?text=IMG'"></td>
             <td><div class="fw-semibold"><%= p.titulo %></div><div class="text-muted small">ID: #<%= p.id %></div></td>
             <td><span class="badge rounded-pill" style="background:var(--color-primary)"><%= p.categoria %></span></td>
             <td>
@@ -20,11 +20,13 @@
             </td>
             <td><%= p.total_visitas || 0 %> visitas</td>
             <td><span class="badge rounded-pill" style="background:<%= p.activo?'#28a745':'#6c757d' %>"><%= p.activo?'Activo':'Inactivo' %></span></td>
-            <td class="d-flex gap-2">
-              <a href="/admin/productos/<%= p.id %>/editar" class="btn btn-sm btn-outline-secondary rounded-3"><i class="bi bi-pencil"></i></a>
-              <form action="/admin/productos/<%= p.id %>/eliminar" method="POST" onsubmit="return confirm('¿Eliminar este producto?')">
-                <button type="submit" class="btn btn-sm btn-outline-danger rounded-3"><i class="bi bi-trash"></i></button>
-              </form>
+            <td>
+              <div class="d-flex gap-2 align-items-center">
+                <a href="/admin/productos/<%= p.id %>/editar" class="btn btn-sm btn-outline-secondary rounded-3"><i class="bi bi-pencil"></i></a>
+                <form action="/admin/productos/<%= p.id %>/eliminar" method="POST" onsubmit="return confirm('¿Eliminar este producto?')" class="m-0">
+                  <button type="submit" class="btn btn-sm btn-outline-danger rounded-3"><i class="bi bi-trash"></i></button>
+                </form>
+              </div>
             </td>
           </tr>
           <% }) %>

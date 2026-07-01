@@ -1,0 +1,54 @@
+<% if (typeof carruselMarca !== 'undefined' && carruselMarca && carruselMarca.length > 0 && (typeof hcfg === 'undefined' || hcfg.mostrar_carrusel_marca !== '0')) { %>
+<style>
+.marca-carousel-wrap { overflow:hidden; padding:0; margin:0; width:100%; }
+.marca-carousel { position:relative; height:clamp(280px,42vw,520px); overflow:hidden; background:#0a0a0a; width:100%; }
+.marca-slide { position:absolute; inset:0; opacity:0; transition:opacity .85s ease; pointer-events:none; }
+.marca-slide.active { opacity:1; pointer-events:auto; }
+.marca-slide img { width:100%; height:100%; object-fit:cover; display:block; }
+.marca-slide-overlay { position:absolute; inset:0; background:linear-gradient(to bottom,rgba(0,0,0,.08),rgba(0,0,0,.55)); display:flex; align-items:flex-end; justify-content:center; padding:0 24px 36px; pointer-events:none; }
+.marca-slide-content { text-align:center; pointer-events:auto; max-width:900px; }
+.marca-slide-content h3 { font-family:'Bebas Neue',sans-serif; font-size:clamp(22px,4.5vw,48px); letter-spacing:6px; color:white; margin:0; filter:url(#gb); text-shadow:0 2px 20px rgba(0,0,0,.7); }
+.marca-slide-content p { font-family:'Rajdhani',sans-serif; font-size:clamp(11px,1.4vw,15px); letter-spacing:2px; color:rgba(255,255,255,.85); margin:8px 0 0; }
+.marca-arrow { position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; background:rgba(0,0,0,.45); border:2px solid rgba(255,255,255,.85); color:white; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:8; font-size:24px; transition:all .2s; border-radius:0; filter:url(#gb); }
+.marca-arrow:hover { background:rgba(233,30,140,.5); border-color:white; }
+.marca-arrow-left { left:20px; } .marca-arrow-right { right:20px; }
+@media(max-width:600px){ .marca-arrow{ width:38px; height:38px; font-size:20px; left:10px; right:10px; } .marca-carousel{ height:clamp(220px,50vw,340px); } .marca-slide-overlay{ padding-bottom:24px; } }
+</style>
+<section class="marca-carousel-wrap" id="home-marca-carousel">
+  <div class="marca-carousel" id="marcaCarousel">
+    <% carruselMarca.forEach(function(m, i) { %>
+    <div class="marca-slide <%= i===0 ? 'active' : '' %>" id="marca-slide-<%= i %>">
+      <img src="/uploads/banners/<%= m.imagen %>" alt="<%= m.titulo || 'Banner' %>" loading="<%= i===0?'eager':'lazy' %>">
+      <div class="marca-slide-overlay">
+        <div class="marca-slide-content">
+          <h3><%= m.titulo || (hcfg && hcfg.carrusel_marca_titulo) || 'NUEVA COLECCIÓN' %></h3>
+          <% if (m.subtitulo) { %><p><%= m.subtitulo %></p><% } %>
+          <% if (m.boton_texto) { %>
+          <a href="<%= m.boton_url||'/productos' %>" class="btn-grunge-w" style="display:inline-block;width:auto;padding:9px 28px;margin-top:12px;border-color:<%= m.color_acento||'var(--pink)' %>;color:<%= m.color_acento||'var(--pink)' %>"><%= m.boton_texto %></a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+    <button type="button" class="marca-arrow marca-arrow-left" onclick="goMarcaSlide(marcaCur-1)" aria-label="Imagen anterior">&#8249;</button>
+    <button type="button" class="marca-arrow marca-arrow-right" onclick="goMarcaSlide(marcaCur+1)" aria-label="Imagen siguiente">&#8250;</button>
+  </div>
+</section>
+<script>
+(function(){
+  var mSlides=document.querySelectorAll('.marca-slide'), marcaCur=0, marcaTimer=null;
+  window.goMarcaSlide=function(n){
+    if(!mSlides.length)return;
+    mSlides[marcaCur].classList.remove('active');
+    marcaCur=(n+mSlides.length)%mSlides.length;
+    mSlides[marcaCur].classList.add('active');
+    resetMarcaTimer();
+  };
+  function resetMarcaTimer(){
+    if(marcaTimer)clearInterval(marcaTimer);
+    if(mSlides.length>1) marcaTimer=setInterval(function(){goMarcaSlide(marcaCur+1);},6500);
+  }
+  if(mSlides.length>1) resetMarcaTimer();
+})();
+</script>
+<% } %>

@@ -1,201 +1,316 @@
 <%- include('../partials/header') %>
 <%
 var bannerSrc = (perfil.banner_tipo==='upload' && perfil.banner)
-  ? perfil.banner
+  ? '/uploads/banners/'+perfil.banner
   : '/img/defaults/banners/'+(perfil.banner_preset||'banner1.jpg');
 var avatarSrc = (perfil.foto_perfil_tipo==='upload' && perfil.foto_perfil)
-  ? perfil.foto_perfil
+  ? '/uploads/profiles/'+perfil.foto_perfil
   : '/img/defaults/avatars/'+(perfil.foto_perfil_preset||'avatar1.png');
-var cfgColor = (pcfg && pcfg.color_primario) ? pcfg.color_primario : 'var(--pink)';
+var cfgColor = (pcfg && pcfg.color_primario) ? pcfg.color_primario : 'var(--cp)';
+var estadoAm = typeof estadoAmistad !== 'undefined' ? estadoAmistad : null;
+var esAmigo   = estadoAm && estadoAm.estado === 'aceptada';
+var pendiente = estadoAm && estadoAm.estado === 'pendiente';
+var PLAT = {
+  discord:{ico:'bi-discord',lbl:'Discord',bg:'rgba(88,101,242,.15)',col:'#5865f2',base:null},
+  steam:{ico:'bi-steam',lbl:'Steam',bg:'rgba(27,40,56,.4)',col:'#c2c2c2',base:'https://steamcommunity.com/id/'},
+  playstation:{ico:'bi-playstation',lbl:'PlayStation',bg:'rgba(0,120,255,.12)',col:'#0078ff',base:null},
+  xbox:{ico:'bi-xbox',lbl:'Xbox',bg:'rgba(16,124,16,.12)',col:'#4caf50',base:'https://account.xbox.com/en-us/profile?gamertag='},
+  spotify:{ico:'bi-spotify',lbl:'Spotify',bg:'rgba(30,215,96,.1)',col:'#1ed760',base:'https://open.spotify.com/user/'},
+  twitch:{ico:'bi-twitch',lbl:'Twitch',bg:'rgba(145,70,255,.12)',col:'#9146ff',base:'https://twitch.tv/'},
+  tiktok:{ico:'bi-tiktok',lbl:'TikTok',bg:'rgba(254,44,85,.1)',col:'#fe2c55',base:'https://www.tiktok.com/@'},
+  youtube:{ico:'bi-youtube',lbl:'YouTube',bg:'rgba(255,0,0,.1)',col:'#ff0000',base:null},
+  instagram:{ico:'bi-instagram',lbl:'Instagram',bg:'rgba(225,48,108,.1)',col:'#e1306c',base:'https://instagram.com/'}
+};
 %>
+<style>
+/* ── Perfil público — rediseño Discord+Roblox ── */
+.pp-wrap{max-width:1100px;margin:0 auto;padding-bottom:80px}
+.pp-banner{position:relative;height:240px;overflow:hidden;background:#111}
+.pp-banner img{width:100%;height:100%;object-fit:cover}
+.pp-banner-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 35%,rgba(10,10,10,.9))}
+.pp-hero{display:flex;align-items:flex-end;gap:20px;padding:0 40px;margin-top:-60px;position:relative;z-index:5;flex-wrap:wrap}
+.pp-avatar{width:112px;height:112px;border-radius:50%;object-fit:cover;flex-shrink:0;border:4px solid #0a0a0a}
+.pp-info{flex:1;min-width:200px;padding-bottom:10px}
+.pp-name{font-family:var(--fd);font-size:1.7rem;letter-spacing:4px;line-height:1;color:var(--text)}
+.pp-username{font-family:var(--fm);font-size:.7rem;color:var(--muted);letter-spacing:2px;margin-top:4px}
+.pp-bio{font-family:var(--fb);font-size:.88rem;color:rgba(255,255,255,.55);margin-top:8px;max-width:420px;line-height:1.5}
+body.light-mode .pp-bio{color:rgba(0,0,0,.45)}
+.pp-actions{display:flex;gap:8px;padding-bottom:12px;flex-shrink:0;align-items:flex-end}
+.pp-btn{height:36px;padding:0 18px;border-radius:8px;border:none;font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:1.5px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;text-decoration:none}
+.pp-btn-primary{background:var(--cp);color:white}
+.pp-btn-primary:hover{background:#d01478;color:white}
+.pp-btn-outline{background:transparent;border:1px solid rgba(233,30,140,.4);color:var(--cp)}
+.pp-btn-outline:hover{background:rgba(233,30,140,.1)}
+.pp-btn-amigo{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#00c853}
+.pp-btn-pending{background:rgba(255,200,0,.08);border:1px solid rgba(255,200,0,.3);color:#ffc800;cursor:default}
 
-<div style="max-width:1100px;margin:0 auto;padding-bottom:80px">
+/* ── Stats bar ── */
+.pp-stats{display:flex;gap:0;padding:16px 40px;border-bottom:1px solid var(--border);border-top:1px solid var(--border);margin-top:20px;flex-wrap:wrap}
+.pp-stat{text-align:center;padding:0 24px;border-right:1px solid var(--border);flex-shrink:0}
+.pp-stat:last-child{border-right:none}
+.pp-stat-val{font-family:var(--fd);font-size:1.3rem;font-weight:800;color:var(--text);letter-spacing:1px}
+.pp-stat-lbl{font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+
+/* ── Tabs ── */
+.pp-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 40px;overflow-x:auto;scrollbar-width:none}
+.pp-tabs::-webkit-scrollbar{display:none}
+.ptab{padding:12px 20px;border:none;background:none;color:var(--muted);font-family:var(--fm);font-size:.7rem;font-weight:700;letter-spacing:2px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;text-transform:uppercase}
+.ptab:hover{color:var(--text)}
+.ptab.active{color:var(--cp);border-bottom-color:var(--cp)}
+
+/* ── Conexiones ── */
+.conex-grid{display:flex;flex-wrap:wrap;gap:10px;padding:28px 40px}
+.conex-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;text-decoration:none;color:var(--text);border:1px solid var(--border);transition:all .2s;min-width:160px}
+.conex-item:hover{border-color:currentColor;transform:translateY(-2px);color:var(--text)}
+.conex-ico{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.conex-username{font-family:var(--fb);font-weight:700;font-size:.82rem}
+.conex-plat{font-family:var(--fm);font-size:.6rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+
+/* ── Logros grid ── */
+.logros-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;padding:28px 40px}
+.logro-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;transition:all .2s}
+.logro-card.desbloqueado{border-color:rgba(255,215,0,.25)}
+.logro-card.desbloqueado:hover{border-color:rgba(255,215,0,.5);box-shadow:0 4px 20px rgba(255,215,0,.08)}
+.logro-card.bloqueado{opacity:.45;filter:grayscale(.9)}
+.logro-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.logro-icon.desbloqueado{background:rgba(255,215,0,.1)}
+.logro-icon.bloqueado{background:rgba(100,100,120,.2)}
+.logro-nombre{font-family:var(--fb);font-weight:700;font-size:.88rem;color:var(--text)}
+.logro-desc{font-family:var(--fb);font-size:.72rem;color:var(--muted);margin-top:2px}
+.logro-fecha{font-family:var(--fm);font-size:.58rem;color:rgba(255,215,0,.5);margin-top:4px;letter-spacing:.5px}
+
+/* ── Grids de favoritos / tableros ── */
+.fav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:28px 40px}
+.tab-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:28px 40px}
+
+/* ── Responsive ── */
+@media(max-width:900px){.fav-grid{grid-template-columns:repeat(3,1fr)}.logros-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
+@media(max-width:700px){.pp-hero{padding:0 20px}.pp-stats{padding:14px 20px}.pp-stat{padding:0 14px}.pp-tabs{padding:0 16px}.conex-grid{padding:20px 16px}.logros-grid{padding:20px 16px;grid-template-columns:1fr 1fr}.fav-grid{grid-template-columns:repeat(2,1fr);padding:16px}.tab-grid{grid-template-columns:1fr 1fr;padding:16px}}
+@media(max-width:480px){.fav-grid{grid-template-columns:1fr 1fr}.pp-name{font-size:1.3rem}}
+</style>
+
+<div class="pp-wrap">
   <!-- BANNER -->
-  <div style="position:relative;height:220px;overflow:hidden;background:#111">
-    <img src="<%=bannerSrc%>" style="width:100%;height:100%;object-fit:cover;opacity:0.65" onerror="this.style.display='none'">
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(10,10,10,0.85))"></div>
+  <div class="pp-banner">
+    <img src="<%= bannerSrc %>" alt="" onerror="this.style.display='none'">
+    <div class="pp-banner-overlay"></div>
   </div>
 
-  <!-- AVATAR + INFO -->
-  <div style="display:flex;align-items:flex-end;gap:24px;padding:0 40px;margin-top:-52px;position:relative;z-index:5;flex-wrap:wrap">
-    <img src="<%=avatarSrc%>" width="104" height="104"
-         style="border-radius:50%;object-fit:cover;border:4px solid #0a0a0a;box-shadow:0 0 0 3px <%=cfgColor%>,0 4px 24px rgba(233,30,140,0.3);flex-shrink:0"
-         onerror="this.src='/img/defaults/avatars/avatar1.png'">
-    <div style="flex:1;padding-bottom:8px">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="font-family:'Permanent Marker',cursive;font-size:26px;color:<%=cfgColor%>"><%=perfil.nombre_visible%></div>
-        <% if (user && user.id !== perfil.id) {
-          const rel = typeof estadoAmistad !== 'undefined' ? estadoAmistad : null;
-          const esAmigo = rel && rel.estado === 'aceptada';
-          const pendiente = rel && rel.estado === 'pendiente';
-        %>
-        <button id="friend-btn" data-estado="<%=rel?rel.estado:'ninguno'%>" onclick="accionAmistad()"
-          style="padding:5px 14px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;border:1px solid <%=esAmigo?'#00c853':'var(--pink)'%>;color:<%=esAmigo?'#00c853':'var(--pink)'%>;background:transparent;transition:all 0.2s"
-          onmouseover="if(!this.dataset.estado||this.dataset.estado!=='aceptada')this.style.background='rgba(233,30,140,0.1)'"
-          onmouseout="this.style.background='transparent'">
-          <% if (esAmigo) { %>
-            <i class="bi bi-person-check-fill me-1"></i>AMIGOS
-          <% } else if (pendiente) { %>
-            <i class="bi bi-person-clock me-1"></i>PENDIENTE
-          <% } else { %>
-            <i class="bi bi-person-plus me-1"></i>AGREGAR
-          <% } %>
-        </button>
+  <!-- HERO: avatar + nombre + acciones -->
+  <div class="pp-hero">
+    <img class="pp-avatar" src="<%= avatarSrc %>"
+         style="box-shadow:0 0 0 3px <%= cfgColor %>,0 6px 28px rgba(0,0,0,.5)"
+         onerror="this.src='/img/defaults/avatars/avatar1.png'" alt="<%= perfil.nombre_visible %>">
+    <div class="pp-info">
+      <div class="pp-name" style="color:<%= cfgColor %>"><%= perfil.nombre_visible %></div>
+      <div class="pp-username">@<%= perfil.username %></div>
+      <% if (perfil.bio) { %><div class="pp-bio"><%= perfil.bio %></div><% } %>
+    </div>
+    <div class="pp-actions">
+      <% if (user && user.id !== perfil.id) { %>
+        <% if (esAmigo) { %>
+          <button class="pp-btn pp-btn-amigo"><i class="bi bi-person-check-fill"></i>AMIGOS</button>
+        <% } else if (pendiente) { %>
+          <button class="pp-btn pp-btn-pending"><i class="bi bi-person-clock"></i>PENDIENTE</button>
+        <% } else { %>
+          <button class="pp-btn pp-btn-primary" id="friend-btn" onclick="enviarSolicitud()">
+            <i class="bi bi-person-plus-fill"></i>AGREGAR AMIGO
+          </button>
         <% } %>
-      </div>
-      <div style="font-size:12px;color:var(--gray);letter-spacing:2px;margin-top:2px">@<%=perfil.username%></div>
-      <%if(perfil.bio){%><div style="font-size:13px;color:rgba(240,240,240,0.7);margin-top:6px;max-width:380px"><%=perfil.bio%></div><%}%>
-    </div>
-    <div style="display:flex;gap:8px;padding-bottom:12px">
-      <div style="text-align:center;padding:8px 14px;border:1px solid <%=cfgColor%>20;min-width:64px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:<%=cfgColor%>"><%=favoritos.length%></div>
-        <div style="font-size:9px;color:var(--gray);letter-spacing:1.5px">FAVORITOS</div>
-      </div>
-      <div style="text-align:center;padding:8px 14px;border:1px solid <%=cfgColor%>20;min-width:64px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:<%=cfgColor%>"><%=tableros.length%></div>
-        <div style="font-size:9px;color:var(--gray);letter-spacing:1.5px">TABLEROS</div>
-      </div>
+        <a href="/chat?with=<%= perfil.username %>" class="pp-btn pp-btn-outline">
+          <i class="bi bi-chat-dots"></i>MENSAJE
+        </a>
+      <% } else if (!user) { %>
+        <a href="/auth/login" class="pp-btn pp-btn-primary"><i class="bi bi-person-plus-fill"></i>SEGUIR</a>
+      <% } %>
     </div>
   </div>
 
-  <!-- LOGROS DESBLOQUEADOS -->
-  <% if (typeof logros !== 'undefined' && logros && logros.length > 0) { %>
-  <div style="padding:12px 40px;display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid rgba(255,255,255,0.05)">
-    <% logros.slice(0,8).forEach(l => { %>
-    <div title="<%=l.nombre%>: <%=l.descripcion||''%>"
-         style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);cursor:help">
-      <span style="font-size:16px"><%=l.icono||'🏆'%></span>
-      <span style="font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:#ffd700"><%=l.nombre%></span>
+  <!-- STATS BAR -->
+  <div class="pp-stats">
+    <div class="pp-stat">
+      <div class="pp-stat-val" style="color:<%= cfgColor %>"><%= typeof totalAmigos !== 'undefined' ? totalAmigos : 0 %></div>
+      <div class="pp-stat-lbl">Amigos</div>
     </div>
-    <% }) %>
-    <% if (logros.length > 8) { %>
-    <div style="display:flex;align-items:center;padding:5px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);font-size:11px;color:var(--muted);font-family:'Bebas Neue',sans-serif;letter-spacing:1px">
-      +<%=logros.length-8%> más
+    <div class="pp-stat">
+      <div class="pp-stat-val" style="color:<%= cfgColor %>"><%= favoritos.length %></div>
+      <div class="pp-stat-lbl">Favoritos</div>
     </div>
-    <% } %>
+    <div class="pp-stat">
+      <div class="pp-stat-val" style="color:<%= cfgColor %>"><%= tableros.length %></div>
+      <div class="pp-stat-lbl">Tableros</div>
+    </div>
+    <div class="pp-stat">
+      <div class="pp-stat-val" style="color:<%= cfgColor %>"><%= (typeof logros !== 'undefined' ? logros.length : 0) %></div>
+      <div class="pp-stat-lbl">Logros</div>
+    </div>
+    <div class="pp-stat">
+      <div class="pp-stat-val" style="color:<%= cfgColor %>"><%= (typeof conexiones !== 'undefined' ? conexiones.length : 0) %></div>
+      <div class="pp-stat-lbl">Conexiones</div>
+    </div>
   </div>
-  <% } %>
-
-  <!-- CONEXIONES PÚBLICAS -->
-  <% if (typeof conexiones !== 'undefined' && conexiones && conexiones.length > 0) {
-    const platCfg = {
-      playstation:{icon:'bi-controller',color:'#003791',base:'https://www.playstation.com/en-us/profiles/'},
-      xbox:{icon:'bi-xbox',color:'#107c10',base:'https://www.xbox.com/en-US/play/user/'},
-      steam:{icon:'bi-steam',color:'#1b2838',base:'https://steamcommunity.com/id/'},
-      github:{icon:'bi-github',color:'#24292f',base:'https://github.com/'},
-      tiktok:{icon:'bi-tiktok',color:'#010101',base:'https://www.tiktok.com/@'},
-      spotify:{icon:'bi-spotify',color:'#1db954',base:'https://open.spotify.com/user/'},
-      twitch:{icon:'bi-twitch',color:'#9146ff',base:'https://www.twitch.tv/'},
-      discord:{icon:'bi-discord',color:'#5865f2',base:null}
-    };
-  %>
-  <div style="padding:12px 40px;display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid rgba(255,255,255,0.05)">
-    <% conexiones.forEach(c => {
-      const cfg = platCfg[c.plataforma]||{icon:'bi-link',color:'#888',base:null};
-      const url = c.url||(cfg.base?cfg.base+c.username:null);
-    %>
-    <% if(url){ %>
-    <a href="<%=url%>" target="_blank" rel="noopener"
-       style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);text-decoration:none;color:var(--white);transition:border-color 0.2s"
-       onmouseover="this.style.borderColor='<%=cfg.color%>'" onmouseout="this.style.borderColor='var(--border)'">
-      <i class="<%=cfg.icon%>" style="color:<%=cfg.color%>;font-size:14px"></i>
-      <span style="font-size:11px;font-weight:700"><%=c.username%></span>
-    </a>
-    <% } else { %>
-    <div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border)">
-      <i class="<%=cfg.icon%>" style="color:<%=cfg.color%>;font-size:14px"></i>
-      <span style="font-size:11px;font-weight:700"><%=c.username%></span>
-    </div>
-    <% } %>
-    <% }) %>
-  </div>
-  <% } %>
 
   <!-- TABS -->
-  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin:24px 0 0;padding:0 40px;overflow-x:auto">
-    <button onclick="showSec('favoritos')" id="psec-favoritos" class="ptab ptab-active">FAVORITOS</button>
-    <button onclick="showSec('tableros')" id="psec-tableros" class="ptab">TABLEROS</button>
-    <%if(widgets&&widgets.length>0){%><button onclick="showSec('widgets')" id="psec-widgets" class="ptab">WIDGETS</button><%}%>
+  <div class="pp-tabs">
+    <button class="ptab active" onclick="showSec('favoritos',this)">Favoritos</button>
+    <button class="ptab" onclick="showSec('tableros',this)">Tableros</button>
+    <% if (typeof logros !== 'undefined' && logros.length > 0) { %>
+    <button class="ptab" onclick="showSec('logros',this)">🏆 Logros</button>
+    <% } %>
+    <% if (typeof conexiones !== 'undefined' && conexiones.length > 0) { %>
+    <button class="ptab" onclick="showSec('conexiones',this)">🎮 Conexiones</button>
+    <% } %>
+    <% if (widgets && widgets.length > 0) { %>
+    <button class="ptab" onclick="showSec('widgets',this)">Widgets</button>
+    <% } %>
   </div>
 
   <!-- FAVORITOS -->
-  <div id="sec-favoritos" style="padding:28px 40px">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px" class="pub-grid">
-      <%if(favoritos.length>0){favoritos.forEach(function(p){%>
-      <div class="product-card" onclick="window.location='/productos/<%=p.id%>'">
-        <div class="pc-label"><span class="pc-label-text"><%=p.titulo.substring(0,16)%></span></div>
-        <div class="pc-img-wrap"><div class="pc-img-clip"><img class="pc-img" src="<%= p.imagen_principal %>" alt="<%=p.titulo%>" onerror="this.src='https://via.placeholder.com/400x533/111/888?text=MANTIZ'"></div></div>
-        <div class="pc-info"><span class="pc-name"><%=p.titulo.substring(0,18)%></span><span class="pc-price">$<%=parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO')%></span></div>
+  <div id="sec-favoritos" class="fav-grid">
+    <% if (favoritos && favoritos.length > 0) { favoritos.forEach(function(p) { %>
+    <a href="/productos/<%= p.id %>" style="text-decoration:none;color:inherit">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all .2s;cursor:pointer"
+           onmouseover="this.style.borderColor='<%= cfgColor %>40'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="height:140px;overflow:hidden;background:#111">
+          <img src="/uploads/products/<%= p.imagen_principal %>" alt="<%= p.titulo %>"
+               style="width:100%;height:100%;object-fit:cover;transition:transform .3s"
+               onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'"
+               onerror="this.src='/img/defaults/product.png'">
+        </div>
+        <div style="padding:10px 12px">
+          <div style="font-family:var(--fb);font-weight:700;font-size:.82rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><%= p.titulo %></div>
+          <div style="font-family:var(--fd);font-size:.85rem;color:<%= cfgColor %>;margin-top:3px">$<%= parseFloat(p.precio_descuento||p.precio).toLocaleString('es-CO') %></div>
+        </div>
       </div>
-      <%})}else{%>
-      <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--gray)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px">SIN FAVORITOS PUBLICOS</div></div>
-      <%}%>
+    </a>
+    <% }); } else { %>
+    <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted)">
+      <i class="bi bi-heart" style="font-size:2rem;display:block;margin-bottom:10px;color:rgba(233,30,140,.2)"></i>
+      <div style="font-family:var(--fd);letter-spacing:3px">Sin favoritos públicos</div>
     </div>
+    <% } %>
   </div>
 
   <!-- TABLEROS -->
-  <div id="sec-tableros" style="display:none;padding:28px 40px">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px" class="pub-grid-t">
-      <%if(tableros.length>0){tableros.forEach(function(t){%>
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);overflow:hidden;transition:border-color 0.2s" onmouseover="this.style.borderColor='<%=cfgColor%>'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="height:70px;background:<%=t.color_portada||cfgColor%>;opacity:0.7"></div>
-        <div style="padding:14px">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px"><%=t.nombre%></div>
-          <div style="font-size:11px;color:var(--gray);margin-top:3px"><%=t.total_pines||0%> pines</div>
-        </div>
+  <div id="sec-tableros" class="tab-grid" style="display:none">
+    <% if (tableros && tableros.length > 0) { tableros.forEach(function(t) { %>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .2s"
+         onmouseover="this.style.borderColor='<%= cfgColor %>60';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+      <div style="height:72px;background:<%= 't.color_portada' %>;position:relative">
+        <div style="position:absolute;inset:0;background:<%= t.color_portada||cfgColor %>;opacity:.7"></div>
       </div>
-      <%})}else{%>
-      <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--gray)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px">SIN TABLEROS PUBLICOS</div></div>
-      <%}%>
+      <div style="padding:12px 14px">
+        <div style="font-family:var(--fb);font-weight:700;font-size:.9rem;color:var(--text)"><%= t.nombre %></div>
+        <div style="font-family:var(--fm);font-size:.65rem;color:var(--muted);margin-top:4px"><%= t.total_pines||0 %> pines</div>
+      </div>
     </div>
+    <% }); } else { %>
+    <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted)">
+      <i class="bi bi-grid-3x3-gap" style="font-size:2rem;display:block;margin-bottom:10px;color:rgba(233,30,140,.2)"></i>
+      <div style="font-family:var(--fd);letter-spacing:3px">Sin tableros públicos</div>
+    </div>
+    <% } %>
   </div>
+
+  <!-- LOGROS -->
+  <% if (typeof logros !== 'undefined' && logros.length > 0) { %>
+  <div id="sec-logros" class="logros-grid" style="display:none">
+    <% logros.forEach(function(l) { %>
+    <div class="logro-card desbloqueado">
+      <div class="logro-icon desbloqueado"><%= l.icono || '🏆' %></div>
+      <div>
+        <div class="logro-nombre"><%= l.nombre %></div>
+        <% if (l.descripcion) { %><div class="logro-desc"><%= l.descripcion %></div><% } %>
+        <% if (l.fecha_desbloqueo) { %>
+        <div class="logro-fecha">🗓 <%= new Date(l.fecha_desbloqueo).toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'2-digit'}) %></div>
+        <% } %>
+      </div>
+    </div>
+    <% }); %>
+  </div>
+  <% } %>
+
+  <!-- CONEXIONES -->
+  <% if (typeof conexiones !== 'undefined' && conexiones.length > 0) { %>
+  <div id="sec-conexiones" class="conex-grid" style="display:none">
+    <% conexiones.forEach(function(c) {
+      var p = PLAT[c.plataforma] || {ico:'bi-link',lbl:c.plataforma,bg:'var(--faint-1)',col:'#888',base:null};
+      var url = c.url || (p.base ? p.base + c.username : null);
+    %>
+    <% if (url) { %>
+    <a href="<%= url %>" target="_blank" rel="noopener" class="conex-item" style="color:var(--text)">
+    <% } else { %>
+    <div class="conex-item">
+    <% } %>
+      <div class="conex-ico" style="background:<%= p.bg %>;color:<%= p.col %>">
+        <i class="<%= p.ico %>"></i>
+      </div>
+      <div>
+        <div class="conex-username"><%= c.username %></div>
+        <div class="conex-plat"><%= p.lbl %></div>
+      </div>
+    <% if (url) { %></a><% } else { %></div><% } %>
+    <% }); %>
+  </div>
+  <% } %>
 
   <!-- WIDGETS -->
-  <%if(widgets&&widgets.length>0){%>
+  <% if (widgets && widgets.length > 0) { %>
   <div id="sec-widgets" style="display:none;padding:28px 40px">
-    <div style="display:flex;gap:16px;flex-wrap:wrap">
-      <%widgets.forEach(function(w){%>
-      <div style="background:rgba(255,255,255,0.04);border:1px solid <%=cfgColor%>30;padding:16px;display:flex;align-items:center;gap:14px;min-width:220px;max-width:280px">
-        <%if(w.imagen_url){%><img src="<%=w.imagen_url%>" width="56" height="56" style="object-fit:cover;border-radius:8px;border:2px solid <%=cfgColor%>" onerror="this.style.display='none'"><%}%>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <% widgets.forEach(function(w) { %>
+      <div style="background:var(--card);border:1px solid <%= cfgColor %>30;border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;min-width:220px;max-width:280px">
+        <% if (w.imagen_url) { %><img src="<%= w.imagen_url %>" width="56" height="56" style="object-fit:cover;border-radius:8px;border:2px solid <%= cfgColor %>" onerror="this.style.display='none'"><% } %>
         <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;color:<%=cfgColor%>"><%=w.tipo.toUpperCase()%></div>
-          <div style="font-size:14px;font-weight:700;color:var(--white);margin-top:2px"><%=w.titulo%></div>
-          <%if(w.subtitulo){%><div style="font-size:11px;color:var(--gray)"><%=w.subtitulo%></div><%}%>
+          <div style="font-family:var(--fm);font-size:.58rem;letter-spacing:2px;color:<%= cfgColor %>;text-transform:uppercase"><%= w.tipo %></div>
+          <div style="font-family:var(--fb);font-weight:700;font-size:.9rem;color:var(--text);margin-top:2px"><%= w.titulo %></div>
+          <% if (w.subtitulo) { %><div style="font-family:var(--fb);font-size:.75rem;color:var(--muted)"><%= w.subtitulo %></div><% } %>
         </div>
       </div>
-      <%})%>
+      <% }); %>
     </div>
   </div>
-  <%}%>
+  <% } %>
 </div>
 
-<style>
-.ptab{padding:10px 18px;border:none;background:none;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap}
-.ptab:hover{color:var(--white)}
-.ptab-active{color:var(--pink)!important;border-bottom:2px solid var(--pink)!important}
-@media(max-width:768px){.pub-grid{grid-template-columns:repeat(2,1fr)!important}.pub-grid-t{grid-template-columns:1fr 1fr!important}div[style*="padding:28px 40px"]{padding:16px!important}}
-</style>
 <script>
-function showSec(s){['favoritos','tableros','widgets'].forEach(function(k){var p=document.getElementById('sec-'+k);var b=document.getElementById('psec-'+k);if(p)p.style.display=k===s?'block':'none';if(b)b.classList.toggle('ptab-active',k===s);});}
+var _perfilId = <%= perfil.id %>;
+var _username = '<%= perfil.username %>';
 
-<% if (user && user.id !== perfil.id) { %>
-async function accionAmistad() {
+function showSec(id, btn){
+  document.querySelectorAll('.pp-tabs .ptab').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var sections = ['favoritos','tableros','logros','conexiones','widgets'];
+  sections.forEach(function(s){
+    var el = document.getElementById('sec-'+s);
+    if (el) el.style.display = s === id ? (s === 'favoritos' || s === 'tableros' ? 'grid' : 'block') : 'none';
+  });
+  if (id === 'favoritos' || id === 'tableros') {
+    var el = document.getElementById('sec-'+id);
+    if (el) el.style.display = 'grid';
+  }
+}
+
+async function enviarSolicitud(){
   var btn = document.getElementById('friend-btn');
   if (!btn) return;
-  var estado = btn.dataset.estado || 'ninguno';
-  if (estado === 'aceptada') { showToast('YA SON AMIGOS'); return; }
-  if (estado === 'pendiente') { showToast('SOLICITUD YA ENVIADA'); return; }
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i>ENVIANDO...';
+  btn.disabled = true;
   try {
-    var r = await fetch('/amigos/solicitud/<%=perfil.id%>', { method: 'POST' });
+    var r = await fetch('/amigos/solicitud/' + _perfilId, { method: 'POST' });
     var d = await r.json();
     if (d.success || d.estado === 'pendiente') {
-      btn.innerHTML = '<i class="bi bi-person-clock me-1"></i>PENDIENTE';
-      btn.dataset.estado = 'pendiente';
-      btn.style.color = '#ffc800'; btn.style.borderColor = '#ffc800';
-      showToast('¡SOLICITUD ENVIADA!');
-    } else { showToast(d.error || 'ERROR'); }
-  } catch(e) { showToast('ERROR DE RED'); }
+      btn.className = 'pp-btn pp-btn-pending';
+      btn.innerHTML = '<i class="bi bi-person-clock"></i>PENDIENTE';
+    } else {
+      btn.innerHTML = '<i class="bi bi-person-plus-fill"></i>AGREGAR AMIGO';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    btn.innerHTML = '<i class="bi bi-person-plus-fill"></i>AGREGAR AMIGO';
+    btn.disabled = false;
+  }
 }
-<% } %>
 </script>
+
 <%- include('../partials/footer') %>

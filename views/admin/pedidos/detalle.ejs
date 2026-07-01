@@ -76,7 +76,7 @@
         <% seguimiento.slice().reverse().forEach((s,i) => { %>
         <div class="d-flex gap-3 mb-4">
           <div class="d-flex flex-column align-items-center">
-            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:34px;height:34px;background:<%= i===0?'var(--color-primary)':'#f0f0f0' %>;color:<%= i===0?'white':'#666' %>">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:34px;height:34px;background:<%= i===0?'var(--color-primary)':'var(--faint-2)' %>;color:<%= i===0?'white':'var(--muted)' %>">
               <i class="bi bi-<% const ic={almacen:'building',empaquetador:'box',transporte:'truck',aduana:'shield',entrega:'house'}; %><%= ic[s.tipo_proveedor]||'circle' %> small"></i>
             </div>
           </div>
@@ -116,7 +116,7 @@
         <h5 class="fw-bold mb-3">Productos</h5>
         <% items.forEach(item => { %>
         <div class="d-flex gap-3 mb-3">
-          <img src="<%= item.imagen_principal  %>" style="width:55px;height:55px;border-radius:8px;object-fit:cover" onerror="this.src='https://via.placeholder.com/55x55/f0f0f0/999?text=IMG'">
+          <img src="/uploads/products/<%= item.imagen_principal %>" style="width:55px;height:55px;border-radius:8px;object-fit:cover" onerror="this.src='https://via.placeholder.com/55x55/f0f0f0/999?text=IMG'">
           <div>
             <div class="small fw-semibold"><%= item.titulo %></div>
             <div class="text-muted small">Talla: <%= item.talla %> × <%= item.cantidad %></div>
@@ -133,12 +133,20 @@
       <% if (pedido.direccion) { %>
       <div class="card border-0 rounded-4 shadow-sm p-4">
         <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2" style="color:var(--color-primary)"></i>Dirección de entrega</h5>
-        <div class="small">
+        <div class="small mb-3">
           <div class="fw-semibold"><%= pedido.nombre_destinatario %></div>
           <div class="text-muted"><%= pedido.tel_envio %></div>
           <div><%= pedido.direccion %></div>
           <div><%= pedido.ciudad %><% if (pedido.departamento) { %>, <%= pedido.departamento %><% } %></div>
+          <% if (pedido.entrega_lat && pedido.entrega_lng) { %>
+          <div class="text-muted mt-1" style="font-size:.78rem">Lat: <%= parseFloat(pedido.entrega_lat).toFixed(6) %> | Lng: <%= parseFloat(pedido.entrega_lng).toFixed(6) %></div>
+          <% } %>
         </div>
+        <% if (pedido.entrega_lat && pedido.entrega_lng) { %>
+        <div id="mapaEntrega" style="height:220px;border-radius:10px;overflow:hidden;border:1px solid var(--border)"></div>
+        <% } else { %>
+        <div class="text-muted small" style="font-style:italic">Sin coordenadas guardadas para esta dirección (pedido anterior a la corrección del selector de mapa).</div>
+        <% } %>
       </div>
       <% } %>
     </div>
@@ -154,6 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
   mapa = L.map('mapaAdmin').setView([4.6097, -74.0817], 6);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
   renderMapa(puntosIniciales);
+
+  // Mapa de la dirección de entrega guardada (requisito: mostrar mapa guardado + marcador)
+  <% if (pedido.entrega_lat && pedido.entrega_lng) { %>
+  var elEntrega = document.getElementById('mapaEntrega');
+  if (elEntrega) {
+    var mapaEntrega = L.map('mapaEntrega').setView([<%= pedido.entrega_lat %>, <%= pedido.entrega_lng %>], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapaEntrega);
+    L.marker([<%= pedido.entrega_lat %>, <%= pedido.entrega_lng %>]).addTo(mapaEntrega)
+      .bindPopup('<%= (pedido.direccion||"").replace(/'/g,String.fromCharCode(39)) %>').openPopup();
+  }
+  <% } %>
 });
 
 function renderMapa(puntos) {
