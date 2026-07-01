@@ -155,7 +155,7 @@ app.use('/perfil', require('./routes/perfil'));
 app.use('/perfil/config', require('./routes/perfil_config'));
 app.use('/tableros', require('./routes/tableros'));
 app.use('/tiendas', require('./routes/tiendas'));
-// app.use('/ia', require('./routes/ia')); // Asistente IA eliminado por completo (botón, ventana, scripts y referencias)
+app.use('/ia', require('./routes/ia')); // Asistente IA: chat con Gemini, productos nuevos y ofertas
 app.use('/admin', require('./routes/admin'));
 app.use('/admin/proveedores', require('./routes/admin.proveedores'));
 app.use('/admin/tiendas', require('./routes/admin.tiendas'));
